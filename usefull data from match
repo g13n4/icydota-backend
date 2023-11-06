@@ -1,0 +1,16 @@
+"match_id": 7393133836
+draft timing > total_time_taken
+duration
+picks_bans > hero_id & is_pick
+"league": "leagueid": 15728 "name": "The International 2023"
+"radiant_team": "team_id": 8255756 "name": "Evil Geniuses"
+"dire_team": "team_id": 8599101 "name": "Gaimin Gladiators",
+ players > "account_id": 292921272, "player_slot": 0, "deaths": 3,
+            "denies": 9, "gold": 5073, "gold_per_min": 707, "gold_spent": 43165, "hero_damage": 36568,
+            "hero_id": 135, "kills": 8, "level": 30, "last_hits": 702, "net_worth": 34098, "pings": 31,
+            "purchase": > branches... # to calculate the amount of gold spend on resources
+            "teamfight_participation": 0.75, "tower_damage": 3416, "xp_per_min": 811, "name": "Wisper",
+            "isRadiant": true,  "win": 0,  "lose": 1,  "total_gold": 49124,  "total_xp": 56350, "kills_per_min": 0.11513552410650035,
+            "kda": 6,  "neutral_kills": 241, "observer_kills": 0, "sentry_kills": 0, "ancient_kills": 63,
+            "lane": 3, "lane_role": 3, "actions_per_min": 294, "rank_tier": 80, "rune_pickups": 3,
+ "replay_url": "http://replay117.valve.net/570/7393133836_1496745078.dem.bz2"

@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:15.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=mx
+      - POSTGRES_PASSWORD=ghbdtn
+      - POSTGRES_DB=dota
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/dota
+

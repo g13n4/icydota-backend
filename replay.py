@@ -8,6 +8,23 @@ CURRENT_DIR = Path.cwd()
 BASE_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
 
 
+def _is_empty(path: Path) -> bool:
+    return os.stat(path).st_size == 0
+
+
+def continue_to_process(file_path: Path, match_id: int, process_name: str, overwrite: bool, ) -> bool:
+    if file_path.exists():
+        if overwrite:
+            os.remove(file_path)
+        else:
+            if _is_empty(file_path):
+                print(f'{match_id} | {process_name} | file is empty! Trying to process again...')
+            else:
+                print(f'{match_id} | {process_name} | already exists')
+                return False
+    return True
+
+
 def _get_match_download_info(match_id: int) -> list:
     r = requests.get(f'https://api.opendota.com/api/replays', params={'match_id': match_id})
     if r.status_code == 200:
@@ -22,9 +39,12 @@ def _download_archived_replay(match_id: int,
                               folder_path: Path,
                               valve_replay_info: list | None = None,
                               overwrite: bool = False) -> None:
-    file_path = os.path.join(folder_path, f'{match_id}.dem.bz2')
-    if Path(file_path).exists() and not overwrite:
-        print(f'{match_id} compressed replay is already downloaded')
+    file_path = Path(os.path.join(folder_path, f'{match_id}.dem.bz2'))
+
+    if not continue_to_process(file_path=file_path,
+                               match_id=match_id,
+                               process_name='downloading',
+                               overwrite=overwrite):
         return None
 
     if not valve_replay_info:
@@ -46,10 +66,13 @@ def _download_archived_replay(match_id: int,
 
 
 def _decompress_archived_replay(match_id: int, folder_path: Path, overwrite: bool = False) -> None:
-    input_path = os.path.join(folder_path, f'{match_id}.dem.bz2')
-    output_path = os.path.join(folder_path, f'{match_id}.dem')
-    if Path(output_path).exists() and not overwrite:
-        print(f'{match_id} replay is already decompressed')
+    input_path = Path(os.path.join(folder_path, f'{match_id}.dem.bz2'))
+    output_path = Path(os.path.join(folder_path, f'{match_id}.dem'))
+
+    if not continue_to_process(file_path=output_path,
+                               match_id=match_id,
+                               process_name='decompressing',
+                               overwrite=overwrite):
         return None
 
     with bz2.BZ2File(input_path, 'rb') as file_input, open(output_path, 'wb') as file_output:
@@ -58,10 +81,16 @@ def _decompress_archived_replay(match_id: int, folder_path: Path, overwrite: boo
     print(f'{match_id} decompressed replay successfully')
 
 
+
+
+
 def _parse_replay_v2(match_id: int, folder_path: Path, overwrite: bool = False) -> None:
-    output_path = os.path.join(folder_path, f'{match_id}.jsonl')
-    if Path(output_path).exists() and not overwrite:
-        print(f'{match_id} replay is already parsed')
+    output_path = Path(os.path.join(folder_path, f'{match_id}.jsonl'))
+
+    if not continue_to_process(file_path=output_path,
+                               match_id=match_id,
+                               process_name='parsing',
+                               overwrite=overwrite):
         return None
 
     command = 'curl localhost:5600 --data-binary ' + \
@@ -79,4 +108,4 @@ def get_match_replay(match_id: int, overwrite: bool = False):
     _parse_replay_v2(match_id=match_id, folder_path=match_folder_path)
 
 
-get_match_replay(7393133836)
+get_match_replay(7402800418)

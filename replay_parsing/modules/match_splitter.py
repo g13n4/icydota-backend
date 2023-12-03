@@ -27,12 +27,15 @@ class MatchSplitter:
         self._time_windows = self._set_time_windows(time_windows)
 
     def _calculate_time_in_window(self, start_time: int, end_time: int | None) -> int:
-        if start_time > self.game_length:
-            if end_time is not None and end_time > self.game_length:
-                return start_time - end_time
+        if self.game_length < start_time:
+            # the game has ended / no such window exists
+            return 0
+        else:
+            if end_time is not None and end_time < self.game_length:
+                return end_time - start_time
             else:
+                # the game ended before the end of the window
                 return self.game_length - start_time
-        return 0
 
     def _set_time_windows(self, time_windows: list) -> list:
         processed_time_windows = []

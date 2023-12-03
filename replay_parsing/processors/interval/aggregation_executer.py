@@ -44,7 +44,7 @@ def execute_window_aggregation(df: pd.DataFrame,
     if agg_type == 'max':
         return np.max(ser)
 
-    elif agg_type == 'gained_pm_avg':
+    elif agg_type == 'gained_pm_median':
         ser_pm = _get_by_minute_slice(ser)
         shifted_ser_pm = _shift_series(ser_pm)
         return np.median(ser_pm.iloc[1:] - shifted_ser_pm.iloc[1:])

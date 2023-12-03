@@ -19,7 +19,6 @@ def process_wards_windows(df: pd.DataFrame, MS: MatchSplitter) -> dict:
 
     return wards_data
 
-
 def process_deward_windows(df: pd.DataFrame, MS: MatchSplitter,
                            players: List[dict], players_to_slot: dict) -> dict:
     df['slotname'] = df['slot'].replace({x['slot']: x['hero_npc_name'] for x in players})
@@ -30,7 +29,8 @@ def process_deward_windows(df: pd.DataFrame, MS: MatchSplitter,
     deward_windows = MS.split_in_windows(df, use_index=False)
     player_data = {x: copy.deepcopy(WINDOWS_BASE_NULLS) for x in ['was_dewarded_sen', 'was_dewarded_obs',
                                                                   'was_dewarded_perc_sen', 'was_dewarded_perc_obs',
-                                                                  'killed_sen', 'killed_obs']}
+                                                                  'killed_sen', 'killed_obs',
+                                                                  'killed_sen_pm', 'killed_obs_pm', ]}
     deward_data = {f'_{y}': player_data for y in range(10)}
 
     for window_df in deward_windows:

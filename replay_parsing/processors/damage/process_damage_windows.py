@@ -6,12 +6,6 @@ from typing import List, Tuple
 import pandas as pd
 import numpy as np
 
-
-def _concat_to_slot(slot: int):
-    def _concat(text: str) -> str:
-        return '|'.join([f'{slot}', text])
-    return _concat
-
 # to_all
 # with_summons
 # to_heroes
@@ -25,9 +19,13 @@ def _concat_to_slot(slot: int):
 # from_creatures
 # from_illusions
 
+def _concat_to_slot(slot: int):
+    def _concat(text: str) -> str:
+        return '|'.join([f'{slot}', text])
+
+    return _concat
 
 def _split_damage_by_player(df: pd.DataFrame, players: list) -> pd.DataFrame:
-
     df['frombuilding'] = df['sourcename'].str.contains('_tower|_rax_|_fillers|fort', regex=True)
     df['tobuilding'] = df['targetname'].str.contains('_tower|_rax_|_fillers|fort', regex=True)
 
@@ -71,29 +69,31 @@ def _split_damage_by_player(df: pd.DataFrame, players: list) -> pd.DataFrame:
     new_df = pd.concat(new_columns.values(), axis=1, ignore_index=True)
     new_df.columns = new_columns.keys()
 
-    new_df[['time', 'value']] = df[['time','value']]
+    new_df[['time', 'value']] = df[['time', 'value']]
     new_df['minutes'] = np.floor(new_df['time'] / 60)
 
     return new_df
 
 
 def _get_column_names(columns: List[str]) -> Tuple[list[str], list[str]]:
-    damage_columns = [x.split('|')[1] for x in columns if '|' in x]
-    unique_damage_columns = list(set([x.split('|')[1] for x in damage_columns if '|' in x]))
-    return unique_damage_columns, damage_columns
+    all_damage_columns = [x for x in columns if '|' in x]
+
+    damage_name_columns = [x.split('|')[1] for x in columns if '|' in x]
+    unique_damage_columns = list(set(damage_name_columns))
+    return unique_damage_columns, all_damage_columns
 
 
 def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -> dict:
     damage_df = _split_damage_by_player(df, players)
     player_windows = MS.split_in_windows(damage_df, use_index=False)
 
-    unique_columns, columns = _get_column_names(damage_df.columns)
+    unique_name_columns, all_damage_columns = _get_column_names(damage_df.columns)
 
-    player_data = {f'{x}_{y}':copy.copy(WINDOWS_BASE_NULLS) for x in unique_columns for y in
+    player_data = {f'{x}_{y}': copy.copy(WINDOWS_BASE_NULLS) for x in unique_name_columns for y in
                    ['sum', 'mean', 'median', 'dmg_inst']}
-    data = {f'_{x}':copy.copy(player_data)  for x in range(10)}
+    data = {f'_{x}': copy.copy(player_data) for x in range(10)}
 
-    for col in columns:
+    for col in all_damage_columns:
         slot_str, damage_type_name = col.split('|')
 
         for item in player_windows:
@@ -104,14 +104,18 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
 
             this_damage = this_df[this_df[col] == True]
 
-            damage_inst = this_damage['value'].count()
+            if this_damage.empty:
+                damage_sum, damage_mean_dmg_pm, damage_median_dmg_pm, damage_inst = 0, 0, 0, 0
 
-            damage_sum = this_damage['value'].sum()
-            damage_agged = this_damage.groupby('minutes')['value'].sum()
+            else:
+                damage_inst = this_damage['value'].count()
 
-            correction_coef = len(damage_agged) / item['minutes']
-            damage_median_dmg_pm = damage_agged.mean() * correction_coef
-            damage_mean_dmg_pm = damage_agged.median() * correction_coef
+                damage_sum = this_damage['value'].sum()
+                damage_agged = this_damage.groupby('minutes')['value'].sum()
+
+                correction_coef = len(damage_agged) / item['minutes']
+                damage_median_dmg_pm = damage_agged.mean() * correction_coef
+                damage_mean_dmg_pm = damage_agged.median() * correction_coef
 
             data['_' + slot_str][damage_type_name + '_sum'][item['name']] = damage_sum
             data['_' + slot_str][damage_type_name + '_mean'][item['name']] = damage_mean_dmg_pm

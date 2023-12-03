@@ -3,6 +3,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from pydantic import condecimal
 import datetime
 
+
 # Items and Heroes
 class InGameEntityBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -174,7 +175,7 @@ class PlayerPerformanceTotalStats(SQLModel, table=True):
 
     lane_kills: int
     hero_kills: int
-    observer_kills: intget_players
+    observer_kills: int
     sentry_kills: int
     roshan_kills: int
     runes_picked_up: int
@@ -196,14 +197,16 @@ class PlayerPerformanceTotalStats(SQLModel, table=True):
     matchdata: Optional["PlayerMatchData"] = Relationship(back_populates="stats_total")
 
 
-class InGameBuildingTier(SQLModel, table=True):
+class InGameBuildingLane(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    lane: str
+    lane_num: int
+
+
+class InGameBuildingTower(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     tier: int
-
-
-class InGameBuildingPosition(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    position: str
 
 
 class InGameBarracks(SQLModel, table=True):
@@ -215,18 +218,61 @@ class InGameBuilding(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     name: str
+    is_tower: bool  # or rax
 
-    dire: bool
+    lane: Optional[int] = Field(default=None, foreign_key="InGameBuildingLane.id")
 
-    tier: Optional[int] = Field(default=None, foreign_key="InGameBuildingTier.id")
-    position: Optional[int] = Field(default=None, foreign_key="InGameBuildingPosition.id")
+    tower: Optional[int] = Field(default=None, foreign_key="InGameBuildingTower.id")
     rax: Optional[int] = Field(default=None, foreign_key="InGameBarracks.id")
+
+    building_stats_id: Optional[int] = Field(default=None, foreign_key="BuildingStats.id")
+    building_stats: Optional["BuildingStats"] = Relationship(back_populates="buildings_stats")
+
+
+class InGameBuildingDestroyed(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    building: Optional[int] = Field(default=None, foreign_key='ingamebuilding.id')
+    death_time: int
+
+    destruction_order: Optional[int]
+    destruction_order_tower: Optional[int]
+    destruction_order_rax: Optional[int]
+
+    # additional rax info
+    destroyed_lane_one: bool = Field(default=False)
+    destroyed_lane_two: bool = Field(default=False)
+    destroyed_lane_three: bool = Field(default=False)
+
+    megacreeps: bool = Field(default=False)
+
+    # additional tower info
+    naked_throne: bool = Field(default=False)
+
+    building_stats_id: Optional[int] = Field(default=None, foreign_key="BuildingStats.id")
+    building_stats: Optional["BuildingStats"] = Relationship(back_populates="buildings_stats")
 
 
 class BuildingStats(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
-    death_time: int
-    building: Optional[int] = Field(default=None, foreign_key='ingamebuilding.id')
+
+    dire: bool
+
+    buildings: List["InGameBuildingDestroyed"] = Relationship(back_populates="buildings_dead",
+                                                              link_model=InGameBuildingDestroyed)
+    buildings_not_dead: List["InGameBuilding"] = Relationship(back_populates="buildings_not_dead",
+                                                              link_model=InGameBuilding)
+
+    destruction_order: Optional[int]
+    destruction_order_tower: Optional[int]
+    destruction_order_rax: Optional[int]
+
+    # additional rax info
+    destroyed_lane: Optional[bool]
+    megacreeps: Optional[bool]
+
+    # additional tower info
+    naked_throne: Optional[bool]
 
 
 class BuildingStatsKillLink(SQLModel, table=True):
@@ -237,6 +283,7 @@ class BuildingStatsKillLink(SQLModel, table=True):
         default=None, foreign_key="PlayerMatchData.id", primary_key=True
     )
 
+
 class BuildingStatsLostLink(SQLModel, table=True):
     buildingstats_id: Optional[int] = Field(
         default=None, foreign_key="BuildingStats.id", primary_key=True
@@ -244,6 +291,7 @@ class BuildingStatsLostLink(SQLModel, table=True):
     team_buildings_lost: Optional[int] = Field(
         default=None, foreign_key="PlayerMatchData.id", primary_key=True
     )
+
 
 class AdditionalMatchStats(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -38,6 +38,9 @@ class MatchAnalyser:
     def get_players(self) -> List[dict]:
         return self.players.get_all()
 
+    def get_players_object(self) -> MatchPlayersData:
+        return self.players
+
     def _fill_cdata(self) -> None:
         slots_added = set()
         re_interval = re.compile(r'"interval"')

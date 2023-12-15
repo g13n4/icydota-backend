@@ -1,10 +1,12 @@
 import copy
-
+from ..processing_utils import process_output
 from replay_parsing.modules import MatchSplitter
 from ..aggregations import WINDOWS_BASE_NULLS
 from typing import List, Tuple
 import pandas as pd
 import numpy as np
+from functools import partial
+from ..processing_utils import add_data_type_name
 
 # to_all
 # with_summons
@@ -18,6 +20,10 @@ import numpy as np
 # from_buildings
 # from_creatures
 # from_illusions
+
+PROCESSED_DATA_NAME = 'damage'
+AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
+PO = partial(process_output, allow_none=False)
 
 def _concat_to_slot(slot: int):
     def _concat(text: str) -> str:
@@ -46,7 +52,8 @@ def _split_damage_by_player(df: pd.DataFrame, players: list) -> pd.DataFrame:
 
     new_columns = {}
     for player in players:
-        name_match = player['hero_npc_name'] + ('|' + player['hero_npc_name'] if player['hero_npc_name'] else '')
+        name_match = player['hero_npc_name'] + \
+                     (f"|{player['hero_npc_name_alias']}" if player['hero_npc_name_alias'] else '')
         player_attack = df['sourcename'].str.contains(name_match, regex=True)
         player_defense = df['targetsourcename'].str.contains(name_match, regex=True)
 
@@ -89,9 +96,11 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
 
     unique_name_columns, all_damage_columns = _get_column_names(damage_df.columns)
 
-    player_data = {f'{x}_{y}': copy.copy(WINDOWS_BASE_NULLS) for x in unique_name_columns for y in
-                   ['sum', 'mean', 'median', 'dmg_inst']}
-    data = {f'_{x}': copy.copy(player_data) for x in range(10)}
+    agg_types = ['sum', 'mean', 'median', 'dmg_inst']
+
+    player_data = {AN(f'{x}__{y}'): copy.deepcopy(WINDOWS_BASE_NULLS) for x in unique_name_columns for y in
+                   agg_types}
+    data = {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
 
     for col in all_damage_columns:
         slot_str, damage_type_name = col.split('|')
@@ -100,14 +109,14 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
             if not item['exists']:
                 continue
 
+            this_window = item['name']
             this_df = item['df']
 
             this_damage = this_df[this_df[col] == True]
 
-            if this_damage.empty:
-                damage_sum, damage_mean_dmg_pm, damage_median_dmg_pm, damage_inst = 0, 0, 0, 0
+            damage_sum, damage_mean_dmg_pm, damage_median_dmg_pm, damage_inst = 0, 0, 0, 0
 
-            else:
+            if not this_damage.empty:
                 damage_inst = this_damage['value'].count()
 
                 damage_sum = this_damage['value'].sum()
@@ -117,9 +126,9 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
                 damage_median_dmg_pm = damage_agged.mean() * correction_coef
                 damage_mean_dmg_pm = damage_agged.median() * correction_coef
 
-            data['_' + slot_str][damage_type_name + '_sum'][item['name']] = damage_sum
-            data['_' + slot_str][damage_type_name + '_mean'][item['name']] = damage_mean_dmg_pm
-            data['_' + slot_str][damage_type_name + '_median'][item['name']] = damage_median_dmg_pm
-            data['_' + slot_str][damage_type_name + '_dmg_inst'][item['name']] = damage_inst
+            data['_' + slot_str][AN(damage_type_name + f'__{agg_types[0]}')][this_window] = PO(damage_sum)
+            data['_' + slot_str][AN(damage_type_name + f'__{agg_types[1]}')][this_window] = PO(damage_mean_dmg_pm)
+            data['_' + slot_str][AN(damage_type_name + f'__{agg_types[2]}')][this_window] = PO(damage_median_dmg_pm)
+            data['_' + slot_str][AN(damage_type_name + f'__{agg_types[3]}')][this_window] = PO(damage_inst)
 
     return data

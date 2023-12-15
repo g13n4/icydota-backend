@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from ..processing_utils import normalise_output_type_wrapper
 
 
 def _clean_division(x, y) -> int | float:
@@ -22,6 +23,7 @@ def _find_distance(axis_x: pd.Series, axis_y: pd.Series) -> pd.Series:
     return (np.square(shifted_x - axis_x) + np.square(shifted_y - axis_y))
 
 
+@normalise_output_type_wrapper(allow_none=True)
 def execute_window_aggregation(df: pd.DataFrame,
                                column: str,
                                agg_type: str,
@@ -49,7 +51,7 @@ def execute_window_aggregation(df: pd.DataFrame,
         shifted_ser_pm = _shift_series(ser_pm)
         return np.median(ser_pm.iloc[1:] - shifted_ser_pm.iloc[1:])
 
-    elif agg_type == 'avg_(by_length)':
+    elif agg_type == 'avg_(by_length)_pm':
         if column == 'movement':
             return np.sum(ser) / (len(ser) / 60)
         else:

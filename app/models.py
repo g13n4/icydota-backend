@@ -130,32 +130,40 @@ class Match(SQLModel, table=True):
     replay_url: str
 
 
+class WindowComparisonType(SQLModel,  table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str  # Carry => [carry, offlane] / mid to mid / soft support => [hard support, soft support]
+
 class WindowType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str  # Base values / percentage
+    comparison: Optional[int] = Field(default=None, foreign_key="WindowComparisonType.id")
+
+class WindowInfo(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    wtype: Optional[int] = Field(default=None, foreign_key="WindowType.id")
     name: str
     description: str
-    pm: bool  # per minute values
-
 
 class PlayerPerformanceWindowStats(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    window_type: Optional[int] = Field(default=None, foreign_key="windowtype.id")
+    window_info: Optional[int] = Field(default=None, foreign_key="WindowInfo.id")
 
     # laning
-    l_2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l_4: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l_6: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l_8: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l_10: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l_total: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l4: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l6: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l8: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l10: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    ltotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
     # next phase
-    g_15: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g_30: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g_45: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g_60: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g_60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g_total: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g15: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g30: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g45: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g60: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
     matchdata: Optional[int] = Field(default=None, foreign_key="playermatchdata.id")
     matchdata_id: Optional["PlayerMatchData"] = Relationship(back_populates="stats_window")

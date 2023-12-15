@@ -97,7 +97,7 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
                 if lane_state[4] == 3:
                     item['megacreeps'] = True
 
-        item['lanes_destroyed'] = copy.copy(lane_destruction_status)
+        item['lanes_destroyed'] = copy.deepcopy(lane_destruction_status)
 
 
 def process_building_windows(df: pd.DataFrame) -> dict:

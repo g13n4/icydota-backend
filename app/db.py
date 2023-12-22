@@ -1,8 +1,7 @@
+import httpx
+from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession, AsyncEngine
-
-from sqlalchemy.orm import sessionmaker
-
 
 DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/dota"
 
@@ -16,9 +15,14 @@ async def init_db():
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def get_session() -> AsyncSession:
+async def get_db_session() -> AsyncSession:
     async_session = sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )
     async with async_session() as session:
         yield session
+
+
+async def get_web_client():
+    async with httpx.AsyncClient() as client:
+        yield client

@@ -1,12 +1,15 @@
-from fastapi import Depends, FastAPI
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-from celery import shared_task, Celery
-from pydantic import BaseModel
 import time
 
-from db import get_session
+from celery import Celery
+from fastapi import Depends, FastAPI
+from httpx import AsyncClient
+from pydantic import BaseModel
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from db import get_db_session, get_web_client
 from models import League
+from .base_data import create_heroes
 
 app = FastAPI()
 
@@ -22,6 +25,19 @@ class TaskOut(BaseModel):
     id: str
     name: str
     status: str
+
+
+@app.on_event("startup")
+async def on_startup(db_session: AsyncSession = Depends(get_db_session),
+                     web_client: AsyncClient = Depends(get_web_client)):
+    await create_heroes(db_session, web_client)
+
+
+@app.on_event("shutdown")
+async def shutdown(db_session: AsyncSession = Depends(get_db_session),
+                   web_client: AsyncClient = Depends(get_web_client)):
+    await db_session.close_all()
+    await web_client.aclose()
 
 
 @celery.task
@@ -50,7 +66,7 @@ async def pong():
 
 
 @app.get("/leagues", response_model=list[League])
-async def get_leagues(session: AsyncSession = Depends(get_session)):
+async def get_leagues(session: AsyncSession = Depends(get_db_session)):
     result = await session.execute(select(League))
     leagues = result.scalars().all()
     return [League(name=league.name) for league in leagues]

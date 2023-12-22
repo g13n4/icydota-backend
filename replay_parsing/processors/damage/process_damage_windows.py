@@ -1,12 +1,15 @@
 import copy
-from ..processing_utils import process_output
+from functools import partial
+from typing import List, Tuple
+
+import numpy as np
+import pandas as pd
+
 from replay_parsing.modules import MatchSplitter
 from ..aggregations import WINDOWS_BASE_NULLS
-from typing import List, Tuple
-import pandas as pd
-import numpy as np
-from functools import partial
 from ..processing_utils import add_data_type_name
+from ..processing_utils import process_output
+from ...windows import DAMAGE_WINDOWS_AGGS
 
 # to_all
 # with_summons
@@ -98,8 +101,7 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
 
     agg_types = ['sum', 'mean', 'median', 'dmg_inst']
 
-    player_data = {AN(f'{x}__{y}'): copy.deepcopy(WINDOWS_BASE_NULLS) for x in unique_name_columns for y in
-                   agg_types}
+    player_data = {AN(f'{x}__{y}'): copy.deepcopy(WINDOWS_BASE_NULLS) for x in DAMAGE_WINDOWS_AGGS}
     data = {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
 
     for col in all_damage_columns:

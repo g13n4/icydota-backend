@@ -1,12 +1,6 @@
 from typing import Dict, List
 
-POSITION_NAMES = {
-    1: 'carry',
-    2: 'mid',
-    3: 'offlane',
-    4: 'soft support',
-    5: 'hard support',
-}
+from ..ingame_data import POSITION_NAMES
 
 POSITION_OPPONENTS = {
     1: [1,3],
@@ -26,7 +20,7 @@ class MatchPlayersData:
 
                 'hero_npc_name': None,
                 'hero_npc_name_alias': None,
-                'hero_name_cdata': None,
+                'hero_name_cdota': None,
                 'hero_id': None,
 
                 'position': None,

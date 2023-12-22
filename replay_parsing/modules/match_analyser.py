@@ -1,10 +1,12 @@
-from . import MatchPlayersData
-from typing import Dict, List
-import re
-import pathlib
 import json
+import pathlib
+import re
+from typing import Dict, List
+
 import pandas as pd
 from fuzzywuzzy import fuzz
+
+from . import MatchPlayersData
 
 
 def _process_name(text: str) -> str:
@@ -52,7 +54,7 @@ class MatchAnalyser:
                 pline = json.loads(line)
                 if pline.get("hero_id", None) and pline['slot'] not in slots_added:
                     temp = {
-                        'hero_name_cdata': pline["unit"],
+                        'hero_name_cdota': pline["unit"],
                         'hero_id': pline['hero_id'],
                     }
 
@@ -64,7 +66,7 @@ class MatchAnalyser:
         return None
 
     def _combine_names(self, names: list):
-        cdata_by_name = {x['hero_name_cdata']: x['slot'] for x in self.players.get_all()}
+        cdata_by_name = {x['hero_name_cdota']: x['slot'] for x in self.players.get_all()}
         most_fitting_word = None
 
         for npc_name in names:
@@ -147,7 +149,7 @@ class MatchAnalyser:
             from_ingame = dict()
 
             for item in self.players.get_all():
-                from_cdata[item['hero_name_cdata']] = item
+                from_cdata[item['hero_name_cdota']] = item
 
                 from_ingame[item['hero_npc_name']] = item
                 if item['hero_npc_name_alias']:

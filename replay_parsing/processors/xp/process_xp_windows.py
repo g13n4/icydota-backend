@@ -1,13 +1,14 @@
 import copy
-import pandas as pd
 from functools import partial
-from replay_parsing.modules import MatchSplitter
 from typing import Dict
-from ..aggregations import WINDOWS_BASE_NULLS
-from ..processing_utils import process_output
-from functools import partial
-from ..processing_utils import add_data_type_name
 
+import pandas as pd
+
+from replay_parsing.modules import MatchSplitter
+from ..aggregations import WINDOWS_BASE_NULLS
+from ..processing_utils import add_data_type_name
+from ..processing_utils import process_output
+from ...windows import XP_WINDOWS_AGGS
 
 PROCESSED_DATA_NAME = 'xp'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
@@ -26,9 +27,7 @@ def process_xp_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: Dic
     df.replace(players_to_slot, inplace=True)
     xp_windows = MS.split_in_windows(df, use_index=False)
 
-    data_item = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in xp_reasons.values()}
-    data_item.update({AN(v + ' pm'): copy.deepcopy(WINDOWS_BASE_NULLS) for k, v in xp_reasons.items()
-                      if k not in [0, 3]})
+    data_item = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in XP_WINDOWS_AGGS}
 
     data = {f'_{x}': copy.deepcopy(data_item) for x in range(10)}
 
@@ -40,6 +39,6 @@ def process_xp_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: Dic
                 data[f'_{slot}'][AN(xp_reasons[gold_reason])][window['name']] = PO(v)
 
                 if gold_reason in [1, 2] and v:
-                    data[f'_{slot}'][AN(xp_reasons[gold_reason])][window['name']] = PO(v / window['minutes'])
+                    data[f'_{slot}'][AN(xp_reasons[gold_reason] + ' pm')][window['name']] = PO(v / window['minutes'])
 
     return data

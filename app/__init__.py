@@ -1,1 +1,2 @@
-from .models import Hero, Item, Player, Team, League, Lane, Game, Match, Slot, GameItemPurchaseLink, GameItemBackpackLink
+from .celery import celery_app
+from .models import Hero, Player, Team, League, Game

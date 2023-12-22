@@ -1,7 +1,8 @@
+import bz2
+import os
 import subprocess
 from pathlib import Path
-import os
-import bz2
+
 import requests
 
 CURRENT_DIR = Path.cwd()
@@ -81,9 +82,6 @@ def _decompress_archived_replay(match_id: int, folder_path: Path, overwrite: boo
     print(f'{match_id} decompressed replay successfully')
 
 
-
-
-
 def _parse_replay_v2(match_id: int, folder_path: Path, overwrite: bool = False) -> None:
     output_path = Path(os.path.join(folder_path, f'{match_id}.jsonl'))
 
@@ -95,7 +93,7 @@ def _parse_replay_v2(match_id: int, folder_path: Path, overwrite: bool = False) 
 
     command = 'curl localhost:5600 --data-binary ' + \
               f'"@replays/{match_id}/{match_id}.dem" > "replays/{match_id}/{match_id}.jsonl"'
-    subprocess.run(command, shell=True)
+    subprocess.run(command, shell=True, check=True)
     print(f'{match_id} replay is parsed successfully')
 
 

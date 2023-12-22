@@ -1,76 +1,54 @@
 from typing import Optional, List
-from sqlmodel import Field, SQLModel, Relationship
+
 from pydantic import condecimal
-import datetime
+from sqlmodel import Field, SQLModel, Relationship
 
 
-# Items and Heroes
-class InGameEntityBase(SQLModel):
+class Hero(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
     odota_id: int
-    ingame_name: str
     name: str
 
-
-class Hero(InGameEntityBase, table=True):
     cdota_name: Optional[str]
-    ingame_alias: Optional[str]
 
-
-class Item(InGameEntityBase, table=True):
-    price: Optional[int]
+    npc_name: Optional[str]
+    npc_name_alias: Optional[str]
 
 
 # Leagues, Teams and Players
 class Player(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nickname: str
+    steam_id: int
 
 
 class Team(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     odota_id: int
     name: str
+    tag: str
 
 
 class League(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    pd_link: str
     league_id: int
-    name: str
+    name: Optional[str]
     tier: int
 
-    start_date: int  # unix time stamp
-    end_date: int
+    start_date: Optional[int]  # unix time stamp
+    end_date: Optional[int]
 
     ended: bool
+    fully_parsed: bool
 
-    match_id: Optional[int] = Field(default=None, foreign_key="team.id")
-    match: Optional["Match"] = Relationship(back_populates="heroes")
-
-
-# Matches and Games
-# Game - a match from a player's perspective
-class GameItemPurchaseLink(SQLModel, table=True):
-    playergameinfo_id: Optional[int] = Field(
-        default=None, foreign_key="playergameinfo.id", primary_key=True
-    )
-    item_id: Optional[int] = Field(
-        default=None, foreign_key="item.id", primary_key=True
-    )
-
-
-class GameItemBackpackLink(SQLModel, table=True):
-    playergameinfo_id: Optional[int] = Field(
-        default=None, foreign_key="playergameinfo.id", primary_key=True
-    )
-    item_id: Optional[int] = Field(
-        default=None, foreign_key="item.id", primary_key=True
-    )
+    games: Optional["Game"] = Relationship(back_populates="league")
 
 
 class InGamePosition(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    slot: int
+    number: int
     name: str
 
 
@@ -80,7 +58,7 @@ class PlayerGameInfo(SQLModel, table=True):
     player: Optional[int] = Field(default=None, foreign_key="player.id")
     nickname: str
 
-    position: Optional[int] = Field(default=None, foreign_key="ingameposition.id")
+    position: Optional[int] = Field(default=None, foreign_key="InGamePosition.id")
     hero: Optional[int] = Field(default=None, foreign_key="hero.id")
     lane: int
     is_roaming: bool
@@ -93,11 +71,8 @@ class PlayerGameInfo(SQLModel, table=True):
     slot_number: int
     pings: int
 
-    purchases: List[Item] = Relationship(back_populates='game', link_model=GameItemPurchaseLink)
-    backpack: List[Item] = Relationship(back_populates='game', link_model=GameItemBackpackLink)
-
-    match: Optional["match"] = Relationship(back_populates="slot")
-    match_id: Optional[int] = Field(default=None, foreign_key="match.id")
+    game: Optional["Game"] = Relationship(back_populates="slot")
+    game_id: Optional[int] = Field(default=None, foreign_key="game.id")
 
 
 class Patch(SQLModel, table=True):
@@ -107,11 +82,13 @@ class Patch(SQLModel, table=True):
     name: str
 
 
-class Match(SQLModel, table=True):
+class Game(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     match_id: int
-    league = Field(default=None, foreign_key='league.id')
+
+    league: Optional[League] = Relationship(back_populates='games')
+    league_id: Optional[int] = Field(default=None, foreign_key='league.id')
 
     patch = Field(default=None, foreign_key='patch.id')
 
@@ -119,7 +96,7 @@ class Match(SQLModel, table=True):
     dire: Optional[int] = Field(default=None, foreign_key="team.id")
     radiant_win: bool
 
-    players_info: List["PlayerGameInfo"] = Relationship(back_populates="match")
+    players_info: List["PlayerGameInfo"] = Relationship(back_populates="game")
 
     total_draft_time: int
     radiant_draft_time: int
@@ -130,20 +107,25 @@ class Match(SQLModel, table=True):
     replay_url: str
 
 
-class WindowComparisonType(SQLModel,  table=True):
+class WindowComparisonType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # Carry => [carry, offlane] / mid to mid / soft support => [hard support, soft support]
+    # we compare comparandum to comparans
+    comparandum: Optional[int] = Field(default=None, foreign_key="InGamePosition.id")
+    comparans: Optional[int] = Field(default=None, foreign_key="InGamePosition.id")
 
-class WindowType(SQLModel, table=True):
+
+class WindowInfoType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str  # Base values / percentage
-    comparison: Optional[int] = Field(default=None, foreign_key="WindowComparisonType.id")
+    name: str  # damage / interval
+
 
 class WindowInfo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    wtype: Optional[int] = Field(default=None, foreign_key="WindowType.id")
+    comparison: Optional[int] = Field(default=None, foreign_key="WindowComparisonType.id")
+    info_type: Optional[int] = Field(default=None, foreign_key="WindowInfoType.id")
+    description: Optional[str]
     name: str
-    description: str
 
 class PlayerPerformanceWindowStats(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -165,8 +147,8 @@ class PlayerPerformanceWindowStats(SQLModel, table=True):
     g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    matchdata: Optional[int] = Field(default=None, foreign_key="playermatchdata.id")
-    matchdata_id: Optional["PlayerMatchData"] = Relationship(back_populates="stats_window")
+    matchdata_id: Optional[int] = Field(default=None, foreign_key="PlayerGameData.id")
+    matchdata: Optional["PlayerGameData"] = Relationship(back_populates="stats_window")
 
 
 class PlayerPerformanceTotalStats(SQLModel, table=True):
@@ -201,36 +183,34 @@ class PlayerPerformanceTotalStats(SQLModel, table=True):
     first_blood: int
     died_first: int
 
-    matchdata_id: Optional[int] = Field(default=None, foreign_key="playermatchdata.id")
-    matchdata: Optional["PlayerMatchData"] = Relationship(back_populates="stats_total")
+    matchdata_id: Optional[int] = Field(default=None, foreign_key="PlayerGameData.id")
+    matchdata: Optional["PlayerGameData"] = Relationship(back_populates="stats_total")
 
 
 class InGameBuildingLane(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    lane: str
+    name: str
     lane_num: int
-
-
-class InGameBuildingTower(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    tier: int
 
 
 class InGameBarracks(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     melee: bool
+    name: str
 
 
 class InGameBuilding(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     name: str
-    is_tower: bool  # or rax
 
     lane: Optional[int] = Field(default=None, foreign_key="InGameBuildingLane.id")
 
-    tower: Optional[int] = Field(default=None, foreign_key="InGameBuildingTower.id")
+    is_tower: bool  # or rax
+    tier: Optional[int]
+    tower4: Optional[bool]  # False - first, True - second one
+
     rax: Optional[int] = Field(default=None, foreign_key="InGameBarracks.id")
 
     building_stats_id: Optional[int] = Field(default=None, foreign_key="BuildingStats.id")
@@ -288,7 +268,7 @@ class BuildingStatsKillLink(SQLModel, table=True):
         default=None, foreign_key="BuildingStats.id", primary_key=True
     )
     team_buildings_kill: Optional[int] = Field(
-        default=None, foreign_key="PlayerMatchData.id", primary_key=True
+        default=None, foreign_key="PlayerGameData.id", primary_key=True
     )
 
 
@@ -297,7 +277,7 @@ class BuildingStatsLostLink(SQLModel, table=True):
         default=None, foreign_key="BuildingStats.id", primary_key=True
     )
     team_buildings_lost: Optional[int] = Field(
-        default=None, foreign_key="PlayerMatchData.id", primary_key=True
+        default=None, foreign_key="PlayerGameData.id", primary_key=True
     )
 
 
@@ -306,14 +286,14 @@ class AdditionalMatchStats(SQLModel, table=True):
 
     first_ten_kills_dire: bool
     first_roshan_dire: int
-    first_roshan: int
+    first_roshan_time: int
 
 
-class PlayerMatchData(SQLModel, table=True):
+class PlayerGameData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key='league.id')
-    match_id: Optional[int] = Field(default=None, foreign_key='match.id')
+    game_id: Optional[int] = Field(default=None, foreign_key='game.id')
     player: Optional[int] = Field(default=None, foreign_key="player.id")
     player_game_info: Optional[int] = Field(default=None, foreign_key="playergameinfo.id")
 

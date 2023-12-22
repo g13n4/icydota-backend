@@ -1,0 +1,28 @@
+GOLD_WINDOWS = {
+    'Gold removed for death': 'death penalty',
+    'Gold removed for death (per minute)': 'death penalty pm',
+    'Gold for assists': 'gold for assist',
+    'Gold for assists (per minute)': 'gold for assist pm',
+    'Gold for killing buildings': 'gold for killing buildings',
+    'Gold for killing buildings (per minute)': 'gold for killing buildings pm',
+    'Gold for killing heroes': 'gold for killing heroes',
+    'Gold for killing heroes (per minute)': 'gold for killing heroes pm',
+    'Gold for killing creeps': 'gold for killing creeps',
+    'Gold for killing creeps (per minute)': 'gold for killing creeps pm',
+    'Gold for killing neutrals': 'gold for killing neutrals',
+    'Gold for killing neutrals (per minute)': 'gold for killing neutrals pm',
+    'Gold for killing roshan': 'gold for killing roshan',
+    'Gold for killing roshan (per minute)': 'gold for killing roshan pm',
+    'Gold for courier assists': 'gold for assisting killing couriers',
+    'Gold for courier assists (per minute)': 'gold for assisting killing couriers pm',
+    'Gold for runes': 'gold runes',
+    'Gold for runes (per minute)': 'gold runes pm',
+    'Gold for flag bearers, devour, etc': 'gold for flag bearer (and doom\'s devour)',
+    'Gold for flag bearers, devour, etc (per minute)': 'gold for flag bearer (and doom\'s devour) pm',
+    'Gold for wards': 'gold for wards',
+    'Gold for wards (per minute)': 'gold for wards pm',
+    'Gold for couriers': 'gold for killing couriers',
+    'Gold for couriers (per minute)': 'gold for killing couriers pm',
+}
+
+GOLD_WINDOWS_AGGS = GOLD_WINDOWS.values()

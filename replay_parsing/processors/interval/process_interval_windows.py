@@ -1,15 +1,18 @@
 import copy
-import numpy as np
-import pandas as pd
-from replay_parsing.modules import MatchSplitter
-from ..aggregations import INTERVAL_WINDOWS, WINDOWS_BASE
-from . import execute_window_aggregation
-from typing import Dict
 from functools import partial
+from typing import Dict
+
+import pandas as pd
+
+from replay_parsing.modules import MatchSplitter
+from . import execute_window_aggregation
+from ..aggregations import WINDOWS_BASE
 from ..processing_utils import add_data_type_name
+from ...windows import INTERVAL_WINDOWS_AGGS
 
 PROCESSED_DATA_NAME = 'interval'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
+
 
 def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter) -> Dict[str, Dict]:
     data_by_player = {f'_{x}': {} for x in range(10)}
@@ -25,7 +28,7 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter) -> Dict[str, D
     df_by_player = MS.split_by_player(df)
     for player_df in df_by_player:
         player_windows = MS.split_in_windows(player_df['df'])
-        for column, agg_type in INTERVAL_WINDOWS:
+        for column, agg_type in INTERVAL_WINDOWS_AGGS:
             value_name = AN(f'{column}__{agg_type}')
             current_agg_window_data = copy.deepcopy(WINDOWS_BASE)
 

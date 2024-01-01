@@ -1,14 +1,8 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
-from ..ingame_data import POSITION_NAMES
+from utils import get_both_slot_values
+from ..ingame_data import POSITION_NAMES, POSITION_OPPONENTS
 
-POSITION_OPPONENTS = {
-    1: [1,3],
-    2: [2],
-    3: [1, 3],
-    4: [4, 5],
-    5: [4, 5],
-}
 
 class MatchPlayersData:
     def __init__(self):
@@ -48,13 +42,24 @@ class MatchPlayersData:
 
         setattr(self, f'_{slot}', info)
 
+    def get_pos_to_slot_by_side(self) -> Dict[str, Dict[int, int]]:
+        all_players = self.get_all()
+        data = {
+            'sentinel': dict(),
+            'dire': dict(),
+        }
+        for player in all_players:
+            data[player['side']][player['position']] = player['slot']
+
+        return data
+
     def get_name_slot_dict(self) -> Dict[str, int]:
         items = self.get_all()
         names = {x['hero_npc_name']: x['slot'] for x in items}
         alias = {x['hero_npc_name_alias']: x['slot'] for x in items if x['hero_npc_name_alias']}
         return {**names, **alias}
 
-    def get_all(self) -> list:
+    def get_all(self) -> List[Dict[str, Any]]:
         return [getattr(self, f'_{x}') for x in range(10)]
 
     def get_dire(self) -> list:
@@ -75,11 +80,40 @@ class MatchPlayersData:
     def __repr__(self):
         return '\n'.join([str(x) for x in self.get_all()])
 
-    def __getitem__(self, slot: int) -> dict:
+    def __getitem__(self, slot: int) -> Dict[str, Any]:
         if 0 <= slot < 10:
             return getattr(self, f'_{slot}')
         else:
             raise KeyError(f"No slot {slot}! Only ten players are in the game")
+
+    def set_position_from_dict(self, positions: Dict[str | int, int]):
+        """
+        :param positions: dictionary where key is the slot of the player and key is his position
+        """
+        for k, v in positions.items():
+            slot_text, slot = get_both_slot_values(k)
+            player = getattr(self, slot_text)
+            player['position'] = v
+            player['position_name'] = POSITION_NAMES[v]
+        self._set_opponents()
+
+    def _new_data_check(self):
+        test_player = getattr(self, '_0')
+        if test_player['position']:
+            self._set_position_names()
+            self._set_opponents()
+
+    def set_player_data_from_dict(self, players_info: Dict[int, Dict[str, Any]]):
+        players = self.get_all()
+        for player in players:
+            player.update(players_info[player['slot']])
+        self._new_data_check()
+
+    def _set_position_names(self):
+        players = self.get_all()
+        for player in players:
+            player['position_name'] = POSITION_NAMES[player['position']]
+        return
 
     def set_position_from_list(self, opponents: List[int]):
         players = self.get_all()

@@ -15,7 +15,7 @@ def process_league(db_session, web_client, league_obj: League):
         if game['match_id'] in db_league_games:
             continue
         else:
-            process_game(db_session=db_session,
-                         web_client=web_client,
-                         match_id=game['match_id'],
-                         league_obj=league_obj)
+            process_game.delay(db_session=db_session,
+                               web_client=web_client,
+                               match_id=game['match_id'],
+                               league_obj=league_obj)

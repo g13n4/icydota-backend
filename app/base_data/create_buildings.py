@@ -1,74 +1,54 @@
-from sqlmodel import select
+from app.models import InGameBuilding
 
-from app.models import InGameBuildingLane, InGameBarracks, InGameBuilding
-
+LANE_TO_NAME = {1: 'bot', 2: 'mid', 3: 'top'}
 
 def _capitalise_first_letter(text: str) -> str:
     return text[0].capitalize() + text[1:]
 
 
-def _generate_tower_name(lane: InGameBuildingLane, tier: int):
-    return f'{_capitalise_first_letter(lane.name)} tier {tier} tower'
+def _generate_tower_name(lane: int, tier: int):
+    return f'{_capitalise_first_letter(LANE_TO_NAME[lane])} tier {tier} tower'
 
 
 async def create_heroes(db_session) -> None:
-    sel_result = await db_session.execute(select(InGameBuilding))
-    towers = sel_result.scalars().all()
-    if towers:
-        return
-    # 'value': 1, 'name': 'bot',
-    for name, lane_num in [[1, 'bot'], [2, 'mid'], [3, 'top'], ]:
-        lane_obj = InGameBuildingLane(
-            lane=name,
-            lane_num=lane_num,
-        )
-        await db_session.add(lane_obj)
-
-    for melee_bool, name in [[False, 'range barracks'], [True, 'melee barracks'], ]:
-        rax = InGameBarracks(
-            melee=melee_bool,
-            name=name,
-        )
-        await db_session.add(rax)
-
-    await db_session.commit()
-
-    sel_result = await db_session.execute(select(InGameBuildingLane))
-    lanes = sel_result.scalars().all()
-
-    for lane in lanes:
+    for lane in [1, 2, 3]:
         for tier in range(1, 3):
             building_obj = InGameBuilding(
                 name=_generate_tower_name(lane, tier),
-                lane=lane.id,
+                lane=lane,
                 is_tower=True,
                 tier=tier,
+                tower4=None,
+
+                is_rax=False,
             )
             await db_session.add(building_obj)
 
     await db_session.add(InGameBuilding(
         name='First tier 4 tower',
+        lane=0,
         is_tower=True,
         tier=4,
         tower4=False,
     ))
     await db_session.add(InGameBuilding(
         name='Second tier 4 tower',
+        lane=0,
         is_tower=True,
         tier=4,
         tower4=True,
     ))
 
-    sel_result = await db_session.execute(select(InGameBarracks))
-    rax_pl = sel_result.scalars().all()
-
-    for lane in lanes:
-        for rax in rax_pl:
+    for lane in [1, 2, 3]:
+        for rax, rax_name in [[False, 'range barracks'], [True, 'melee barracks'], ]:
             building_obj = InGameBuilding(
-                name=_capitalise_first_letter(f'{lane.name} {rax.name}'),
-                lane=lane.id,
+                name=_capitalise_first_letter(f'{LANE_TO_NAME[lane]} {rax_name}'),
+                lane=lane,
                 is_tower=False,
-                rax=rax.id,
+
+                tier=None,
+                is_rax=True,
+                melee=rax,
             )
             await db_session.add(building_obj)
 

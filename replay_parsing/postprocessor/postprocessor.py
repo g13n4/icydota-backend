@@ -1,12 +1,12 @@
-from typing import Dict, List
-from ..modules import MatchPlayersData
 import copy
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 
 from .columns_to_postprocess import LANE_COLUMNS, GAME_COLUMNS, SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA, \
-    COMPARE_DATA, COMPARE_DATA_SUPPORT, PERCENTAGE_DATA
+    COMPARE_DATA, COMPARE_DATA_SUPPORT
+from ..modules import MatchPlayersData
 
 # Add percentage data eventually ?
 
@@ -17,14 +17,16 @@ def _flatten_for_pd(data: dict) -> list:
             for ck, cv in slot_v.items()]
 
 
-def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, ) -> dict:
-    output = {f'_{x}': [] for x in range(10)}
+def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, ) -> List[dict]:
+    output = list()
     opponent_base = {
-        'slot': None,
-        'position': None,
-        'position_name': None,
+        'slot_comparandum': None,
+        'position_comparandum': None,
+
+        'slot_comparans': None,
+        'position_comparans': None,
+
         'comparison': [],
-        'comparison_name': '',
         'df': None
     }
 
@@ -53,11 +55,11 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
 
             opponent_data = copy.deepcopy(opponent_base)
 
-            opponent_data['slot'] = opponent['slot']
-            opponent_data['position'] = opponent['position']
-            opponent_data['position_name'] = opponent['position_name']
-            opponent_data['comparison'] = [player['slot'], opponent['slot']]
-            opponent_data['comparison_name'] = f"{player['position_name']} to {opponent['position_name']}"
+            opponent_data['slot_comparandum'] = player['slot']
+            opponent_data['position_comparandum'] = player['position']
+
+            opponent_data['slot_comparans'] = opponent['slot']
+            opponent_data['position_comparans'] = opponent['position']
 
             comparison_df.reset_index(inplace=True)
             comparison_df.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -66,11 +68,12 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
 
             comparison_df.loc[nullable_values, :] = comparison_df.loc[nullable_values, :].fillna(0)
 
+            del comparison_df['slot']
             opponent_data['df'] = comparison_df.copy()
 
-            output[player['slot_text']].append(opponent_data)
+            output.append(opponent_data)
 
-            return output
+    return output
 
 
 def fill_total_values(data_df: pd.DataFrame) -> pd.DataFrame:
@@ -94,16 +97,11 @@ def fill_total_values(data_df: pd.DataFrame) -> pd.DataFrame:
     return data_df
 
 
-test_position = [1, 4, 5, 2, 3, 1, 2, 3, 4, 5]
-
-
-def postprocess_data(data: Dict[str, Dict[str, dict]], MPD: MatchPlayersData) -> dict:
-    MPD.set_position_from_list(test_position)
-
+def postprocess_data(data: Dict[str, Dict[str, dict]], MPD: MatchPlayersData) -> Tuple[pd.DataFrame, List[dict]]:
     data_df = pd.DataFrame(_flatten_for_pd(data))
 
-    data_df = fill_total_values(data_df)
+    filled_totals = fill_total_values(data_df)
 
-    comparison_data = compare_position_performance(data_df, MPD)
+    comparison_data = compare_position_performance(filled_totals.copy(), MPD)
 
-    return comparison_data
+    return filled_totals, comparison_data

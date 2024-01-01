@@ -112,6 +112,7 @@ class MatchAnalyser:
             raise ValueError('The game was not yet processed. Game length is unavailable')
         return self.game_length
 
+
     def get_match_data(self) -> Dict[str, pd.DataFrame]:
         with open(self.path, 'r') as file:
             interval = []  # interval
@@ -125,12 +126,16 @@ class MatchAnalyser:
             # CHAT_MESSAGE_COURIER_LOST
             chat_messages = []
 
+            # DOTA_COMBATLOG_DEATH
+            hero_deaths = []
+
+            roshan_deaths = []
+
             # DOTA_COMBATLOG_DAMAGE
             # DOTA_COMBATLOG_GOLD
             # DOTA_COMBATLOG_XP
             # DOTA_COMBATLOG_PURCHASE
             # DOTA_COMBATLOG_ITEM
-            # DOTA_COMBATLOG_TEAM_BUILDING_KILL
             # combat_log = []
 
             # DOTA_COMBATLOG_TEAM_BUILDING_KILL
@@ -208,16 +213,11 @@ class MatchAnalyser:
                     building_kill.append({x: p_line[x] for x in
                                           ['time', 'value', 'targetname']})
 
-                # deprecated
-                elif line_type in ['DOTA_COMBATLOG_DAMAGE',
-                                   'DOTA_COMBATLOG_GOLD',
-                                   'DOTA_COMBATLOG_XP',
-                                   'DOTA_COMBATLOG_PURCHASE',
-                                   'DOTA_COMBATLOG_ITEM',
-                                   'DOTA_COMBATLOG_TEAM_BUILDING_KILL',
-                                   ]:
-                    #                    combat_log.append(p_line)
-                    continue
+                elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targethero']:
+                    hero_deaths.append({x: p_line[x] for x in ['time', 'sourcename', 'targetname', ]})
+
+                elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targetname'] == 'npc_dota_roshan':
+                    roshan_deaths.append({x: p_line[x] for x in ['time', 'sourcename', ]})
 
         return {
             'interval': pd.DataFrame(interval),
@@ -230,4 +230,6 @@ class MatchAnalyser:
             'xp': pd.DataFrame(xp),
             'gold': pd.DataFrame(gold),
             'damage': pd.DataFrame(damage),
+            'roshan_deaths': pd.DataFrame(roshan_deaths),
+            'hero_deaths': pd.DataFrame(hero_deaths),
         }

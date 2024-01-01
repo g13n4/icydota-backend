@@ -1,6 +1,6 @@
 from sqlmodel import select
 
-from app.models import InGamePosition, WindowComparisonType
+from app.models import InGamePosition, WindowPlayerComparisonType
 from ...replay_parsing.ingame_data import POSITION_NAMES
 
 
@@ -31,7 +31,7 @@ async def create_positions(db_session, ) -> None:
                                    ]:
         comparandum_obj = db_positions_dict[comparandum]
         comparans_obj = db_positions_dict[comparans]
-        position = WindowComparisonType(
+        position = WindowPlayerComparisonType(
             comparandum=comparandum_obj.id,
             comparans=comparans_obj.id,
             name=f'{comparandum_obj.name} to {comparans_obj.name}',

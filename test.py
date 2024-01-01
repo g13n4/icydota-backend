@@ -1,10 +1,10 @@
+import os
+import pathlib
+
 from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_windows, \
     process_pings_windows, process_wards_windows, process_deward_windows, process_damage_windows, \
-    process_xp_windows, process_gold_windows, process_building_windows, postprocess_data
-import pathlib
-import os
-import json
-
+    process_xp_windows, process_gold_windows, process_building, postprocess_data, \
+    process_hero_deaths, process_roshan_deaths
 
 print(os.getcwd())
 
@@ -20,6 +20,13 @@ def _combine_dicts(*args) -> dict:
 def get_replay_info(path):
     match = MatchAnalyser(pathlib.Path(path))
     match_data = match.get_match_data()
+    match.players.set_position_from_list([1, 4, 5, 2, 3, 1, 2, 3, 4, 5])
+    match.players.set_player_data_from_dict({
+        x: {
+            'hero_id': 100,
+            'player_id': 100,
+        } for x in range(10)
+    })
 
     MS = MatchSplitter(game_length=match.get_game_length())
 
@@ -37,9 +44,17 @@ def get_replay_info(path):
 
     match_info = _combine_dicts(interval, pings, wards, deward, damage, xp, gold)
 
-    building_kill = process_building_windows(match_data['building_kill'])
+    set_totals, comparison_data = postprocess_data(match_info, match.get_players_object())
 
-    comparison_data = postprocess_data(match_info, match.get_players_object())
+    # additional info
+    player_hero_info, ftk_dire, hero_deaths = process_hero_deaths(match_data['hero_deaths'],
+                                                                  players_to_slot=match.players.get_name_slot_dict())
+
+    roshan_deaths = process_roshan_deaths(match_data['roshan_deaths'],
+                                          players_to_slot=match.players.get_name_slot_dict())
+
+    player_building_info, building_kill = process_building(match_data['building_kill'],
+                                                           pos_to_slot=match.players.get_pos_to_slot_by_side())
 
     return comparison_data
 

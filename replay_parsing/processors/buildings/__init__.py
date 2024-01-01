@@ -1,1 +1,1 @@
-from .process_buildings_windows import process_building_windows
+from .process_buildings import process_building

@@ -101,7 +101,7 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
 
     agg_types = ['sum', 'mean', 'median', 'dmg_inst']
 
-    player_data = {AN(f'{x}__{y}'): copy.deepcopy(WINDOWS_BASE_NULLS) for x in DAMAGE_WINDOWS_AGGS}
+    player_data = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in DAMAGE_WINDOWS_AGGS}
     data = {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
 
     for col in all_damage_columns:

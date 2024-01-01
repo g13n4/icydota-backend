@@ -1,13 +1,15 @@
-import pandas as pd
-from typing import List
 import copy
 import math
+from typing import List
+
+import pandas as pd
+
 
 class MatchSplitter:
     def __init__(self, game_length: int, offset: int = +90, time_windows: list = None, ):
-        """The variable game_length doesn't need offset. It breaks proper calculation in _calculate_time_in_window"""
-        self.offset = offset
-        self.game_length = game_length
+        """The variable game_length doesn't need _offset. It breaks proper calculation in _calculate_time_in_window"""
+        self._offset = offset
+        self._game_length = game_length
 
         if not time_windows:
             early_game_windows = [(-90, 60 * 2, 'l2'),  # first 2 minutes
@@ -26,16 +28,20 @@ class MatchSplitter:
 
         self._time_windows = self._set_time_windows(time_windows)
 
+    @property
+    def game_length(self) -> int:
+        return self._game_length
+
     def _calculate_time_in_window(self, start_time: int, end_time: int | None) -> int:
-        if self.game_length < start_time:
+        if self._game_length < start_time:
             # the game has ended / no such window exists
             return 0
         else:
-            if end_time is not None and end_time < self.game_length:
+            if end_time is not None and end_time < self._game_length:
                 return end_time - start_time
             else:
                 # the game ended before the end of the window
-                return self.game_length - start_time
+                return self._game_length - start_time
 
     def _set_time_windows(self, time_windows: list) -> list:
         processed_time_windows = []
@@ -47,8 +53,8 @@ class MatchSplitter:
                     'name': name,
                     'start_time': start_time,
                     'end_time': end_time,
-                    'start_index': start_time + self.offset,
-                    'end_index': end_time + self.offset if end_time else None,
+                    'start_index': start_time + self._offset,
+                    'end_index': end_time + self._offset if end_time else None,
                     'length': length,
                     'minutes': math.floor(length / 60) if length else 0,
                     'exists': None,

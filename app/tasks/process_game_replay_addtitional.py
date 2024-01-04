@@ -5,7 +5,7 @@ import pandas as pd
 from replay_parsing import MatchAnalyser, MatchPlayersData, \
     process_building, process_hero_deaths, process_roshan_deaths
 from utils import get_all_sqlmodel_objs
-from ..models import GameData, PlayerPerformanceTotalStats, Game
+from ..models import AdditionalGameData, PerformanceTotalStats, Game
 from ..models import HeroDeath
 from ..models import InGameBuilding, InGameBuildingDestroyed, \
     InGameBuildingNotDestroyed
@@ -148,8 +148,8 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
 def pgr_additional(db_session,
                    match: MatchAnalyser,
                    match_data: Dict[str, pd.DataFrame],
-                   pperformance_objs: Dict[int, PlayerPerformanceTotalStats],
-                   game_obj: Game, ):
+                   pperformance_objs: Dict[int, PerformanceTotalStats],
+                   game_obj: Game, ) -> AdditionalGameData:
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(match_data['roshan_deaths'],
                                                                players_to_slot=match.players.get_name_slot_dict())
     roshan_death_objs = _fill_roshan_deaths(db_session=db_session, roshan_deaths=roshan_deaths)
@@ -187,7 +187,7 @@ def pgr_additional(db_session,
     db_session.refresh(building_stats_objs['dire'])
     db_session.refresh(building_stats_objs['sentinel'])
 
-    gd = GameData(
+    agd = AdditionalGameData(
         league_id=game_obj.league_id,
         game_id=game_obj.id,
 
@@ -200,4 +200,6 @@ def pgr_additional(db_session,
         dire_building_status_id=building_stats_objs['dire'].id,
         sent_building_status_id=building_stats_objs['sent'].id, )
 
-    db_session.add(gd)
+    db_session.add(agd)
+
+    return agd

@@ -8,8 +8,7 @@ from .proces_game_replay import process_game_replay
 from ..celery import celery_app
 from ..models import InGamePosition, Hero
 from ..models import Player, Team, League
-from ..models import PlayerGameInfo, Game, PlayerPerformanceTotalStats
-from ..models import WindowPlayer
+from ..models import PlayerGameInfo, Game, PerformanceTotalStats
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -100,10 +99,10 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
     heroes_dict = {x.odota_id: x for x in heroes_all}  # "hero_id": 78,
 
     player_data_dict = dict()
-    pgame_info_list = []
     pperformance_total_dict = dict()
     ppositions_dict = dict()
     wp_dict = dict()
+    pgi_dict = {}
     for player_info in game_data['players']:
         this_team = teams_dict['radiant'] if player_info['isRadiant'] else teams_dict['dire']
         this_slot = player_info['player_slot']
@@ -131,14 +130,9 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
             game=game_obj,
         )
 
-        wp_obj = WindowPlayer(
-            slot=this_slot,
-            player_id=players_dict[this_slot],
-            hero_id=heroes_dict[this_hero].id,
-        )
+        pgi_dict[this_slot] = player_obj
 
         db_session.add(player_obj)
-        db_session.add(wp_obj)
 
         player_data_dict[this_slot] = {
             'position': positions_dict[this_position].value,
@@ -147,10 +141,8 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
 
         }
         ppositions_dict[this_slot] = positions_dict[this_position]
-        pgame_info_list.append(player_obj)
-        wp_dict[this_slot] = wp_obj
 
-        p_per_tot_stats_obj = PlayerPerformanceTotalStats(
+        p_per_tot_stats_obj = PerformanceTotalStats(
             total_gold=player_info['total_gold'],
             total_xp=player_info['total_xp'],
             kills_per_min=player_info['benchmarks']['kills_per_min'],
@@ -192,8 +184,7 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
 
     process_game_replay(db_session=db_session,
                         match_id=match_id,
-                        wp_dict=wp_dict,
                         game_obj=game_obj,
                         pperformance_objs=pperformance_total_dict,
-                        ppositions_dict=ppositions_dict,
+                        pgi_dict=pgi_dict,
                         additional_player_data=player_data_dict)

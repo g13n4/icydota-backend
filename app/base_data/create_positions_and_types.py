@@ -1,7 +1,8 @@
 from sqlmodel import select
 
-from app.models import InGamePosition, WindowPlayerComparisonType
+from app.models import WindowPositionComparisonType, WindowStatsType, InGamePosition
 from ...replay_parsing.ingame_data import POSITION_NAMES
+from ...replay_parsing.windows import ALL_WINDOWS
 
 
 async def create_positions(db_session, ) -> None:
@@ -31,11 +32,24 @@ async def create_positions(db_session, ) -> None:
                                    ]:
         comparandum_obj = db_positions_dict[comparandum]
         comparans_obj = db_positions_dict[comparans]
-        position = WindowPlayerComparisonType(
-            comparandum=comparandum_obj.id,
-            comparans=comparans_obj.id,
+        position = WindowPositionComparisonType(
+            comparandum_id=comparandum_obj.id,
+            comparans_id=comparans_obj.id,
             name=f'{comparandum_obj.name} to {comparans_obj.name}',
         )
         await db_session.add(position)
 
+    await db_session.commit()
+
+    # TYPES
+    sel_result = await db_session.execute(select(WindowStatsType))
+    db_win_info = sel_result.scalars().all()
+    if db_win_info:
+        return
+
+    for wtype in ALL_WINDOWS.keys():
+        wtype_obj = WindowStatsType(
+            name=wtype
+        )
+        db_session.add(wtype_obj)
     await db_session.commit()

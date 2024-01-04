@@ -39,7 +39,7 @@ def get_both_slot_values(key: str | int) -> (str, int):
 def iterate_df(df: pd.DataFrame, use_offset: bool = True, index_offset: int = 1) -> (int, dict):
     for index, values in df.T.to_dict().items():
         if use_offset:
-            index = index + index_offset
+            index += index_offset
         yield (index, values)
 
 

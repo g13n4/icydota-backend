@@ -5,10 +5,11 @@ import pandas as pd
 from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_windows, process_pings_windows, \
     process_wards_windows, process_deward_windows, process_damage_windows, \
     process_xp_windows, process_gold_windows, postprocess_data
-from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs
-from ..models import PerformanceWindowStats
+from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
+    compare_total_performance
+from ..models import PerformanceWindowData
 from ..models import WindowPlayerComparisonType, PlayerGameInfo, InGamePosition, WindowComparisonType
-from ..models import WindowStatsType, PlayerStatsInfo, WindowHeroComparisonType
+from ..models import WindowStatsType, PlayerStatsInfo, WindowHeroComparisonType, PerformanceTotalData
 
 
 def _get_window_objs(db_session) -> Tuple[List[WindowPlayerComparisonType], List[WindowStatsType],]:
@@ -20,7 +21,7 @@ def _get_window_objs(db_session) -> Tuple[List[WindowPlayerComparisonType], List
 def _fill_pws(db_session,
               final_data: pd.DataFrame,
               wst: List[WindowStatsType],
-              pgi_dict: Dict[int, PlayerGameInfo], ) -> Dict[int, List[PerformanceWindowStats]]:
+              pgi_dict: Dict[int, PlayerGameInfo], ) -> Dict[int, List[PerformanceWindowData]]:
     window_data_by_slot = {x: [] for x in range(10)}
 
     for index, line in iterate_df(final_data, use_offset=False):
@@ -40,7 +41,7 @@ def _fill_pws(db_session,
 
         db_session.add(psi_obj)
 
-        ppws_obj = PerformanceWindowStats(
+        ppws_obj = PerformanceWindowData(
             stats_info=psi_obj,
 
             l2=line['l2'],
@@ -66,10 +67,13 @@ def _fill_pws(db_session,
 
 def _fill_comparison_pws(db_session,
                          comparison_data: List[dict],
+                         pperformance_objs: Dict[int, PerformanceTotalData],
                          wst: List[WindowStatsType],
                          pgi_dict: Dict[int, PlayerGameInfo],
-                         wpct: List[WindowPlayerComparisonType], ) -> Dict[int, List[PerformanceWindowStats]]:
+                         wpct: List[WindowPlayerComparisonType],
+                         ) -> Tuple[Dict[int, List[PerformanceWindowData]], Dict[int, List[PerformanceTotalData]]]:
     window_data_by_slot = {x: [] for x in range(10)}
+    window_total_data_by_slot = {x: [] for x in range(10)}
     igp = get_all_sqlmodel_objs(db_session, InGamePosition)
 
     for item in comparison_data:
@@ -78,11 +82,13 @@ def _fill_comparison_pws(db_session,
             comparandum_pos = line['position_comparandum']
             comparandum_obj = get_obj_from_list(igp, number=comparandum_pos)
             comparandum_pgi_obj = pgi_dict[comparandum_slot]
+            comparandum_total_obj = pperformance_objs[comparandum_slot]
 
             comparans_slot = line['slot_comparans']
             comparans_pos = line['position_comparans']
             comparans_obj = get_obj_from_list(igp, number=comparans_pos)
             comparans_pgi_obj = pgi_dict[comparans_slot]
+            comparans_total_obj = pperformance_objs[comparans_slot]
 
             w_type, w_name = line['index'].split('|')
             wst_obj = get_obj_from_list(wst, name=w_type)
@@ -117,7 +123,7 @@ def _fill_comparison_pws(db_session,
                 comparison=wct)
             db_session.add(psi_obj)
 
-            ppws_obj = PerformanceWindowStats(
+            ppws_obj = PerformanceWindowData(
                 stats_info=psi_obj,
 
                 l2=line['l2'],
@@ -138,14 +144,34 @@ def _fill_comparison_pws(db_session,
 
             window_data_by_slot[comparandum_slot].append(ppws_obj)
 
-    return window_data_by_slot
+            psi_obj = PlayerStatsInfo(
+                slot=comparandum_pgi_obj.slot,
+                player_id=comparandum_pgi_obj.player_id,
+                hero_id=comparandum_pgi_obj.hero_id,
+                is_total_stats=True,
+                is_comparison=True,
+                comparison=wct)
+            db_session.add(psi_obj)
+
+            ctp_obj = compare_total_performance(comparandum_total_obj,
+                                                comparans_total_obj,
+                                                PerformanceTotalData)
+            ctp_obj.stats_info = psi_obj
+
+            db_session.add(ctp_obj)
+
+            window_total_data_by_slot[comparandum_slot].append(ctp_obj)
+
+    return window_data_by_slot, window_total_data_by_slot
 
 
 def pgr_main(db_session,
              match: MatchAnalyser,
              match_data: Dict[str, pd.DataFrame],
              MS: MatchSplitter,
-             pgi_dict: Dict[int, PlayerGameInfo], ) -> Tuple[Dict[int, List[PerformanceWindowStats]], ...]:
+             pperformance_objs: Dict[int, PerformanceTotalData],
+             pgi_dict: Dict[int, PlayerGameInfo],
+             ) -> Tuple[Dict[int, List[PerformanceWindowData]], Dict[int, List[PerformanceTotalData]]]:
     wpct, wst = _get_window_objs(db_session)
 
     interval = process_interval_windows(match_data['interval'], MS)
@@ -169,10 +195,15 @@ def pgr_main(db_session,
                          wst=wst,
                          pgi_dict=pgi_dict, )
 
-    pwd_dict_comparison = _fill_comparison_pws(db_session=db_session,
-                                               comparison_data=comparison_data,
-                                               wst=wst,
-                                               wpct=wpct,
-                                               pgi_dict=pgi_dict, )
+    pwd_dict_comparison, ptd_dict_comparison = _fill_comparison_pws(db_session=db_session,
+                                                                    comparison_data=comparison_data,
+                                                                    pperformance_objs=pperformance_objs,
+                                                                    wst=wst,
+                                                                    wpct=wpct,
+                                                                    pgi_dict=pgi_dict, )
 
-    return pwd_dict, pwd_dict_comparison
+    pwd_output = dict()
+    for slot in range(10):
+        pwd_output[slot] = pwd_dict[slot] + pwd_dict_comparison[slot]
+
+    return pwd_output, ptd_dict_comparison

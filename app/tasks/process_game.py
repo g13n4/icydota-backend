@@ -8,7 +8,7 @@ from .proces_game_replay import process_game_replay
 from ..celery import celery_app
 from ..models import InGamePosition, Hero
 from ..models import Player, Team, League
-from ..models import PlayerGameInfo, Game, PerformanceTotalStats
+from ..models import PlayerGameInfo, Game, PerformanceTotalData
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -142,7 +142,7 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
         }
         ppositions_dict[this_slot] = positions_dict[this_position]
 
-        p_per_tot_stats_obj = PerformanceTotalStats(
+        p_per_tot_stats_obj = PerformanceTotalData(
             total_gold=player_info['total_gold'],
             total_xp=player_info['total_xp'],
             kills_per_min=player_info['benchmarks']['kills_per_min'],

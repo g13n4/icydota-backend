@@ -162,7 +162,7 @@ class WindowStatsType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # damage / interval
 
-    player_stats_info = Relationship(back_populates='win_stats_type')
+    player_stats_info: List["PlayerStatsInfo"] = Relationship(back_populates='win_stats_type')
 
 
 class PlayerStatsInfo(SQLModel, table=True):
@@ -170,6 +170,7 @@ class PlayerStatsInfo(SQLModel, table=True):
 
     win_stats_type_id: Optional[int] = Field(default=None, foreign_key="WindowStatsType.id")
     win_stats_type: Optional[WindowStatsType] = Relationship(back_populates='player_stats_info')
+    is_total_stats: bool = Field(default=False)
 
     name: Optional[str]  # generate
 
@@ -184,11 +185,14 @@ class PlayerStatsInfo(SQLModel, table=True):
     is_aggregation: bool = Field(default=False)
     aggregation_id: Optional[int] = Field(default=None, foreign_key="WindowAggregationType.id")
 
-    performance_window_stats_id = Optional[int] = Field(default=None, foreign_key="WindowStatsType.id")
-    performance_window_stats = Optional["PerformanceWindowStats"] = Relationship(back_populates='player_stats_info')
+    performance_window_stats_id: Optional[int] = Field(default=None, foreign_key="WindowStatsType.id")
+    performance_window_stats: Optional["PerformanceWindowData"] = Relationship(back_populates='player_stats_info')
+
+    performance_total_stats_id: Optional[int] = Field(default=None, foreign_key="PerformanceTotalData.id")
+    performance_total_stats: Optional["PerformanceTotalData"] = Relationship(back_populates='player_stats_info')
 
 
-class PerformanceWindowStats(SQLModel, table=True):
+class PerformanceWindowData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     stats_info_id: Optional[int] = Field(default=None, foreign_key="PlayerStatsInfo.id")
@@ -214,10 +218,11 @@ class PerformanceWindowStats(SQLModel, table=True):
     matchdata: Optional["PlayerGameData"] = Relationship(back_populates="stats_window")
 
 
-class PerformanceTotalStats(SQLModel, table=True):
+class PerformanceTotalData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     stats_info_id: Optional[int] = Field(default=None, foreign_key="PlayerStatsInfo.id")
+    stats_info: Optional[PlayerStatsInfo] = Relationship(back_populates='performance_total_stats')
 
     total_gold: int
     total_xp: int
@@ -243,22 +248,23 @@ class PerformanceTotalStats(SQLModel, table=True):
     lane_efficiency: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     lane_efficiency_pct: int
 
-    first_blood_claimed: bool = Field(default=False, nullable=False)
+    first_blood_claimed: bool = Field(default=False, nullable=True)
     first_kill_time: Optional[int]
 
-    died_first: bool = Field(default=False, nullable=False)
+    died_first: bool = Field(default=False, nullable=True)
     first_death_time: Optional[int]
 
-    lost_tower_first: bool = Field(default=False, nullable=False)
+    lost_tower_first: bool = Field(default=False, nullable=True)
     lost_tower_lane: Optional[int]
     lost_tower_time: Optional[int]
 
-    destroyed_tower_first: bool = Field(default=False, nullable=False)
+    destroyed_tower_first: bool = Field(default=False, nullable=True)
     destroyed_tower_lane: Optional[int]
     destroyed_tower_time: Optional[int]
 
     matchdata_id: Optional[int] = Field(default=None, foreign_key="PlayerGameData.id")
     matchdata: Optional["PlayerGameData"] = Relationship(back_populates="total_stats")
+
 
 
 
@@ -391,16 +397,16 @@ class PlayerGameData(SQLModel, table=True):
 
     additional_stats_id: Optional[int] = Field(default=None, foreign_key="AdditionalMatchStats.id")
 
-    window_stats: List["PerformanceWindowStats"] = Relationship(back_populates="matchdata")
-    total_stats: Optional["PerformanceTotalStats"] = Relationship(back_populates="matchdata")
+    window_stats: List["PerformanceWindowData"] = Relationship(back_populates="matchdata")
+    total_stats: List["PerformanceTotalData"] = Relationship(back_populates="matchdata")
 
 
 # GAME AGGREGATION TABLE
 class GameAggregatedMock(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    window_stats_id: Optional[int] = Field(default=None, foreign_key="PerformanceWindowStats.id")
-    total_stats_id: Optional[int] = Field(default=None, foreign_key="PerformanceTotalStats.id")
+    window_stats_id: Optional[int] = Field(default=None, foreign_key="PerformanceWindowData.id")
+    total_stats_id: Optional[int] = Field(default=None, foreign_key="PerformanceTotalData.id")
 
     game_aggregated_data_id: Optional[int] = Field(default=None, foreign_key="GameAggregatedData.id")
 
@@ -445,3 +451,6 @@ class AdditionalGameData(SQLModel, table=True):
     dire_lost_first_tower: bool
     dire_building_status_id: Optional[int] = Field(default=None, foreign_key="BuildingStats.id")
     sent_building_status_id: Optional[int] = Field(default=None, foreign_key="BuildingStats.id")
+
+
+print()

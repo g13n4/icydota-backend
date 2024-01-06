@@ -6,7 +6,7 @@ from typing import Dict, Any
 from replay_parsing import MatchAnalyser, MatchSplitter
 from .process_game_replay_addtitional import pgr_additional
 from .process_game_replay_main import pgr_main
-from ..models import PerformanceTotalStats, Game, PlayerGameInfo, PlayerGameData
+from ..models import PerformanceTotalData, Game, PlayerGameInfo, PlayerGameData
 
 CURRENT_DIR = Path.cwd().parent.parent.absolute()
 
@@ -15,7 +15,7 @@ def process_game_replay(db_session,
                         match_id: int,
                         game_obj: Game,
                         pgi_dict: Dict[int, PlayerGameInfo],
-                        pperformance_objs: Dict[int, PerformanceTotalStats],
+                        pperformance_objs: Dict[int, PerformanceTotalData],
                         additional_player_data: Dict[int, Dict[str, Any]]):
     match_path = os.path.join(CURRENT_DIR, Path(f'./replays/{match_id}/{match_id}.jsonl'))
 
@@ -26,17 +26,18 @@ def process_game_replay(db_session,
 
     MS = MatchSplitter(game_length=match.game_length)
 
-    pws, pws_comparison = pgr_main(db_session=db_session,
-                                   match=match,
-                                   match_data=match_data,
-                                   MS=MS,
-                                   pgi_dict=pgi_dict)
-
     agd = pgr_additional(db_session=db_session,
                          match=match,
                          match_data=match_data,
                          pperformance_objs=pperformance_objs,
                          game_obj=game_obj, )
+
+    pwd_dict_objs, ptd_dict_objs = pgr_main(db_session=db_session,
+                                            match=match,
+                                            match_data=match_data,
+                                            MS=MS,
+                                            pperformance_objs=pperformance_objs,
+                                            pgi_dict=pgi_dict)
 
     db_session.commit()
     for x in range(10):
@@ -52,8 +53,8 @@ def process_game_replay(db_session,
 
             additional_stats_id=agd.id,
 
-            window_stats=pws[x] + pws_comparison[x],
-            total_stats=pperformance_objs[x],
+            window_stats=pwd_dict_objs[x],
+            total_stats=ptd_dict_objs[x],
         )
 
         db_session.add(pgd)

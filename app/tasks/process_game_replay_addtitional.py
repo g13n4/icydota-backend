@@ -5,7 +5,7 @@ import pandas as pd
 from replay_parsing import MatchAnalyser, MatchPlayersData, \
     process_building, process_hero_deaths, process_roshan_deaths
 from utils import get_all_sqlmodel_objs
-from ..models import AdditionalGameData, PerformanceTotalStats, Game
+from ..models import AdditionalGameData, PerformanceTotalData, Game
 from ..models import HeroDeath
 from ..models import InGameBuilding, InGameBuildingDestroyed, \
     InGameBuildingNotDestroyed
@@ -148,7 +148,7 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
 def pgr_additional(db_session,
                    match: MatchAnalyser,
                    match_data: Dict[str, pd.DataFrame],
-                   pperformance_objs: Dict[int, PerformanceTotalStats],
+                   pperformance_objs: Dict[int, PerformanceTotalData],
                    game_obj: Game, ) -> AdditionalGameData:
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(match_data['roshan_deaths'],
                                                                players_to_slot=match.players.get_name_slot_dict())

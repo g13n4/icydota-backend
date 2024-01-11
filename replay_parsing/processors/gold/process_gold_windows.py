@@ -1,13 +1,13 @@
-import copy
 from functools import partial
 from typing import Dict
 
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
+from utils import create_player_windows
 from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import process_output, add_data_type_name
-from ...windows import GOLD_WINDOWS_AGGS
+from ...windows import GOLD_WINDOWS
 
 gold_reasons = {
     # 0: 'starting gold',
@@ -34,8 +34,7 @@ def process_gold_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: D
     df.replace(players_to_slot, inplace=True)
     wards_windows = MS.split_in_windows(df, use_index=False)
 
-    data_item = {AN(v): copy.deepcopy(WINDOWS_BASE_NULLS) for v in GOLD_WINDOWS_AGGS}
-    data = {f'_{x}': copy.deepcopy(data_item) for x in range(10)}
+    data = create_player_windows(WINDOWS=GOLD_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
 
     for window in wards_windows:
         if window['exists']:

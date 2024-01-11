@@ -1,4 +1,3 @@
-import copy
 import re
 from functools import partial
 from typing import List
@@ -6,9 +5,10 @@ from typing import List
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
+from utils import create_player_windows
 from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import add_data_type_name
-from ...windows import WARDS_WINDOWS_AGGS, DEWARD_WINDOWS_AGGS
+from ...windows import WARDS_WINDOWS, DEWARD_WINDOWS
 
 PROCESSED_DATA_NAME = 'wards'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
@@ -16,8 +16,8 @@ AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
 
 def process_wards_windows(df: pd.DataFrame, MS: MatchSplitter) -> dict:
     wards_windows = MS.split_in_windows(df, use_index=False)
-    wards_data = {f'_{y}': {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in WARDS_WINDOWS_AGGS}
-                  for y in range(10)}
+    wards_data = create_player_windows(WINDOWS=WARDS_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
+
     for window_df in wards_windows:
         if window_df['exists']:
             groupped_wdf = window_df['df'].groupby(['slot', 'type'])['time'].count()
@@ -36,8 +36,7 @@ def process_deward_windows(df: pd.DataFrame, MS: MatchSplitter,
     df['attackerslot'] = df['attackername'].replace(players_to_slot)
 
     deward_windows = MS.split_in_windows(df, use_index=False)
-    player_data = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in DEWARD_WINDOWS_AGGS}
-    deward_data = {f'_{y}': player_data for y in range(10)}
+    deward_data = create_player_windows(WINDOWS=DEWARD_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
 
     for window_df in deward_windows:
         if window_df['exists']:

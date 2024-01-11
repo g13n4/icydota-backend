@@ -1,4 +1,3 @@
-import copy
 from functools import partial
 from typing import List, Tuple
 
@@ -6,27 +5,16 @@ import numpy as np
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
+from utils import create_player_windows
 from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import add_data_type_name
 from ..processing_utils import process_output
-from ...windows import DAMAGE_WINDOWS_AGGS
-
-# to_all
-# with_summons
-# to_heroes
-# to_buildings
-# to_creatures
-# to_illusions
-
-# from_all
-# from_heroes
-# from_buildings
-# from_creatures
-# from_illusions
+from ...windows import DAMAGE_WINDOWS
 
 PROCESSED_DATA_NAME = 'damage'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
 PO = partial(process_output, allow_none=False)
+
 
 def _concat_to_slot(slot: int):
     def _concat(text: str) -> str:
@@ -101,8 +89,7 @@ def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -
 
     agg_types = ['sum', 'mean', 'median', 'dmg_inst']
 
-    player_data = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in DAMAGE_WINDOWS_AGGS}
-    data = {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
+    data = create_player_windows(WINDOWS=DAMAGE_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
 
     for col in all_damage_columns:
         slot_str, damage_type_name = col.split('|')

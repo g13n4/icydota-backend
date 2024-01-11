@@ -18,6 +18,7 @@ class MatchPlayersData:
                 'hero_id': None,
 
                 'position': None,
+                'position_id': None,
                 'position_name': None,
 
                 'player': None,

@@ -7,4 +7,3 @@ XP_WINDOWS = {
     'XP for roshan': 'xp for roshan',
 }
 
-XP_WINDOWS_AGGS = XP_WINDOWS.values()

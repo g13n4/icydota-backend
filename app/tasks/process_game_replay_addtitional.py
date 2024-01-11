@@ -1,15 +1,15 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import pandas as pd
 
 from replay_parsing import MatchAnalyser, MatchPlayersData, \
     process_building, process_hero_deaths, process_roshan_deaths
 from utils import get_all_sqlmodel_objs
-from ..models import AdditionalGameData, PerformanceTotalData, Game
 from ..models import HeroDeath
 from ..models import InGameBuilding, InGameBuildingDestroyed, \
     InGameBuildingNotDestroyed
-from ..models import RoshanDeath, BuildingStats
+from ..models import PerformanceTotalData
+from ..models import RoshanDeath, BuildingData
 
 NUM_TOWERS = 11  # 3 bot / 3 top / 3 mid / 2 throne
 NUM_RAX = 6  # 2 bot / 2 top / 2 mid
@@ -68,7 +68,7 @@ def _get_building_dict(db_session, ) -> dict:
     return igb_dict
 
 
-def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> Dict[str, BuildingStats]:
+def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> Dict[str, BuildingData]:
     igb_dict = _get_building_dict(db_session)
     output_dict = dict()
     for is_dire, side in [(True, 'dire'), (False, 'sentinel')]:
@@ -88,9 +88,9 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
                 destruction_order_rax=bk['rax']['destruction_order'],
 
                 # additional rax info
-                destroyed_lane_one=bk['lanes_destroyed'][1],
-                destroyed_lane_two=bk['lanes_destroyed'][2],
-                destroyed_lane_three=bk['lanes_destroyed'][3],
+                destroyed_lane_1=bk['lanes_destroyed'][1],
+                destroyed_lane_2=bk['lanes_destroyed'][2],
+                destroyed_lane_3=bk['lanes_destroyed'][3],
 
                 megacreeps=bk['megacreeps'],
 
@@ -118,10 +118,10 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             rax_left_total=bk_left_data['rax_left_total'], )
         db_session.add(bnk_obj)
 
-        bs = BuildingStats(
+        bs = BuildingData(
             dire=is_dire,
 
-            buildings_destroyed=bd_objs,
+            destruction_order=bd_objs,
 
             destroyed_buildings=NUM_BUILDINGS - (bk_left_data['towers_left_total'] + bk_left_data['rax_left_total']),
             destroyed_towers=NUM_TOWERS - bk_left_data['towers_left_total'],
@@ -137,7 +137,7 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             # additional tower info
             naked_throne=bd_objs[-1].naked_throne,
 
-            buildings_not_destroyed=bnk_obj, )
+            not_destroyed=bnk_obj, )
         db_session.add(bs)
 
         output_dict[side] = bs
@@ -145,11 +145,10 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
     return output_dict
 
 
-def pgr_additional(db_session,
-                   match: MatchAnalyser,
-                   match_data: Dict[str, pd.DataFrame],
-                   pperformance_objs: Dict[int, PerformanceTotalData],
-                   game_obj: Game, ) -> AdditionalGameData:
+def process_additional_data(db_session,
+                            match: MatchAnalyser,
+                            match_data: Dict[str, pd.DataFrame],
+                            ptd_dict: Dict[int, PerformanceTotalData], ) -> Dict[str, Any]:
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(match_data['roshan_deaths'],
                                                                players_to_slot=match.players.get_name_slot_dict())
     roshan_death_objs = _fill_roshan_deaths(db_session=db_session, roshan_deaths=roshan_deaths)
@@ -163,7 +162,7 @@ def pgr_additional(db_session,
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
     for player_slot in range(10):
-        this_pperf_obj = pperformance_objs[player_slot]
+        this_pperf_obj = ptd_dict[player_slot]
 
         hero_death_player_data = player_data[player_slot]
 
@@ -184,13 +183,7 @@ def pgr_additional(db_session,
 
         db_session.add(this_pperf_obj)
 
-    db_session.refresh(building_stats_objs['dire'])
-    db_session.refresh(building_stats_objs['sentinel'])
-
-    agd = AdditionalGameData(
-        league_id=game_obj.league_id,
-        game_id=game_obj.id,
-
+    return dict(
         average_roshan_window_time=avg_rosh_death_time,
         roshan_death=roshan_death_objs,
 
@@ -198,8 +191,5 @@ def pgr_additional(db_session,
         hero_death=hero_death_objs,
 
         dire_building_status_id=building_stats_objs['dire'].id,
-        sent_building_status_id=building_stats_objs['sent'].id, )
-
-    db_session.add(agd)
-
-    return agd
+        sent_building_status_id=building_stats_objs['sent'].id,
+    )

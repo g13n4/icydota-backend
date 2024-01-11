@@ -8,13 +8,13 @@ from replay_parsing.modules import MatchSplitter
 from . import execute_window_aggregation
 from ..aggregations import WINDOWS_BASE
 from ..processing_utils import add_data_type_name
-from ...windows import INTERVAL_WINDOWS_AGGS
+from ...windows import INTERVAL_WINDOWS
 
 PROCESSED_DATA_NAME = 'interval'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
 
 
-def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter) -> Dict[str, Dict]:
+def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, ) -> Dict[str, Dict]:
     data_by_player = {f'_{x}': {} for x in range(10)}
 
     agg_by_time_df = (df.groupby('time')
@@ -28,7 +28,8 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter) -> Dict[str, D
     df_by_player = MS.split_by_player(df)
     for player_df in df_by_player:
         player_windows = MS.split_in_windows(player_df['df'])
-        for column, agg_type in INTERVAL_WINDOWS_AGGS:
+        for column_db_name, window_names in INTERVAL_WINDOWS:
+            column, agg_type = window_names
             value_name = AN(f'{column}__{agg_type}')
             current_agg_window_data = copy.deepcopy(WINDOWS_BASE)
 
@@ -42,6 +43,9 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter) -> Dict[str, D
                                                    df_agg=agg_window['df'])
 
                 current_agg_window_data[p_window['name']] = value
+
+            current_agg_window_data['_db_name'] = column_db_name
+            current_agg_window_data['_parsing_name'] = value_name
 
             data_by_player[player_df['name']][value_name] = current_agg_window_data
 

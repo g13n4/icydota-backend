@@ -1,3 +1,6 @@
+import json
+import os
+from pathlib import Path
 from typing import Dict, List
 
 from sqlmodel import select
@@ -6,9 +9,14 @@ from utils import get_all_sqlmodel_objs
 from .download_replay import get_match_replay
 from .proces_game_replay import process_game_replay
 from ..celery import celery_app
-from ..models import InGamePosition, Hero
 from ..models import Player, Team, League
-from ..models import PlayerGameInfo, Game, PerformanceTotalData
+from ..models import PlayerGameData, Game, PerformanceTotalData
+from ..models import Position, Hero
+
+CURRENT_DIR = Path.cwd().parent.parent.absolute()
+BASE_PATH = os.path.join(CURRENT_DIR, Path('/replays'))
+
+assert Path(BASE_PATH).is_dir() == True
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -56,61 +64,42 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
     return players_dict
 
 
-def create_game_obj(db_session, league_obj: League, game_data: dict, teams: dict) -> Game:
-    game_obj = Game(
-        match_id=game_data['match_id'],
-
-        league=league_obj,
-
-        patch=game_data['patch'],
-
-        radiant_team=teams['radiant'].id,
-        dire_team=teams['dire'].id,
-        radiant_win=game_data['radiant_win'],
-
-        game_start_time=game_data['start_time'],
-        duration=game_data['duration'],
-        replay_url=game_data['replay_url'],
-    )
-
-    db_session.add(game_obj)
-    db_session.commit()
-    db_session.refresh(game_obj)
-    return game_obj
-
-
 @celery_app.task
 def process_game(db_session, web_client, match_id: int, league_obj: League):
-    r = web_client.get(f'https://api.opendota.com/api/matches/{match_id}')
-    game_data = r.json()
+    match_folder_path = Path(f'{BASE_PATH}/{match_id}/')
+    match_folder_path.mkdir(parents=True, exist_ok=True)
+
+    match_json_path = match_folder_path.joinpath(f'{match_id}.json')
+    if match_json_path.is_file():
+        with open(match_json_path, "r") as match_json:
+            game_data = json.load(match_json)
+    else:
+        r = web_client.get(f'https://api.opendota.com/api/matches/{match_id}')
+        game_data = r.json()
+
+        with open(match_json_path, "w") as match_json:
+            json.dump(game_data, match_json)
 
     teams_dict = process_teams(db_session, game_data['dire_team'], game_data['radiant_team'])
     players_dict = process_players(db_session, game_data['players'])
 
-    game_obj = create_game_obj(db_session,
-                               league_obj=league_obj,
-                               game_data=game_data,
-                               teams=teams_dict)
-
-    positions_all = get_all_sqlmodel_objs(db_session, InGamePosition)
+    positions_all = get_all_sqlmodel_objs(db_session, Position)
     positions_dict = {x.number: x for x in positions_all}  # "lane_role": 3,
 
     heroes_all = get_all_sqlmodel_objs(db_session, Hero)
     heroes_dict = {x.odota_id: x for x in heroes_all}  # "hero_id": 78,
 
     player_data_dict = dict()
-    pperformance_total_dict = dict()
-    ppositions_dict = dict()
-    wp_dict = dict()
-    pgi_dict = {}
+    PTD_objs_dict = dict()
+    PGD_objs_dict = dict()
     for player_info in game_data['players']:
         this_team = teams_dict['radiant'] if player_info['isRadiant'] else teams_dict['dire']
         this_slot = player_info['player_slot']
         this_position = player_info['lane_role']
         this_hero = player_info['hero_id']
 
-        player_obj = PlayerGameInfo(
-            team=this_team,
+        PGD_obj = PlayerGameData(
+            team_id=this_team.id,
             player_id=players_dict[this_slot].id,
             nickname=player_info['name'],
 
@@ -127,22 +116,21 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
             slot=this_slot,
             pings=player_info['pings'],
 
-            game=game_obj,
         )
 
-        pgi_dict[this_slot] = player_obj
+        PGD_objs_dict[this_slot] = PGD_obj
 
-        db_session.add(player_obj)
+        db_session.add(PGD_obj)
 
         player_data_dict[this_slot] = {
             'position': positions_dict[this_position].value,
+            'position_id': positions_dict[this_position].id,
             'hero_id': heroes_dict[this_hero].id,
             'player_id': players_dict[this_slot].id,
 
         }
-        ppositions_dict[this_slot] = positions_dict[this_position]
 
-        p_per_tot_stats_obj = PerformanceTotalData(
+        PTD_obj = PerformanceTotalData(
             total_gold=player_info['total_gold'],
             total_xp=player_info['total_xp'],
             kills_per_min=player_info['benchmarks']['kills_per_min'],
@@ -174,17 +162,55 @@ def process_game(db_session, web_client, match_id: int, league_obj: League):
             # died_first=player_info['rune_pickups'],
         )
 
-        db_session.add(p_per_tot_stats_obj)
+        db_session.add(PTD_obj)
 
-        pperformance_total_dict[this_slot] = p_per_tot_stats_obj
+        PTD_objs_dict[this_slot] = PTD_obj
 
     db_session.commit()
 
     get_match_replay(match_id=match_id, )
 
-    process_game_replay(db_session=db_session,
-                        match_id=match_id,
-                        game_obj=game_obj,
-                        pperformance_objs=pperformance_total_dict,
-                        pgi_dict=pgi_dict,
-                        additional_player_data=player_data_dict)
+    game_performance_objs, additional_data = process_game_replay(db_session=db_session,
+                                                                 match_id=match_id,
+                                                                 PTD_objs_dict=PTD_objs_dict,
+                                                                 additional_player_data=player_data_dict)
+
+    PGD_objs = []
+    for this_slot in range(10):
+        PGD_obj = PGD_objs_dict[this_slot]
+        GP_obj = game_performance_objs[this_slot]
+
+        PGD_obj.performance = GP_obj
+        db_session.add(PGD_obj)
+        PGD_objs.append(PGD_obj)
+
+    game = Game(
+        match_id=match_id,
+
+        league=league_obj,
+
+        patch=game_data['patch'],
+
+        radiant_team_id=teams_dict['radiant'].id,
+        dire_team_id=teams_dict['dire'].id,
+        dire_win=(not game_data['radiant_win']),
+
+        players_data=PGD_objs,
+
+        average_roshan_window_time=additional_data['avg_rosh_death_time'],
+        roshan_death=additional_data['roshan_death'],
+
+        first_ten_kills_dire=additional_data['ftk_dire'],
+        hero_death=additional_data['hero_death'],
+
+        dire_lost_first_tower=additional_data['dire_lost_first_tower'],
+        dire_building_status_id=additional_data['dire_building_status_id'],
+        sent_building_status_id=additional_data['sent_building_status_id'],
+
+        game_start_time=game_data['start_time'],
+        duration=game_data['duration'],
+        replay_url=game_data['replay_url'],
+    )
+
+    db_session.add(game)
+    db_session.commit()

@@ -30,7 +30,7 @@ def get_replay_info(path):
 
     MS = MatchSplitter(game_length=match.get_game_length())
 
-    interval = process_interval_windows(match_data['interval'], MS)
+    interval = process_interval_windows(match_data['interval'], MS, )
     pings = process_pings_windows(match_data['pings'], MS)
 
     wards = process_wards_windows(match_data['wards'], MS, )

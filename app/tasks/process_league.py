@@ -11,6 +11,7 @@ def process_league(db_session, web_client, league_obj: League):
     league_match_data = r.json()
 
     db_league_games: Dict[int, Game] = {x.match_id: x for x in league_obj.games}
+    new_games_found = False
     for game in league_match_data:
         if game['match_id'] in db_league_games:
             continue
@@ -18,4 +19,11 @@ def process_league(db_session, web_client, league_obj: League):
             process_game.delay(db_session=db_session,
                                web_client=web_client,
                                match_id=game['match_id'],
-                               league_obj=league_obj)
+                               league_obj=league_obj, )
+
+            new_games_found = True
+
+    if new_games_found:
+        process_aggregation.delay(
+            db_session=db_session,
+            league_id=league_obj.id, )

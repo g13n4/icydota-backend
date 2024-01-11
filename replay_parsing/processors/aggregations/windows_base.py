@@ -13,6 +13,9 @@ WINDOWS_BASE: Dict[str, int | None | str] = {
     'g45': None,
     'g60': None,
     'g60plus': None,
+
+    '_db_name': None,
+    '_parsing_name': None,
 }
 
 WINDOWS_BASE_NULLS: Dict[str, int] = {
@@ -28,4 +31,7 @@ WINDOWS_BASE_NULLS: Dict[str, int] = {
     'g45': 0,
     'g60': 0,
     'g60plus': 0,
+
+    '_db_name': None,
+    '_parsing_name': None,
 }

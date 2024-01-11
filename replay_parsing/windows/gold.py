@@ -25,4 +25,3 @@ GOLD_WINDOWS = {
     'Gold for couriers (per minute)': 'gold for killing couriers pm',
 }
 
-GOLD_WINDOWS_AGGS = GOLD_WINDOWS.values()

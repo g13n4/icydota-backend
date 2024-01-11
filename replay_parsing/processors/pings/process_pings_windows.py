@@ -1,12 +1,12 @@
-import copy
 from functools import partial
 
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
+from utils import create_player_windows
 from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import add_data_type_name
-from ...windows import PINGS_WINDOWS_AGGS
+from ...windows import PINGS_WINDOWS
 
 PROCESSED_DATA_NAME = 'pings'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
@@ -18,9 +18,8 @@ def _aggregate_pings(df: pd.DataFrame | None) -> pd.DataFrame | None:
     return df.groupby('slot')['type'].count()
 
 
-def process_pings_windows(df: pd.DataFrame, MS: MatchSplitter) -> dict:
-    player_data = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in PINGS_WINDOWS_AGGS}
-    players_windows = {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
+def process_pings_windows(df: pd.DataFrame, MS: MatchSplitter, ) -> dict:
+    players_windows = create_player_windows(WINDOWS=PINGS_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
 
     pings_windows = MS.split_in_windows(df, use_index=False)
 

@@ -12,9 +12,12 @@ from ..modules import MatchPlayersData
 
 np.seterr(divide='ignore', invalid='ignore')
 
-def _flatten_for_pd(data: dict) -> list:
-    return [{'slot': slot_k, 'data': ck, **cv} for slot_k, slot_v in data.items()
-            for ck, cv in slot_v.items()]
+def _flatten_for_pd(data: dict, db_names: list = None, ) -> list:
+    if db_names is None:
+        db_names = []
+
+    return [{'slot': slot_k, 'data': ck, **{k: v for k, v in cv.items() if k not in db_names}}
+            for slot_k, slot_v in data.items() for ck, cv in slot_v.items()]
 
 
 def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, ) -> List[dict]:
@@ -98,10 +101,9 @@ def fill_total_values(data_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def postprocess_data(data: Dict[str, Dict[str, dict]], MPD: MatchPlayersData) -> Tuple[pd.DataFrame, List[dict]]:
-    data_df = pd.DataFrame(_flatten_for_pd(data))
+    data_df = pd.DataFrame(_flatten_for_pd(data, ['_parsing_name', '_db_name']))
 
     filled_totals = fill_total_values(data_df)
-
     comparison_data = compare_position_performance(filled_totals.copy(), MPD)
 
     return filled_totals, comparison_data

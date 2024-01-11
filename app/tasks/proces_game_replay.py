@@ -1,22 +1,21 @@
 import os
 import pathlib
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 from replay_parsing import MatchAnalyser, MatchSplitter
-from .process_game_replay_addtitional import pgr_additional
-from .process_game_replay_main import pgr_main
-from ..models import PerformanceTotalData, Game, PlayerGameInfo, PlayerGameData
+from .process_game_replay_addtitional import process_additional_data
+from .process_game_replay_main import main_data
+from ..models import PerformanceTotalData, GamePerformance
 
 CURRENT_DIR = Path.cwd().parent.parent.absolute()
 
 
 def process_game_replay(db_session,
                         match_id: int,
-                        game_obj: Game,
-                        pgi_dict: Dict[int, PlayerGameInfo],
-                        pperformance_objs: Dict[int, PerformanceTotalData],
-                        additional_player_data: Dict[int, Dict[str, Any]]):
+                        PTD_objs_dict: Dict[int, PerformanceTotalData],
+                        additional_player_data: Dict[int, Dict[str, Any]],
+                        ) -> Tuple[Dict[int, GamePerformance], Dict[str, Any]]:
     match_path = os.path.join(CURRENT_DIR, Path(f'./replays/{match_id}/{match_id}.jsonl'))
 
     # MATCH PARSING
@@ -26,37 +25,13 @@ def process_game_replay(db_session,
 
     MS = MatchSplitter(game_length=match.game_length)
 
-    agd = pgr_additional(db_session=db_session,
-                         match=match,
-                         match_data=match_data,
-                         pperformance_objs=pperformance_objs,
-                         game_obj=game_obj, )
+    additional_data = process_additional_data(db_session=db_session, match=match, match_data=match_data,
+                                              ptd_dict=PTD_objs_dict)
 
-    pwd_dict_objs, ptd_dict_objs = pgr_main(db_session=db_session,
-                                            match=match,
-                                            match_data=match_data,
-                                            MS=MS,
-                                            pperformance_objs=pperformance_objs,
-                                            pgi_dict=pgi_dict)
+    GP_objs_dict = main_data(db_session=db_session,
+                             match=match,
+                             match_data=match_data,
+                             MS=MS,
+                             PerTotalData_dict=PTD_objs_dict, )
 
-    db_session.commit()
-    for x in range(10):
-        pgi = pgi_dict[x]
-
-        pgd = PlayerGameData(
-            league_id=Game.league_id,
-            game_id=Game.id,
-            team_id=pgi.team_id,
-            player_id=pgi.player_id,
-
-            player_game_info_id=pgi.id,
-
-            additional_stats_id=agd.id,
-
-            window_stats=pwd_dict_objs[x],
-            total_stats=ptd_dict_objs[x],
-        )
-
-        db_session.add(pgd)
-
-    db_session.commit()
+    return (GP_objs_dict, additional_data)

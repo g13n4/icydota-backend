@@ -1,18 +1,17 @@
-import copy
 from functools import partial
 from typing import Dict
 
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
+from utils import create_player_windows
 from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import add_data_type_name
 from ..processing_utils import process_output
-from ...windows import XP_WINDOWS_AGGS
+from ...windows import XP_WINDOWS
 
 PROCESSED_DATA_NAME = 'xp'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
-
 
 xp_reasons = {
     0: 'other',
@@ -27,9 +26,7 @@ def process_xp_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: Dic
     df.replace(players_to_slot, inplace=True)
     xp_windows = MS.split_in_windows(df, use_index=False)
 
-    data_item = {AN(x): copy.deepcopy(WINDOWS_BASE_NULLS) for x in XP_WINDOWS_AGGS}
-
-    data = {f'_{x}': copy.deepcopy(data_item) for x in range(10)}
+    data = create_player_windows(WINDOWS=XP_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
 
     for window in xp_windows:
         if window['exists']:

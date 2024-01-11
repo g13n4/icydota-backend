@@ -1,3 +1,6 @@
+import copy
+from typing import Dict, Any, Callable
+
 import pandas as pd
 from sqlmodel import select
 from tabulate import tabulate
@@ -63,3 +66,18 @@ def get_obj_from_list(objs_list: list, **kwargs):
             return obj
 
     return None
+
+
+def copy_and_set(dict_to_copy: dict, **kwargs_to_set):
+    new_dict = copy.deepcopy(dict_to_copy)
+    for k, v in kwargs_to_set:
+        new_dict[k] = v
+    return new_dict
+
+
+def create_player_windows(WINDOWS: Dict[str, Any],
+                          WINDOW_BASE_DICT: Dict[str, Any],
+                          AN: Callable) -> Dict[str, Dict[str, Any]]:
+    player_data = {AN(column_name): copy_and_set(WINDOW_BASE_DICT, _db_name=db_name, _parsing_name=column_name)
+                   for db_name, column_name in WINDOWS}
+    return {f'_{x}': copy.deepcopy(player_data) for x in range(10)}

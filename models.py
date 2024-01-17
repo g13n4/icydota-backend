@@ -1,45 +1,63 @@
 from typing import Optional, List
 
+import sqlalchemy as db
 from pydantic import condecimal
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, ForeignKey
+
+
+def _fk(column_name: str, **column_kwargs) -> Field:
+    return Field(sa_column=db.Column(db.Integer,
+                                     ForeignKey(f'{column_name}.id',
+                                                ondelete='SET NULL', ),
+                                     nullable=True,
+                                     primary_key=False,
+                                     **column_kwargs))
 
 
 # BASE IN GAME DATA
 class Hero(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    odota_id: int
-    name: str
+    odota_id: int = Field(unique=True, index=True)
+    name: str = Field(unique=True, index=True)
 
     cdota_name: Optional[str]
 
     npc_name: Optional[str]
     npc_name_alias: Optional[str]
 
+    __tablename__ = 'heroes'
+
 
 class Position(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    number: int
+    number: int = Field(unique=True)
     name: str
+
+    __tablename__ = 'positions'
 
 
 class Player(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nickname: str
-    steam_id: int
+    steam_id: int = Field(unique=True, index=True)
+
+    __tablename__ = 'players'
 
 
 class Team(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    odota_id: int
+    odota_id: int = Field(unique=True, index=True)
     name: str
     tag: str
+
+    __tablename__ = 'teams'
 
 
 class League(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     pd_link: str
-    league_id: int
+    league_id: int = Field(unique=True, index=True)
     name: Optional[str]
     tier: int
 
@@ -51,17 +69,19 @@ class League(SQLModel, table=True):
 
     games: List["Game"] = Relationship(back_populates="league")
 
+    __tablename__ = 'leagues'
+
 
 # GAME DATA
 class PlayerGameData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    team_id: Optional[int] = Field(default=None, foreign_key="team.id")
-    player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
+    player_id: Optional[int] = Field(default=None, foreign_key="players.id")
 
     nickname: str
 
-    position_id: Optional[int] = Field(default=None, foreign_key="Position.id")
-    hero_id: Optional[int] = Field(default=None, foreign_key="hero.id")
+    position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
+    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
     slot: int
 
     lane: int
@@ -74,25 +94,26 @@ class PlayerGameData(SQLModel, table=True):
     apm: int
     pings: int
 
-    performance: Optional["GamePerformance"] = Relationship(back_populates="player_game_data")
-    performance_id: Optional[int] = Field(default=None, foreign_key="GamePerformance.id")
+    performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
 
     game: Optional["Game"] = Relationship(back_populates="players_info")
-    game_id: Optional[int] = Field(default=None, foreign_key="game.id")
+    game_id: Optional[int] = Field(default=None, foreign_key="games.id")
+
+    __tablename__ = 'player_games_data'
 
 
 class Game(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    match_id: int
+    match_id: int = Field(unique=True, index=True)
 
     league: Optional[League] = Relationship(back_populates='games')
-    league_id: Optional[int] = Field(default=None, foreign_key='league.id')
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
 
     patch = int
 
-    radiant_team_id: Optional[int] = Field(default=None, foreign_key="team.id")
-    dire_team_id: Optional[int] = Field(default=None, foreign_key="team.id")
+    sent_team_id: int = _fk('teams')
+    dire_team_id: int = _fk('teams')
     dire_win: bool
 
     players_data: List["PlayerGameData"] = Relationship(back_populates="game")
@@ -104,12 +125,47 @@ class Game(SQLModel, table=True):
     hero_death: List["HeroDeath"] = Relationship(back_populates="hero_death")
 
     dire_lost_first_tower: bool
-    dire_building_status_id: Optional[int] = Field(default=None, foreign_key="BuildingData.id")
-    sent_building_status_id: Optional[int] = Field(default=None, foreign_key="BuildingData.id")
+    dire_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
+    sent_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
 
     game_start_time: int  # unix timestamp
     duration: int
     replay_url: str
+
+    __tablename__ = 'games'
+
+
+# COMPARISON
+class ComparisonType(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    # cpd - comparandum / cps - comparans
+
+    player_cpd_id: Optional[int] = _fk('players')
+    player_cps_id: Optional[int] = _fk('players')
+
+    hero_cpd_id: Optional[int] = _fk('heroes')
+    hero_cps_id: Optional[int] = _fk('heroes')
+
+    pos_cpd_id: Optional[int] = _fk('positions')
+    pos_cps_id: Optional[int] = _fk('positions')
+
+    __tablename__ = 'comparison_types'
+
+
+# AGGREGATION
+class DataAggregationType(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    by_player: bool = Field(default=False)
+    player_id: Optional[int] = _fk('players')
+
+    by_hero: bool = Field(default=False)
+    hero_id: Optional[int] = _fk('heroes')
+
+    by_position: bool = Field(default=False)
+    position_id: Optional[int] = _fk('positions')
+
+    __tablename__ = 'data_aggregation_types'
 
 
 # PERFORMANCE DATA
@@ -119,89 +175,50 @@ class GamePerformance(SQLModel, table=True):
     window_data: List["PerformanceWindowData"] = Relationship(back_populates="game_performance")
     total_data: List["PerformanceTotalData"] = Relationship(back_populates="game_performance")
 
-    player_game_data: Optional["PlayerGameData"] = Relationship(back_populates="player_performance")
-    player_game_data_id: Optional[int] = Field(default=None, foreign_key="PlayerGameData.id")
+    __tablename__ = 'games_performance'
 
 
-# COMPARISON
-class ComparisonType(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    # cpd - comparandum / cps - comparans
-
-    player_cpd_id: Optional[int] = Field(default=None, foreign_key="Player.id")
-    player_cps_id: Optional[int] = Field(default=None, foreign_key="Player.id")
-
-    hero_cpd_id: Optional[int] = Field(default=None, foreign_key="Hero.id")
-    hero_cps_id: Optional[int] = Field(default=None, foreign_key="Hero.id")
-
-    pos_cpd_id: Optional[int] = Field(default=None, foreign_key="Position.id")
-    pos_cps_id: Optional[int] = Field(default=None, foreign_key="Position.id")
-
-    data_info: Optional["PerformanceDataDescription"] = Relationship(back_populates="comparison_type")
-
-
-# AGGREGATION
-class DataAggregationType(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-
-    by_player: bool = Field(default=False)
-    player_id: Optional[int] = Field(default=None, foreign_key="Hero.id")
-
-    by_hero: bool = Field(default=False)
-    hero_id: Optional[int] = Field(default=None, foreign_key="Hero.id")
-
-    by_position: bool = Field(default=False)
-    position_id: Optional[int] = Field(default=None, foreign_key="Position.id")
-
-    data_info_id: Optional[int] = Field(default=None, foreign_key="DataAggregationType.id")
-    data_info: Optional["PerformanceDataDescription"] = Relationship(back_populates='aggregation')
-
-
-# PERFORMANCE DATA INFO
 class PerformanceDataCategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # damage / interval
 
     data_type: List["PerformanceDataType"] = Relationship(back_populates='data_category')
 
+    __tablename__ = 'performance_data_categories'
+
 
 class PerformanceDataType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str  # Number of dewarded observers
+    name: str
 
-    data_category_id: Optional[int] = Field(default=None, foreign_key="PerformanceDataCategory.id")
+    data_category_id: Optional[int] = Field(default=None, foreign_key="performance_data_categories.id")
     data_category: Optional["PerformanceDataCategory"] = Relationship(back_populates='data_type')
+
+    __tablename__ = 'performance_data_types'
 
 
 class PerformanceDataDescription(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    data_type_id: Optional[int] = Field(default=None, foreign_key="PerformanceDataType.id")
+    data_type_id: Optional[int] = Field(default=None, foreign_key="performance_data_types.id")
     is_total_stats: bool = Field(default=False)
 
     name: Optional[str]  # generate
 
     is_comparison: bool = Field(default=False)
-    comparison_id: Optional[int] = Field(default=None, foreign_key="ComparisonType.id")
-    comparison: Optional["ComparisonType"] = Relationship(back_populates='player_stats_info')
+    comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id")
 
     is_aggregation: bool = Field(default=False)
-    aggregation_id: Optional[int] = Field(default=None, foreign_key="DataAggregationType.id")
-    aggregation: Optional["DataAggregationType"] = Relationship(back_populates='data_info')
+    aggregation_id: Optional[int] = Field(default=None, foreign_key="data_aggregation_types.id")
 
-    performance_window_data_id: Optional[int] = Field(default=None, foreign_key="PerformanceWindowData.id")
-    performance_window_data: Optional["PerformanceWindowData"] = Relationship(back_populates='data_info')
-
-    performance_total_data_id: Optional[int] = Field(default=None, foreign_key="PerformanceTotalData.id")
-    performance_total_data: Optional["PerformanceTotalData"] = Relationship(back_populates='data_info')
+    __tablename__ = 'performance_data_descriptions'
 
 
 # PERFORMANCE DATA INFO
 class PerformanceWindowData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    data_info_id: Optional[int] = Field(default=None, foreign_key="PerformanceDataDescription.id")
-    data_info: Optional[PerformanceDataDescription] = Relationship(back_populates='performance_window_stats')
+    data_info_id: Optional[int] = Field(default=None, foreign_key="performance_data_descriptions.id")
 
     # laning
     l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -219,15 +236,15 @@ class PerformanceWindowData(SQLModel, table=True):
     g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    game_performance_id: Optional[int] = Field(default=None, foreign_key="GamePerformance.id")
-    game_performance: Optional["GamePerformance"] = Relationship(back_populates='window_data')
+    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
+
+    __tablename__ = 'performance_windows_data'
 
 
 class PerformanceTotalData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    data_info_id: Optional[int] = Field(default=None, foreign_key="PerformanceDataDescription.id")
-    data_info: Optional[PerformanceDataDescription] = Relationship(back_populates='performance_total_stats')
+    data_info_id: Optional[int] = Field(default=None, foreign_key="performance_data_descriptions.id")
 
     total_gold: int
     total_xp: int
@@ -267,9 +284,9 @@ class PerformanceTotalData(SQLModel, table=True):
     destroyed_tower_lane: Optional[int]
     destroyed_tower_time: Optional[int]
 
-    game_performance_id: Optional[int] = Field(default=None, foreign_key="GamePerformance.id")
-    game_performance: Optional["GamePerformance"] = Relationship(back_populates='total_data')
+    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
 
+    __tablename__ = 'performance_totals_data'
 
 
 # ADDITIONAL DATA
@@ -281,6 +298,8 @@ class RoshanDeath(SQLModel, table=True):
 
     kill_dire: Optional[bool]
 
+    __tablename__ = 'roshan_deaths'
+
 
 class HeroDeath(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -289,12 +308,14 @@ class HeroDeath(SQLModel, table=True):
     death_time: int
 
     kill_dire: Optional[bool]
-    killer_hero_id: Optional[int] = Field(default=None, foreign_key="hero.id")
-    killer_player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    killer_hero_id: Optional[int] = _fk('heroes')
+    killer_player_id: Optional[int] = _fk('players')
 
     victim_dire: Optional[bool]
-    victim_hero_id: Optional[int] = Field(default=None, foreign_key="hero.id")
-    victim_player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    victim_hero_id: Optional[int] = _fk('heroes')
+    victim_player_id: Optional[int] = _fk('players')
+
+    __tablename__ = 'hero_deaths'
 
 
 # BUILDINGS
@@ -312,11 +333,13 @@ class InGameBuilding(SQLModel, table=True):
     is_rax: bool
     melee: bool
 
+    __tablename__ = 'in_game_buildings'
+
 
 class InGameBuildingDestroyed(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    building_id: Optional[int] = Field(default=None, foreign_key='ingamebuilding.id')
+    building_id: Optional[int] = _fk("in_game_buildings")
     death_time: int
 
     destruction_order: Optional[int]
@@ -333,8 +356,10 @@ class InGameBuildingDestroyed(SQLModel, table=True):
     # additional tower info
     naked_throne: bool = Field(default=False)
 
-    building_data_id: Optional[int] = Field(default=None, foreign_key="BuildingData.id")
+    building_data_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
     building_data: Optional["BuildingData"] = Relationship(back_populates="destruction_order")
+
+    __tablename__ = 'in_game_buildings_destroyed'
 
 
 class InGameBuildingNotDestroyed(SQLModel, table=True):
@@ -353,11 +378,10 @@ class InGameBuildingNotDestroyed(SQLModel, table=True):
 
     rax_left_total: int
 
-    building_data_id: Optional[int] = Field(default=None, foreign_key="BuildingData.id")
-    building_data: Optional["BuildingData"] = Relationship(back_populates="not_destroyed")
+    __tablename__ = 'in_game_buildings_not_destroyed'
 
 
-class BuildingData(SQLModel):
+class BuildingData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     dire: bool
@@ -378,8 +402,9 @@ class BuildingData(SQLModel):
     # additional tower info
     naked_throne: Optional[bool]
 
-    not_destroyed_id: Optional[int] = Field(default=None, foreign_key="InGameBuildingNotDestroyed.id")
-    not_destroyed: Optional["InGameBuildingNotDestroyed"] = Relationship(back_populates="building_data")
+    not_destroyed_id: Optional[int] = Field(default=None, foreign_key="in_game_buildings_not_destroyed.id")
+
+    __tablename__ = 'buildings_data'
 
 
 # TODO: make a player game data like view
@@ -401,31 +426,39 @@ class BuildingData(SQLModel):
 class GameAggregatedMock(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    window_stats_id: Optional[int] = Field(default=None, foreign_key="GamePerformance.id")
+    window_stats_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
 
-    game_aggregated_data_id: Optional[int] = Field(default=None, foreign_key="GameAggregatedData.id")
+    game_aggregated_data_id: Optional[int] = Field(default=None, foreign_key="games_aggregated_data.id")
 
 
 class GameAggregatedByPlayer(GameAggregatedMock, table=True):
-    player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    player_id: Optional[int] = Field(default=None, foreign_key="players.id")
     game_agg_data: Optional["GameAggregatedData"] = Relationship(back_populates="player_agg")
+
+    __tablename__ = 'games_aggregated_by_player'
 
 
 class GameAggregatedByHero(GameAggregatedMock, table=True):
-    hero_id: Optional[int] = Field(default=None, foreign_key="hero.id")
+    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
     game_agg_data: Optional["GameAggregatedData"] = Relationship(back_populates="hero_agg")
+
+    __tablename__ = 'games_aggregated_by_hero'
 
 
 class GameAggregatedByPosition(GameAggregatedMock, table=True):
-    position_id: Optional[int] = Field(default=None, foreign_key="InGamePosition.id")
-    game_agg_data: Optional["GameAggregatedData"] = Relationship(back_populates="position_agg")
+    position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
+    game_agg_data: Optional["GameAggregatedData"] = Relationship(back_populates="position_agg", )
+
+    __tablename__ = 'games_aggregated_by_position'
 
 
 class GameAggregatedData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    league_id: Optional[int] = Field(default=None, foreign_key='league.id')
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
 
     player_agg: List["GameAggregatedByPlayer"] = Relationship(back_populates="game_agg_data")
     hero_agg: List["GameAggregatedByHero"] = Relationship(back_populates="game_agg_data")
     position_agg: List["GameAggregatedByPosition"] = Relationship(back_populates="game_agg_data")
+
+    __tablename__ = 'games_aggregated_data'

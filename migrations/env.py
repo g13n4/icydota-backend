@@ -31,7 +31,7 @@ target_metadata = SQLModel.metadata
 
 def _include_name(name, type_, parent_names):
     if type_ == "schema":
-        return name in ['dota', ]
+        return name
     else:
         return True
 
@@ -66,8 +66,7 @@ def do_run_migrations(connection: Connection) -> None:
                       target_metadata=target_metadata,
                       version_table_schema=target_metadata.schema,
                       compare_type=True,
-                      include_name=_include_name,
-                      include_schemas=True, )
+                      include_schemas=False, )
 
     with context.begin_transaction():
         context.run_migrations()

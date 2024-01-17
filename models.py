@@ -96,7 +96,7 @@ class PlayerGameData(SQLModel, table=True):
 
     performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
 
-    game: Optional["Game"] = Relationship(back_populates="players_info")
+    game: Optional["Game"] = Relationship(back_populates="players_data")
     game_id: Optional[int] = Field(default=None, foreign_key="games.id")
 
     __tablename__ = 'player_games_data'
@@ -119,10 +119,10 @@ class Game(SQLModel, table=True):
     players_data: List["PlayerGameData"] = Relationship(back_populates="game")
 
     average_roshan_window_time: Optional[int]
-    roshan_death: List["RoshanDeath"] = Relationship(back_populates="roshan_death")
+    roshan_death: List["RoshanDeath"] = Relationship(back_populates="game")
 
     first_ten_kills_dire: bool
-    hero_death: List["HeroDeath"] = Relationship(back_populates="hero_death")
+    hero_death: List["HeroDeath"] = Relationship(back_populates="game")
 
     dire_lost_first_tower: bool
     dire_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
@@ -237,6 +237,7 @@ class PerformanceWindowData(SQLModel, table=True):
     gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
     game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
+    game_performance: Optional["GamePerformance"] = Relationship(back_populates='window_data')
 
     __tablename__ = 'performance_windows_data'
 
@@ -285,6 +286,7 @@ class PerformanceTotalData(SQLModel, table=True):
     destroyed_tower_time: Optional[int]
 
     game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
+    game_performance: Optional["GamePerformance"] = Relationship(back_populates='total_data')
 
     __tablename__ = 'performance_totals_data'
 
@@ -297,6 +299,9 @@ class RoshanDeath(SQLModel, table=True):
     death_time: int
 
     kill_dire: Optional[bool]
+
+    game_id: Optional[int] = Field(default=None, foreign_key="games.id")
+    game: Optional["Game"] = Relationship(back_populates='roshan_death')
 
     __tablename__ = 'roshan_deaths'
 
@@ -315,6 +320,9 @@ class HeroDeath(SQLModel, table=True):
     victim_hero_id: Optional[int] = _fk('heroes')
     victim_player_id: Optional[int] = _fk('players')
 
+    game_id: Optional[int] = Field(default=None, foreign_key="games.id")
+    game: Optional["Game"] = Relationship(back_populates='hero_death')
+
     __tablename__ = 'hero_deaths'
 
 
@@ -330,8 +338,8 @@ class InGameBuilding(SQLModel, table=True):
     tier: Optional[int]
     tower4: Optional[bool]  # False - first, True - second one
 
-    is_rax: bool
-    melee: bool
+    is_rax: Optional[bool]
+    melee: Optional[bool]
 
     __tablename__ = 'in_game_buildings'
 

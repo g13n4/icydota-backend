@@ -15,6 +15,7 @@ from base_data_creation import create_heroes, delete_heroes
 from base_data_creation import create_performance_data_tags, delete_performance_data_tags
 from base_data_creation import create_positions, delete_positions
 
+
 # revision identifiers, used by Alembic.
 revision: str = '59e623740d2d'
 down_revision: Union[str, None] = 'c3b1ab7d2f39'

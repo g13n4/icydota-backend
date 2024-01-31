@@ -126,12 +126,11 @@ class MatchPlayersData:
     def _set_opponents(self):
         players = self.get_all()
         for player in players:
-            p_position = player['position']
-            p_opponents = POSITION_OPPONENTS[p_position]
+            player_position = player['position']
+            player_opponents_positions = POSITION_OPPONENTS[player_position]
+
             for opponent in players:
-                if player['side'] == opponent['side'] or \
-                        player['slot'] == opponent['slot'] or \
-                        opponent['position'] not in p_opponents:
+                if player['side'] == opponent['side'] and not (opponent['position'] in player_opponents_positions):
                     continue
 
                 player['opponents'].append(opponent['slot'])

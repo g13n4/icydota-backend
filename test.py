@@ -6,6 +6,7 @@ from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_window
     process_xp_windows, process_gold_windows, process_building, postprocess_data, \
     process_hero_deaths, process_roshan_deaths
 
+
 print(os.getcwd())
 
 def _combine_dicts(*args) -> dict:
@@ -28,7 +29,7 @@ def get_replay_info(path):
         } for x in range(10)
     })
 
-    MS = MatchSplitter(game_length=match.get_game_length())
+    MS = MatchSplitter(game_length=match.game_length, match_windows=match.match_windows)
 
     interval = process_interval_windows(match_data['interval'], MS, )
     pings = process_pings_windows(match_data['pings'], MS)
@@ -44,7 +45,7 @@ def get_replay_info(path):
 
     match_info = _combine_dicts(interval, pings, wards, deward, damage, xp, gold)
 
-    set_totals, comparison_data = postprocess_data(match_info, match.get_players_object())
+    set_totals, comparison_data = postprocess_data(match_info, match.get_players_object(), MS)
 
     # additional info
     player_hero_info, ftk_dire, hero_deaths = process_hero_deaths(match_data['hero_deaths'],
@@ -60,4 +61,4 @@ def get_replay_info(path):
 
 
 if __name__ == '__main__':
-    get_replay_info('replays/7393133836/7393133836.jsonl')
+    get_replay_info('replays/7254189995/7254189995.jsonl')

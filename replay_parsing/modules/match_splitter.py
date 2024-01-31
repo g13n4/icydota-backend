@@ -1,107 +1,95 @@
 import copy
-import math
-from typing import List
+from decimal import Decimal
+from typing import Dict, Any, Callable, List
 
 import pandas as pd
 
 
+WINDOWS_BASE: Dict[str, int | None | Decimal] = {
+    'l2': 0,
+    'l4': 0,
+    'l6': 0,
+    'l8': 0,
+    'l10': 0,
+
+    # next phase
+    'g15': 0,
+    'g30': 0,
+    'g45': 0,
+    'g60': 0,
+    'g60plus': 0,
+
+    '_db_name': None,
+    '_parsing_name': None,
+}
+
+
+def _copy_and_set(dict_to_copy: dict, non_existing_windows: List[str], **kwargs_to_set) -> Dict[str, Any]:
+    new_dict = copy.deepcopy(dict_to_copy)
+    for k, v in kwargs_to_set.items():
+        new_dict[k] = v
+
+    for window_name in non_existing_windows:
+        new_dict[window_name] = None
+
+    return new_dict
+
+
+def _to_str(cname: Any) -> str:
+    if isinstance(cname, str):
+        return cname
+    return '__'.join(list(cname))
+
+
 class MatchSplitter:
-    def __init__(self, game_length: int, offset: int = +90, time_windows: list = None, ):
-        """The variable game_length doesn't need _offset. It breaks proper calculation in _calculate_time_in_window"""
-        self._offset = offset
+    def __init__(self, game_length: int, match_windows: List, base_window: Dict[str, Any] | None = None):
+        """The variable _game_total_length doesn't need _offset.
+        It breaks proper calculation in _calculate_time_in_window"""
         self._game_length = game_length
+        self.match_windows = match_windows
 
-        if not time_windows:
-            early_game_windows = [(-90, 60 * 2, 'l2'),  # first 2 minutes
-                                  (60 * 2, 60 * 4, 'l4'),  # 2-4
-                                  (60 * 4, 60 * 6, 'l6'),  # 4-6
-                                  (60 * 6, 60 * 8, 'l8'),  # 6-8
-                                  (60 * 8, 60 * 10, 'l10'),  # 8-10
-                                  ]
-            late_game_windows = [(-90, 60 * 15, 'g15'),  # first 15 minutes
-                                 (60 * 15, 60 * 30, 'g30'),  # 15 - 30
-                                 (60 * 30, 60 * 45, 'g45'),  # 30 - 45
-                                 (60 * 45, 60 * 60, 'g60'),  # 6-8
-                                 (60 * 60, None, 'g60plus'),  # 8-10
-                                 ]
-            time_windows = early_game_windows + late_game_windows
+        if not base_window:
+            self._base_window = WINDOWS_BASE
 
-        self._time_windows = self._set_time_windows(time_windows)
+        self.window_values_names = [name for name in self._base_window.keys() if not name.startswith('_')]
+
 
     @property
     def game_length(self) -> int:
         return self._game_length
 
-    def _calculate_time_in_window(self, start_time: int, end_time: int | None) -> int:
-        if self._game_length < start_time:
-            # the game has ended / no such window exists
-            return 0
-        else:
-            if end_time is not None and end_time < self._game_length:
-                return end_time - start_time
-            else:
-                # the game ended before the end of the window
-                return self._game_length - start_time
 
-    def _set_time_windows(self, time_windows: list) -> list:
-        processed_time_windows = []
-        for start_time, end_time, name in time_windows:
-            length = self._calculate_time_in_window(start_time, end_time)
-
-            processed_time_windows.append(
-                {
-                    'name': name,
-                    'start_time': start_time,
-                    'end_time': end_time,
-                    'start_index': start_time + self._offset,
-                    'end_index': end_time + self._offset if end_time else None,
-                    'length': length,
-                    'minutes': math.floor(length / 60) if length else 0,
-                    'exists': None,
-                    'df': None,
-                })
-        return processed_time_windows
-
-    def split_in_windows(self, df: pd.DataFrame, use_index: bool = True) -> List[dict]:
+    def split_into_windows(self, df: pd.DataFrame, use_index: bool = False) -> List[dict]:
         """Process interval df for only one player"""
-        time_windows = copy.deepcopy(self._time_windows)
-        found_the_end = False
+        windows_for_this_df = copy.deepcopy(self.match_windows)
 
-        if use_index:
-            df_length = len(df.index)
-            for item in time_windows:
-                if found_the_end:
-                    item['exists'] = False
-                    continue
-
-                item['exists'] = True
-                if item['end_index'] is None or item['end_index'] > df_length:
-                    item['df'] = df.iloc[item['start_index']: -1]
-                    found_the_end = True
+        for window in windows_for_this_df:
+            if window['exists']:
+                if use_index:
+                    time = df.index
                 else:
-                    item['df'] = df.iloc[item['start_index']: item['end_index']]
-        else:
-            for item in time_windows:
-                if found_the_end:
-                    item['exists'] = False
-                    continue
+                    time = df['time']
 
-                temp_df = df[(item['start_time'] < df['time']) &
-                             (df['time'] <= (item['end_time'] if item['end_time'] else 60*60*60))]  # 60+ game
-                if temp_df.empty:
-                    found_the_end = True
-                    item['exists'] = False
-                    continue
+                temp_df = df[(window['start_time'] < time) & (time <= window['end_time'])]
 
-                item['exists'] = True
-                item['df'] = temp_df
+                window['df']: pd.DataFrame = temp_df
+                window['is_empty'] = temp_df.empty
 
-        return time_windows
+        return windows_for_this_df
+
 
     @staticmethod
     def split_by_player(df: pd.DataFrame) -> list:
         """Separate interval df by slot"""
         return [{'name': f'_{idx}', 'df': x} for idx, x in df.groupby('slot')]
 
-    def get_windows_number(self) -> int:
-        return len(self._time_windows)
+
+    def create_windows(self, WINDOWS: Dict[str, Any], AN: Callable, ) -> Dict[str, Dict[str, Any]]:
+        not_existing_windows = [w['name'] for w in self.match_windows if not w['exists']]
+
+        player_data = {AN(_to_str(column_name)): _copy_and_set(dict_to_copy=self._base_window,
+                                                               non_existing_windows=not_existing_windows,
+                                                               _db_name=db_name,
+                                                               _parsing_name=_to_str(column_name), )
+                       for db_name, column_name in WINDOWS.items()}
+        return {f'_{x}': copy.deepcopy(player_data) for x in range(10)}

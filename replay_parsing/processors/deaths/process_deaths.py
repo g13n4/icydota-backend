@@ -90,6 +90,9 @@ def process_roshan_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> 
     roshan_death = []
     average_roshan_window_time = 0
 
+    if df.empty:
+        return (average_roshan_window_time, roshan_death)
+
     df['sourcename'] = df['sourcename'].replace(players_to_slot)
 
     killing_time = []

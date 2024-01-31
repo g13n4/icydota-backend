@@ -1,8 +1,8 @@
-import copy
-from typing import Dict, Any, Callable
+from decimal import Decimal
+from typing import Any
 
 import pandas as pd
-from sqlmodel import select
+from sqlmodel import select, Session
 from tabulate import tabulate
 
 
@@ -26,7 +26,7 @@ def is_numeric_type(value, none_is_true: bool = True) -> bool:
     return True
 
 
-def get_all_sqlmodel_objs(db_session, model, ) -> list:
+def get_all_sqlmodel_objs(db_session: Session, model, ) -> list:
     sel_result = db_session.execute(select(model))
     return sel_result.scalars().all()
 
@@ -58,7 +58,7 @@ def combine_slot_dicts(*args) -> dict:
 def get_obj_from_list(objs_list: list, **kwargs):
     for obj in objs_list:
         suitable = []
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             equals = (getattr(obj, k) == v)
             suitable.append(equals)
 
@@ -68,16 +68,13 @@ def get_obj_from_list(objs_list: list, **kwargs):
     return None
 
 
-def copy_and_set(dict_to_copy: dict, **kwargs_to_set):
-    new_dict = copy.deepcopy(dict_to_copy)
-    for k, v in kwargs_to_set:
-        new_dict[k] = v
-    return new_dict
+def none_to_zero(value: Any) -> Decimal:
+    if value:
+        return Decimal(value)
+    return Decimal(0.0)
 
 
-def create_player_windows(WINDOWS: Dict[str, Any],
-                          WINDOW_BASE_DICT: Dict[str, Any],
-                          AN: Callable) -> Dict[str, Dict[str, Any]]:
-    player_data = {AN(column_name): copy_and_set(WINDOW_BASE_DICT, _db_name=db_name, _parsing_name=column_name)
-                   for db_name, column_name in WINDOWS}
-    return {f'_{x}': copy.deepcopy(player_data) for x in range(10)}
+def refresh_objects(db_session: Session, objects, ) -> None:
+    for obj in objects:
+        db_session.refresh(obj)
+    return None

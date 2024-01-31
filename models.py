@@ -11,7 +11,7 @@ def _fk(column_name: str, **column_kwargs) -> Field:
                                                 ondelete='SET NULL', ),
                                      nullable=True,
                                      primary_key=False,
-                                     **column_kwargs))
+                                     **column_kwargs), )
 
 
 # BASE IN GAME DATA
@@ -40,7 +40,11 @@ class Position(SQLModel, table=True):
 class Player(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nickname: str
-    steam_id: int = Field(unique=True, index=True)
+
+    account_id: Optional[int] = Field(unique=True, index=True)
+    steam_id: Optional[int] = Field(sa_column=db.Column(db.BIGINT, nullable=True, unique=True), )
+
+    official_name: Optional[bool] = Field(default=False)
 
     __tablename__ = 'players'
 
@@ -56,20 +60,25 @@ class Team(SQLModel, table=True):
 
 class League(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    pd_link: str
+
+    pd_link: Optional[str]
     league_id: int = Field(unique=True, index=True)
     name: Optional[str]
-    tier: int
+    tier: Optional[int]
 
     start_date: Optional[int]  # unix time stamp
     end_date: Optional[int]
+    has_dates: bool = Field(default=False)
 
-    ended: bool
-    fully_parsed: bool
+    has_started: Optional[bool] = Field(default=None)
+    has_ended: Optional[bool] = Field(default=None)
+    fully_parsed: bool = Field(default=False)
 
     games: List["Game"] = Relationship(back_populates="league")
 
     __tablename__ = 'leagues'
+
+
 
 
 # GAME DATA
@@ -77,8 +86,6 @@ class PlayerGameData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     player_id: Optional[int] = Field(default=None, foreign_key="players.id")
-
-    nickname: str
 
     position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
     hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
@@ -94,6 +101,7 @@ class PlayerGameData(SQLModel, table=True):
     apm: int
     pings: int
 
+    performance: Optional["GamePerformance"] = Relationship(back_populates="player_game_data")
     performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
 
     game: Optional["Game"] = Relationship(back_populates="players_data")
@@ -105,7 +113,7 @@ class PlayerGameData(SQLModel, table=True):
 class Game(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    match_id: int = Field(unique=True, index=True)
+    match_id: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, unique=True), )
 
     league: Optional[League] = Relationship(back_populates='games')
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
@@ -128,7 +136,7 @@ class Game(SQLModel, table=True):
     dire_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
     sent_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
 
-    game_start_time: int  # unix timestamp
+    game_start_time: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, unique=False), )  # unix timestamp
     duration: int
     replay_url: str
 
@@ -140,6 +148,8 @@ class ComparisonType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     # cpd - comparandum / cps - comparans
 
+    percent: bool  # percent or flat
+
     player_cpd_id: Optional[int] = _fk('players')
     player_cps_id: Optional[int] = _fk('players')
 
@@ -148,6 +158,8 @@ class ComparisonType(SQLModel, table=True):
 
     pos_cpd_id: Optional[int] = _fk('positions')
     pos_cps_id: Optional[int] = _fk('positions')
+
+    data_description: Optional["PerformanceDataDescription"] = Relationship(back_populates='comparison')
 
     __tablename__ = 'comparison_types'
 
@@ -165,6 +177,8 @@ class DataAggregationType(SQLModel, table=True):
     by_position: bool = Field(default=False)
     position_id: Optional[int] = _fk('positions')
 
+    data_description: Optional["PerformanceDataDescription"] = Relationship(back_populates='aggregation')
+
     __tablename__ = 'data_aggregation_types'
 
 
@@ -174,6 +188,8 @@ class GamePerformance(SQLModel, table=True):
 
     window_data: List["PerformanceWindowData"] = Relationship(back_populates="game_performance")
     total_data: List["PerformanceTotalData"] = Relationship(back_populates="game_performance")
+
+    player_game_data: Optional["PlayerGameData"] = Relationship(back_populates="performance")
 
     __tablename__ = 'games_performance'
 
@@ -207,9 +223,14 @@ class PerformanceDataDescription(SQLModel, table=True):
 
     is_comparison: bool = Field(default=False)
     comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id")
+    comparison: Optional["ComparisonType"] = Relationship(back_populates='data_description')
 
     is_aggregation: bool = Field(default=False)
     aggregation_id: Optional[int] = Field(default=None, foreign_key="data_aggregation_types.id")
+    aggregation: Optional["DataAggregationType"] = Relationship(back_populates='data_description')
+
+    pwd: Optional["PerformanceWindowData"] = Relationship(back_populates='data_info')
+    ptd: Optional["PerformanceTotalData"] = Relationship(back_populates='data_info')
 
     __tablename__ = 'performance_data_descriptions'
 
@@ -219,6 +240,7 @@ class PerformanceWindowData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     data_info_id: Optional[int] = Field(default=None, foreign_key="performance_data_descriptions.id")
+    data_info: Optional["PerformanceDataDescription"] = Relationship(back_populates='pwd')
 
     # laning
     l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -246,11 +268,12 @@ class PerformanceTotalData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     data_info_id: Optional[int] = Field(default=None, foreign_key="performance_data_descriptions.id")
+    data_info: Optional["PerformanceDataDescription"] = Relationship(back_populates='ptd')
 
     total_gold: int
     total_xp: int
-    kills_per_min: int
-    kda: int
+    kills_per_min: condecimal(max_digits=10, decimal_places=2) = Field(nullable=False)
+    kda: condecimal(max_digits=5, decimal_places=2) = Field(nullable=False)
 
     neutral_kills: int
     tower_kills: int
@@ -386,6 +409,8 @@ class InGameBuildingNotDestroyed(SQLModel, table=True):
 
     rax_left_total: int
 
+    building_data: Optional["BuildingData"] = Relationship(back_populates="not_destroyed")
+
     __tablename__ = 'in_game_buildings_not_destroyed'
 
 
@@ -410,6 +435,7 @@ class BuildingData(SQLModel, table=True):
     # additional tower info
     naked_throne: Optional[bool]
 
+    not_destroyed: Optional["InGameBuildingNotDestroyed"] = Relationship(back_populates="building_data")
     not_destroyed_id: Optional[int] = Field(default=None, foreign_key="in_game_buildings_not_destroyed.id")
 
     __tablename__ = 'buildings_data'

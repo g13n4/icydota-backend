@@ -4,12 +4,11 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from replay_parsing.modules import MatchSplitter
-from utils import create_player_windows
-from ..aggregations import WINDOWS_BASE_NULLS
+from replay_parsing.modules.match_splitter import MatchSplitter
 from ..processing_utils import add_data_type_name
 from ..processing_utils import process_output
 from ...windows import DAMAGE_WINDOWS
+
 
 PROCESSED_DATA_NAME = 'damage'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
@@ -62,7 +61,7 @@ def _split_damage_by_player(df: pd.DataFrame, players: list) -> pd.DataFrame:
         new_columns[concat_('from_buildings')] = player_defense & ser_from_buildings
         new_columns[concat_('from_creatures')] = player_defense & ser_from_creatures
         new_columns[concat_('from_illusions')] = player_defense & ser_from_illusions
-        new_columns[concat_('from_all')] = player_defense
+        new_columns[concat_('from_all')] = player_defense  # TODO: check zeroes in 7254073428
 
     new_df = pd.concat(new_columns.values(), axis=1, ignore_index=True)
     new_df.columns = new_columns.keys()
@@ -83,13 +82,13 @@ def _get_column_names(columns: List[str]) -> Tuple[list[str], list[str]]:
 
 def process_damage_windows(df: pd.DataFrame, MS: MatchSplitter, players: list) -> dict:
     damage_df = _split_damage_by_player(df, players)
-    player_windows = MS.split_in_windows(damage_df, use_index=False)
+    player_windows = MS.split_into_windows(damage_df, use_index=False)
 
     unique_name_columns, all_damage_columns = _get_column_names(damage_df.columns)
 
     agg_types = ['sum', 'mean', 'median', 'dmg_inst']
 
-    data = create_player_windows(WINDOWS=DAMAGE_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
+    data = MS.create_windows(WINDOWS=DAMAGE_WINDOWS, AN=AN)
 
     for col in all_damage_columns:
         slot_str, damage_type_name = col.split('|')

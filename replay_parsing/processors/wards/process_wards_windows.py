@@ -5,18 +5,17 @@ from typing import List
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
-from utils import create_player_windows
-from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import add_data_type_name
 from ...windows import WARDS_WINDOWS, DEWARD_WINDOWS
+
 
 PROCESSED_DATA_NAME = 'wards'
 AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
 
 
 def process_wards_windows(df: pd.DataFrame, MS: MatchSplitter) -> dict:
-    wards_windows = MS.split_in_windows(df, use_index=False)
-    wards_data = create_player_windows(WINDOWS=WARDS_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
+    wards_windows = MS.split_into_windows(df, use_index=False)
+    wards_data = MS.create_windows(WINDOWS=WARDS_WINDOWS, AN=AN)
 
     for window_df in wards_windows:
         if window_df['exists']:
@@ -35,8 +34,8 @@ def process_deward_windows(df: pd.DataFrame, MS: MatchSplitter,
 
     df['attackerslot'] = df['attackername'].replace(players_to_slot)
 
-    deward_windows = MS.split_in_windows(df, use_index=False)
-    deward_data = create_player_windows(WINDOWS=DEWARD_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
+    deward_windows = MS.split_into_windows(df, use_index=False)
+    deward_data = MS.create_windows(WINDOWS=DEWARD_WINDOWS, AN=AN)
 
     for window_df in deward_windows:
         if window_df['exists']:
@@ -59,6 +58,6 @@ def process_deward_windows(df: pd.DataFrame, MS: MatchSplitter,
 
                 new_ward_type = 'sen' if 'sen' in ward_type else 'obs'
                 deward_data[f'_{slot}'][AN(f'killed_{new_ward_type}')][window_df['name']] = v
-                deward_data[f'_{slot}'][AN(f'killed_{new_ward_type}_pm')][window_df['name']] = v / window_df['length']
+                deward_data[f'_{slot}'][AN(f'killed_{new_ward_type}_pm')][window_df['name']] = v / window_df['minutes']
 
     return deward_data

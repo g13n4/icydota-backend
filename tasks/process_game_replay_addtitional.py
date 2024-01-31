@@ -2,14 +2,15 @@ from typing import Dict, List, Any
 
 import pandas as pd
 
+from models import HeroDeath
+from models import InGameBuilding, InGameBuildingDestroyed, \
+    InGameBuildingNotDestroyed
+from models import PerformanceTotalData
+from models import RoshanDeath, BuildingData
 from replay_parsing import MatchAnalyser, MatchPlayersData, \
     process_building, process_hero_deaths, process_roshan_deaths
 from utils import get_all_sqlmodel_objs
-from ..models import HeroDeath
-from ..models import InGameBuilding, InGameBuildingDestroyed, \
-    InGameBuildingNotDestroyed
-from ..models import PerformanceTotalData
-from ..models import RoshanDeath, BuildingData
+
 
 NUM_TOWERS = 11  # 3 bot / 3 top / 3 mid / 2 throne
 NUM_RAX = 6  # 2 bot / 2 top / 2 mid
@@ -17,6 +18,9 @@ NUM_BUILDINGS = NUM_RAX + NUM_RAX
 
 
 def _fill_roshan_deaths(db_session, roshan_deaths: List[dict], ) -> List[RoshanDeath]:
+    if not roshan_deaths:
+        return []
+
     roshan_objs = []
     for rosh_death in roshan_deaths:
         rd_obj = RoshanDeath(
@@ -32,23 +36,37 @@ def _fill_roshan_deaths(db_session, roshan_deaths: List[dict], ) -> List[RoshanD
 def _fill_hero_deaths(db_session, hero_deaths: List[dict], MPD: MatchPlayersData) -> List[HeroDeath]:
     hero_deaths_obj = []
     for hero_death in hero_deaths:
-        killer = MPD[hero_death['kill_slot']]
-        victim = MPD[hero_death['victim_slot']]
+        if hero_death['kill_slot']:  # There is a hero killer who killed
+            killer = MPD[hero_death['kill_slot']]
+            victim = MPD[hero_death['victim_slot']]
 
-        hero_death_obj = HeroDeath(
-            death_number=hero_death['death_number'],
-            death_time=hero_death['death_time'],
+            hero_death_obj = HeroDeath(
+                death_number=hero_death['death_number'],
+                death_time=hero_death['death_time'],
 
-            kill_dire=hero_death['kill_dire'],
-            killer_hero_id=killer['hero_id'],
-            killer_player_id=killer['player_id'],
+                kill_dire=hero_death['kill_dire'],
+                killer_hero_id=killer['hero_id'],
+                killer_player_id=killer['player_id'],
 
-            victim_dire=hero_death['victim_dire'],
-            victim_hero_id=victim['hero_id'],
-            victim_player_id=victim['player_id'], )
+                victim_dire=hero_death['victim_dire'],
+                victim_hero_id=victim['hero_id'],
+                victim_player_id=victim['player_id'], )
 
-        db_session.add(hero_death_obj)
+        else:  # the hero died from something else
+            victim = MPD[hero_death['victim_slot']]
+
+            hero_death_obj = HeroDeath(
+                death_number=hero_death['death_number'],
+                death_time=hero_death['death_time'],
+
+                kill_dire=hero_death['kill_dire'],
+
+                victim_dire=hero_death['victim_dire'],
+                victim_hero_id=victim['hero_id'],
+                victim_player_id=victim['player_id'], )
+
         hero_deaths_obj.append(hero_death_obj)
+        db_session.add(hero_death_obj)
 
     return hero_deaths_obj
 
@@ -58,7 +76,7 @@ def _get_building_dict(db_session, ) -> dict:
     igb_dict = dict()
     for igb_obj in igb_objs:
         if igb_obj.is_tower:
-            if igb_obj.tower4 is not None:
+            if igb_obj.tower4 is None:
                 igb_dict[(1, igb_obj.lane, igb_obj.tier)] = igb_obj
             else:
                 igb_dict[(1, igb_obj.tower4, igb_obj.tier)] = igb_obj
@@ -74,9 +92,9 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
     for is_dire, side in [(True, 'dire'), (False, 'sentinel')]:
         bk_died_name = f'{side}_died'
         bk_died_data = building_kill[bk_died_name]
-        bd_objs = []
+        bd_objs = []  # KeyError: (1, 2, 1)
         for bk in bk_died_data:
-            b_obj = igb_dict[(bk['is_tower'],
+            b_obj = igb_dict[(int(bk['is_tower']),
                               (bk['lane']['value'] if bk['lane']['tower4'] is None else bk['lane']['tower4']),
                               bk['tower']['tier'])]
             bk_obj = InGameBuildingDestroyed(
@@ -128,14 +146,14 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             destroyed_rax=NUM_RAX - bk_left_data['rax_left_total'],
 
             # additional rax info
-            destroyed_lane_1=bd_objs[-1].destroyed_lane_1,
-            destroyed_lane_2=bd_objs[-1].destroyed_lane_2,
-            destroyed_lane_3=bd_objs[-1].destroyed_lane_3,
+            destroyed_lane_1=bd_objs[-1].destroyed_lane_1 if len(bd_objs) else False,  # TODO: check 7253395555
+            destroyed_lane_2=bd_objs[-1].destroyed_lane_2 if len(bd_objs) else False,
+            destroyed_lane_3=bd_objs[-1].destroyed_lane_3 if len(bd_objs) else False,
 
-            megacreeps=bd_objs[-1].megacreeps,
+            megacreeps=bd_objs[-1].megacreeps if len(bd_objs) else False,
 
             # additional tower info
-            naked_throne=bd_objs[-1].naked_throne,
+            naked_throne=bd_objs[-1].naked_throne if len(bd_objs) else False,
 
             not_destroyed=bnk_obj, )
         db_session.add(bs)
@@ -145,10 +163,10 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
     return output_dict
 
 
-def process_additional_data(db_session,
-                            match: MatchAnalyser,
-                            match_data: Dict[str, pd.DataFrame],
-                            ptd_dict: Dict[int, PerformanceTotalData], ) -> Dict[str, Any]:
+def process_additional_replay_data(db_session,
+                                   match: MatchAnalyser,
+                                   match_data: Dict[str, pd.DataFrame],
+                                   ptd_dict: Dict[int, PerformanceTotalData], ) -> Dict[str, Any]:
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(match_data['roshan_deaths'],
                                                                players_to_slot=match.players.get_name_slot_dict())
     roshan_death_objs = _fill_roshan_deaths(db_session=db_session, roshan_deaths=roshan_deaths)
@@ -157,8 +175,8 @@ def process_additional_data(db_session,
                                                              players_to_slot=match.players.get_name_slot_dict())
     hero_death_objs = _fill_hero_deaths(db_session=db_session, hero_deaths=hero_deaths, MPD=match.players)
 
-    player_building, building_kill = process_building(match_data['building_kill'],
-                                                      pos_to_slot=match.players.get_pos_to_slot_by_side())
+    player_building, dire_lost_first_tower, building_kill = process_building(match_data['building_kill'],
+                                                                             pos_to_slot=match.players.get_pos_to_slot_by_side())
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
     for player_slot in range(10):
@@ -190,6 +208,8 @@ def process_additional_data(db_session,
         first_ten_kills_dire=ftk_dire,
         hero_death=hero_death_objs,
 
+        dire_lost_first_tower=dire_lost_first_tower,
+
         dire_building_status_id=building_stats_objs['dire'].id,
-        sent_building_status_id=building_stats_objs['sent'].id,
+        sent_building_status_id=building_stats_objs['sentinel'].id,
     )

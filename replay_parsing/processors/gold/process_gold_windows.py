@@ -4,10 +4,9 @@ from typing import Dict
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
-from utils import create_player_windows
-from ..aggregations import WINDOWS_BASE_NULLS
 from ..processing_utils import process_output, add_data_type_name
 from ...windows import GOLD_WINDOWS
+
 
 gold_reasons = {
     # 0: 'starting gold',
@@ -32,9 +31,9 @@ PO = partial(process_output, allow_none=False)
 
 def process_gold_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: Dict[str, int]) -> dict:
     df.replace(players_to_slot, inplace=True)
-    wards_windows = MS.split_in_windows(df, use_index=False)
+    wards_windows = MS.split_into_windows(df, use_index=False)
 
-    data = create_player_windows(WINDOWS=GOLD_WINDOWS, WINDOW_BASE_DICT=WINDOWS_BASE_NULLS, AN=AN)
+    data = MS.create_windows(WINDOWS=GOLD_WINDOWS, AN=AN)
 
     for window in wards_windows:
         if window['exists']:

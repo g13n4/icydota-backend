@@ -158,8 +158,9 @@ def process_building_kill_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, dict):
+def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
     new_df = process_building_kill_df(df)
+    # TODO: check 7254189995 KeyError: 'targetname'
 
     position_towers_status = {x: {
         'lost_tower_first': False,
@@ -173,6 +174,8 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, dict):
 
     dire_t_died = []
     sent_t_died = []
+
+    dire_lost_first_tower = None
     first_tower = True
     for idx, v in new_df[['time', 'dire', 'tier', 'lane', 'rax']].iterrows():
         values = v.to_dict()
@@ -207,8 +210,8 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, dict):
             sent_t_died.append(building)
 
         if first_tower:
-
-            lost_t, killed_t = ('dire', 'sentinel') if values['dire'] else ('sentinel', 'dire')
+            dire_lost_first_tower = values['dire']
+            lost_t, killed_t = ('dire', 'sentinel') if dire_lost_first_tower else ('sentinel', 'dire')
             lost_t_pos = lane_to_pos[values['lane']][lost_t]
             killed_t_pos = lane_to_pos[values['lane']][killed_t]
             for pos in lost_t_pos:
@@ -233,9 +236,11 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, dict):
     dire_left = _find_left_towers(dire_t_died)
     sentinel_left = _find_left_towers(sent_t_died)
 
-    return position_towers_status, {
-        'dire_died': dire_t_died,
-        'sentinel_died': sent_t_died,
+    return (position_towers_status,
+            dire_lost_first_tower,
+            {
+                'dire_died': dire_t_died,
+                'sentinel_died': sent_t_died,
 
-        'dire_left': dire_left,
-        'sentinel_left': sentinel_left, }
+                'dire_left': dire_left,
+                'sentinel_left': sentinel_left, })

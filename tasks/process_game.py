@@ -1,12 +1,12 @@
 import json
 import os
+import time
 from pathlib import Path
 from typing import Dict, List
 
 import requests
 from celery.utils.log import get_task_logger
 from sqlmodel import Session
-from sqlmodel import select
 
 from celery_app import celery_app
 from db import get_sync_db_session
@@ -16,7 +16,7 @@ from models import Position, Hero
 from tasks.download_replay import get_match_replay
 from tasks.proces_game_replay import process_game_replay
 from tasks.process_game_helpers import fix_odota_data
-from utils import get_all_sqlmodel_objs, none_to_zero, refresh_objects
+from utils import get_all_sqlmodel_objs, none_to_zero, refresh_objects, get_or_create
 
 
 CURRENT_DIR = Path.cwd().absolute()
@@ -39,16 +39,16 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
     }
 
     for key, data in teams.items():
-        team_q = db_session.execute(select(Team).where(Team.odota_id == data['team_id'])).first()
-        if not team_q:
-            team_obj = Team(
-                odota_id=data['team_id'],
-                name=data['name'],
-                tag=data['tag'],
-            )
-            db_session.add(team_obj)
-        else:
-            team_obj = team_q[0]
+        team_obj = get_or_create(logger=logger,
+                                 db_session=db_session,
+                                 model_obj=Team,
+                                 attribute='odota_id',
+                                 compare_to=data['team_id'],
+                                 object_data=dict(
+                                     odota_id=data['team_id'],
+                                     name=data['name'],
+                                     tag=data['tag'],
+                                 ))
 
         obj_teams[key] = team_obj
 
@@ -68,17 +68,16 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 
         this_name_to_use = this_nickname if this_true_name_exists else this_current_acc_name
 
-        player_q = db_session.execute(select(Player).where(Player.steam_id == this_steam_id)).first()
-        if not player_q:
-            player_obj = Player(
-                nickname=this_name_to_use,
-                steam_id=this_steam_id,
-                official_name=this_true_name_exists,
-            )
-            db_session.add(player_obj)
-            newly_created.append(player_obj)
-        else:
-            player_obj = player_q[0]
+        player_obj = get_or_create(logger=logger,
+                                   db_session=db_session,
+                                   model_obj=Player,
+                                   attribute='steam_id',
+                                   compare_to=this_steam_id,
+                                   object_data=dict(
+                                       nickname=this_name_to_use,
+                                       steam_id=this_steam_id,
+                                       official_name=this_true_name_exists,
+                                   ))
 
         players_dict[player['player_slot']] = player_obj
 
@@ -89,24 +88,55 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
     return players_dict
 
 
-@celery_app.task
-def process_game(match_id: int, league_id: int):
-    logger.info('')
+def _get_match_data(folder_path: Path, match_id: id, overwrite: bool = None, **req_kwargs) -> dict | None:
+    match_json_path = folder_path.joinpath(f'{match_id}.json')
+    file_exists = match_json_path.is_file()
+    game_data = None
+
+    if file_exists and not overwrite:
+        with open(match_json_path, "r") as match_json:
+            game_data = json.load(match_json)
+
+    else:
+        r = requests.get(f'https://api.opendota.com/api/matches/{match_id}', **req_kwargs)
+        if r.status_code == 200:
+            game_data = r.json()
+
+    if 'error' in game_data:
+        if file_exists:
+            os.remove(match_json_path)
+
+        return None
+
+    if not file_exists:
+        with open(match_json_path, "w") as match_json:
+            json.dump(game_data, match_json)
+
+    return game_data
+
+
+@celery_app.task(name='process game')
+def process_game(match_id: int, league_id: int | None = None):
     db_session: Session = get_sync_db_session()
 
     match_folder_path = Path(f'{BASE_PATH}/{match_id}/')
     match_folder_path.mkdir(parents=True, exist_ok=True)
 
-    match_json_path = match_folder_path.joinpath(f'{match_id}.json')
-    if match_json_path.is_file():
-        with open(match_json_path, "r") as match_json:
-            game_data = json.load(match_json)
-    else:
-        r = requests.get(f'https://api.opendota.com/api/matches/{match_id}')
-        game_data = r.json()
+    game_data = None
+    for x in range(0, 2):
+        game_data = _get_match_data(folder_path=match_folder_path,
+                                    match_id=match_id,
+                                    overwrite=bool(x))
+        if game_data:
+            break
+        else:
+            time.sleep(0.77)
 
-        with open(match_json_path, "w") as match_json:
-            json.dump(game_data, match_json)
+    if not game_data:
+        raise ConnectionError(f"Can't download the file from odota for match {match_id}")
+
+    if league_id is None:
+        league_id = game_data['league']['leagueid']
 
     fix_odota_data(game_data)
 
@@ -207,7 +237,7 @@ def process_game(match_id: int, league_id: int):
     if not game_data['replay_url']:
         replay_url = f"http://replay{game_data['cluster']}.valve.net/570/{match_id}_{game_data['replay_salt']}.dem.bz2"
 
-    get_match_replay(match_id=match_id, url=replay_url, match_folder_path=match_folder_path)
+    get_match_replay(match_id=match_id, url=replay_url, folder_path=match_folder_path)
 
     game_performance_objs, additional_data = process_game_replay(db_session=db_session,
                                                                  match_id=match_id,

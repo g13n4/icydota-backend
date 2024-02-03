@@ -20,14 +20,23 @@ def _is_empty(path: Path) -> bool:
     return os.stat(path).st_size == 0
 
 
-def _file_properly_parsed(match_id, folder_path) -> bool:
-    file_path = Path(os.path.join(folder_path, f'{match_id}.jsonl'))
+def _jsonl_exists(file_path: Path) -> bool:
     if file_path.exists():
-        with open(file_path, 'r') as file:
-            full_text = file.read()
-            for word in ['"cosmetics"', '"dotaplus"', "'epilogue"]:
-                if not re.search(word, full_text[::-1]):
-                    return True
+        return True
+    return False
+
+
+def _jsonl_is_valid(file_path: Path) -> bool:
+    with open(file_path, 'r') as file:
+        required_words = ['"cosmetics"', '"dotaplus"', '"epilogue"']
+        matched_words = set()
+        for line in file.readlines()[::-1]:
+            for word in required_words:
+                if re.search(word, line):
+                    matched_words.add(word)
+
+            if len(required_words) == len(matched_words):
+                return True
 
     return False
 
@@ -43,16 +52,6 @@ def continue_to_process(file_path: Path, match_id: int, process_name: str, overw
                 logger.info(f'{match_id} | {process_name} | already exists')
                 return False
     return True
-
-
-def _get_match_download_info(match_id: int) -> list:
-    r = requests.get(f'https://api.opendota.com/api/replays', params={'match_id': match_id})
-    if r.status_code == 200:
-        logger.info(f'{match_id} received match info successfully')
-        return r.json()
-    else:
-        logger.info(f'{match_id} received no match info')
-        return []
 
 
 def _download_archived_replay(match_id: int,
@@ -104,7 +103,7 @@ def _parse_replay(match_id: int, folder_path: Path, overwrite: bool = False) -> 
     curl_file_output = f'"{str(folder_path)}/{match_id}.jsonl"'
 
     command = 'curl localhost:5600 --data-binary ' + f'{curl_file_path} > {curl_file_output}'
-    subprocess.run(command, shell=True, check=True)
+    curl_json = subprocess.run(command, shell=True, check=True, capture_output=True)
     logger.info(f'{match_id} replay is parsed successfully')
 
 
@@ -112,11 +111,13 @@ def get_match_replay(match_id: int,
                      url: str,
                      overwrite: bool = False,
                      folder_path: Path | None = None, ) -> None:
-    if folder_path is None:
-        folder_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/')
-        folder_path.mkdir(parents=True, exist_ok=True)
-    else:
-        overwrite = _file_properly_parsed(match_id=match_id, folder_path=folder_path)
+    folder_path.mkdir(parents=True, exist_ok=True)
+
+    output_path = Path(os.path.join(folder_path, f'{match_id}.jsonl'))
+    if not overwrite and \
+            _jsonl_exists(file_path=output_path) and \
+            not _jsonl_is_valid(file_path=output_path):
+        overwrite = True
         logger.warning(f'It seems that parsed match {match_id} is broken. Overwriting...')
 
     try:

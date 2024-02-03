@@ -15,12 +15,7 @@ from tasks.create_league import update_league_obj_dates, create_league
 logger = get_task_logger(__name__)
 
 
-@celery_app.task
-def process_league(league_obj: League | None = None,
-                   league_id: int | None = None):
-    db_session: Session = get_sync_db_session()
-    logger.info(f'Processing league {league_id}...')
-
+def _get_league(league_id: int, db_session: Session, league_obj: League = None, ) -> League:
     if league_obj is None:
         league_q = db_session.execute(select(League).where(League.league_id == league_id)).first()
         if not league_q:
@@ -30,12 +25,31 @@ def process_league(league_obj: League | None = None,
             db_session.refresh(league_obj)
         else:
             league_obj: League = league_q[0]
+    return league_obj
+
+
+@celery_app.task(name='process match')
+def process_match(match_id: int = None, league_id: int | None = None, ):
+    db_session: Session = get_sync_db_session()
+    logger.info(f'Processing match {match_id}...')
+    league_obj = _get_league(league_id, db_session)
+
+    process_game.delay(match_id=match_id, league_id=league_obj.id, )
+
+
+@celery_app.task(name='process league')
+def process_league(league_obj: League | None = None,
+                   league_id: int | None = None):
+    db_session: Session = get_sync_db_session()
+    logger.info(f'Processing league {league_id}...')
+
+    league_obj = _get_league(league_id, db_session, league_obj)
 
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_obj.league_id}/matches')
     league_match_data = r.json()
 
     db_league_games: Dict[int, Game] = {x.match_id: x for x in league_obj.games}
-    new_games_found = False
+    new_games_found = 0
     for game in league_match_data:
         if game['match_id'] in db_league_games:
             continue
@@ -43,7 +57,10 @@ def process_league(league_obj: League | None = None,
             process_game.delay(match_id=game['match_id'],
                                league_id=league_obj.id, )
 
-            new_games_found = True
+            new_games_found += 1
+
+    if new_games_found:
+        logger.info(f'Found {new_games_found} new games in league {league_id}')
 
     if new_games_found:
         pass
@@ -52,7 +69,7 @@ def process_league(league_obj: League | None = None,
         #     league_id=league_obj.id, )
 
 
-@celery_app.task
+@celery_app.task(name='process league games (cron)')
 def process_leagues_cron() -> None:
     db_session: Session = get_sync_db_session()
     logger.info(f'Processing leagues: start')
@@ -77,7 +94,7 @@ def process_leagues_cron() -> None:
     logger.info(f'Processing leagues: end')
 
 
-@celery_app.task
+@celery_app.task(name='update leagues date (cron)')
 def update_leagues_dates_cron() -> None:
     db_session: Session = get_sync_db_session()
     logger.info(f'Updating leagues dates: start')

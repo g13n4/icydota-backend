@@ -1,7 +1,8 @@
 from decimal import Decimal
-from typing import Any
+from typing import Any, Dict
 
 import pandas as pd
+from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
 from tabulate import tabulate
 
@@ -78,3 +79,39 @@ def refresh_objects(db_session: Session, objects, ) -> None:
     for obj in objects:
         db_session.refresh(obj)
     return None
+
+
+def get_or_create_base(db_session: Session,
+                       model_obj,
+                       attribute: str,
+                       compare_to: Any,
+                       object_data: Dict[str, Any]):
+    object_qr = (db_session
+                 .execute(select(model_obj)
+                          .where(getattr(model_obj, attribute) == compare_to))
+                 .first())
+    if not object_qr:
+        new_obj = model_obj(**object_data)
+
+        db_session.add(new_obj)
+        db_session.commit()
+        db_session.refresh(new_obj)
+
+        return new_obj
+    else:
+        return object_qr[0]
+
+
+def get_or_create(logger, *args, **kwargs):
+    output = None
+    for x in range(2):
+        if not x:
+            try:
+                output = get_or_create_base(*args, **kwargs)
+            except IntegrityError:
+                logger.warning('It seems that the there is a problem with creating an object.' +
+                               "Let's give it another chance to ensure that it's not just inserting error...")
+        else:
+            output = get_or_create_base(*args, **kwargs)
+
+    return output

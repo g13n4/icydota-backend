@@ -16,6 +16,8 @@ def _count_fk(fk_list: List[bool]) -> bool | None:
 
 def process_hero_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> tuple[dict, bool | None, list]:
     df[['sourcename', 'targetname', ]] = df[['sourcename', 'targetname', ]].replace(players_to_slot)
+    # 7483084944
+    # TODO: KeyError: "None of [Index(['sourcename', 'targetname'], dtype='object')] are in the [columns]"
 
     player_data = {x: {
         'first_blood_claimed': False,

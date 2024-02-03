@@ -146,7 +146,7 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             destroyed_rax=NUM_RAX - bk_left_data['rax_left_total'],
 
             # additional rax info
-            destroyed_lane_1=bd_objs[-1].destroyed_lane_1 if len(bd_objs) else False,  # TODO: check 7253395555
+            destroyed_lane_1=bd_objs[-1].destroyed_lane_1 if len(bd_objs) else False,
             destroyed_lane_2=bd_objs[-1].destroyed_lane_2 if len(bd_objs) else False,
             destroyed_lane_3=bd_objs[-1].destroyed_lane_3 if len(bd_objs) else False,
 

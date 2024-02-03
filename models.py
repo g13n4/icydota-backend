@@ -97,7 +97,7 @@ class PlayerGameData(SQLModel, table=True):
     win: bool
     dire: bool
 
-    rank: int
+    rank: Optional[int]
     apm: int
     pings: int
 

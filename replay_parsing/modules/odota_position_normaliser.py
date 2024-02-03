@@ -73,11 +73,12 @@ class ODOTAPositionNormaliser:
         to_keys.sort(key=_move_two_to_the_end)
 
         for from_k in from_keys:
-            if (priority_move := self._move_priority[from_k]):
-                if priority_move in to_keys:
-                    move_to = priority_move
+            priority_move = self._move_priority[from_k]
 
+            if priority_move and priority_move in to_keys:
+                move_to = priority_move
             else:
+                # use to_keys[0] == 1 to ensure that move pos 2 -> pos 1 happens last
                 move_to = to_keys.pop(0) if to_keys[0] == 1 else to_keys.pop(-1)
 
             from_end = True if move_to < from_k else False

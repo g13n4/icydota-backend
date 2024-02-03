@@ -22,7 +22,7 @@ def fix_odota_data(odota_data: Dict[str, Any]) -> None:
 
         side = 'radiant' if player['isRadiant'] else 'dire'
 
-        position_tester[side].add(player['lane_role'])
+        position_tester[side].add(player['lane_role'])  # KeyError: 'lane_role' 7248385188
         position_data[side].append({
             'hero_id': player['hero_id'],
             'neutral_kills': player['neutral_kills'],

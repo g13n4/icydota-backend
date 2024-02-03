@@ -39,10 +39,10 @@ def process_gold_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: D
         if window['exists']:
             agged_df = window['df'].groupby(['targetname', 'gold_reason'])['value'].sum()
             for k, v in agged_df.to_dict().items():
-                slot, xp_reason = k
-                if xp_reason == 0:
+                slot, gold_reason = k
+                if gold_reason == 0:
                     continue
-                data[f'_{slot}'][AN(gold_reasons[xp_reason])][window['name']] = PO(v)
-                data[f'_{slot}'][AN(gold_reasons[xp_reason] + ' pm')][window['name']] = PO(v) / window['minutes']
+                data[f'_{slot}'][AN(gold_reasons[gold_reason])][window['name']] = PO(v)
+                data[f'_{slot}'][AN(gold_reasons[gold_reason] + ' pm')][window['name']] = PO(v) / window['minutes']
 
     return data

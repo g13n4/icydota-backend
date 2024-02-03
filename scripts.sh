@@ -17,7 +17,7 @@ do
 		break
 		;;
 	2)
-		celery --app=celery_app flower
+		celery --app=celery_app flower --basic-auth=mx:ghbdtn
 		break
 		;;
 	*)

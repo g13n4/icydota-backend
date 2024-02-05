@@ -3,14 +3,13 @@ import json
 import math
 import pathlib
 import re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 import pandas as pd
 from fuzzywuzzy import fuzz
 
 from replay_parsing.ingame_data import POSITION_NAMES, POSITION_OPPONENTS
 from utils import get_both_slot_values
-from .match_windows import GAME_WINDOWS
 
 
 # MATCH PLAYER DATA
@@ -191,8 +190,23 @@ def _compare_name_complex(cdota_name, npc_name) -> int:
     return fuzz.ratio(cdota_name_processed, npc_name_processed)
 
 
+early_game_windows = [(1, 'l2', 'lane', -90, 60 * 2,),  # first 2 minutes
+                      (2, 'l4', 'lane', 60 * 2, 60 * 4,),  # 2-4
+                      (3, 'l6', 'lane', 60 * 4, 60 * 6,),  # 4-6
+                      (4, 'l8', 'lane', 60 * 6, 60 * 8,),  # 6-8
+                      (5, 'l10', 'lane', 60 * 8, 60 * 10,), ]  # 8-10
+
+late_game_windows = [(1, 'g15', 'game', -90, 60 * 15,),  # first 15 minutes
+                     (2, 'g30', 'game', 60 * 15, 60 * 30,),  # 15 - 30
+                     (3, 'g45', 'game', 60 * 30, 60 * 45,),  # 30 - 45
+                     (4, 'g60', 'game', 60 * 45, 60 * 60,),  # 45 - 60
+                     (5, 'g60plus', 'game', 60 * 60, 60 * 60 * 60,), ]  # 60 - inf
+
+
 class MatchAnalyser:
-    def __init__(self, path: str | pathlib.Path):
+    def __init__(self,
+                 path: str | pathlib.Path,
+                 windows: List[Tuple[int, int, str]] = None, ):
         self.path = path
 
         self.players = MatchPlayersData()
@@ -201,20 +215,30 @@ class MatchAnalyser:
         self._game_total_length = None  # In game time aka the time the clock in the game is showing
 
         self._is_match_windows_set = False
-        self._match_windows = [{'name': window[2],
+
+        if not windows:
+            windows = early_game_windows + late_game_windows
+
+        self._match_windows = [{'name': window[1],
+                                'window_type': window[2],
+                                'index': window[0],
 
                                 'start_time': None,
                                 'end_time': None,
 
-                                'window_start': window[0],
-                                'window_end': window[1],
+                                'window_start': window[3],
+                                'window_end': window[4],
+                                'window_length': window[4] - window[3],
 
                                 'length': 0,
                                 'minutes': 0,
 
                                 'exists': False,
                                 'empty': None,
-                                'df': None, } for window in GAME_WINDOWS]
+                                'incomplete': False,
+                                'df': None, } for window in windows]
+
+        self._windows_types = list(set([window['window_type'] for window in self._match_windows]))
 
 
     def get_players(self) -> List[dict]:
@@ -313,7 +337,7 @@ class MatchAnalyser:
 
             return current_window_index
         else:
-            self._update_game_time_data(current_window_index + 1, time)
+            return self._update_game_time_data(current_window_index + 1, time)
 
 
     @property
@@ -330,56 +354,70 @@ class MatchAnalyser:
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
 
 
+    def _set_incomplete_status(self, ) -> None:
+        for window_type in self._windows_types:
+            for window in self._match_windows:
+                if not window['window_type'] == window_type:
+                    pass
+
+                if window['length'] > 0 and \
+                        not (window['window_length'] + 2 > window['length'] > window['window_length'] - 2):
+                    window['incomplete'] = True
+                    break
+
+
     def get_match_data(self) -> Dict[str, pd.DataFrame]:
         current_window_index = None
 
+        interval = []  # interval
+        pings = []  # pings
+        wards = []  # obs / sen / sen_left / obs_left
+        deward = []  # sen_left / obs_left
+
+        # CHAT_MESSAGE_ITEM_PURCHASE
+        # CHAT_MESSAGE_RUNE_PICKUP
+        # CHAT_MESSAGE_SCAN_USED
+        # CHAT_MESSAGE_TOWER_KILL
+        # CHAT_MESSAGE_COURIER_LOST
+        # chat_messages = []
+
+        # DOTA_COMBATLOG_DEATH
+        hero_deaths = []
+
+        roshan_deaths = []
+
+        # DOTA_COMBATLOG_DAMAGE
+        # DOTA_COMBATLOG_GOLD
+        # DOTA_COMBATLOG_XP
+        # DOTA_COMBATLOG_PURCHASE
+        # DOTA_COMBATLOG_ITEM
+        # combat_log = []
+
+        # DOTA_COMBATLOG_TEAM_BUILDING_KILL
+        building_kill = []
+
+        # DOTA_COMBATLOG_XP
+        xp = []
+
+        # DOTA_COMBATLOG_DAMAGE
+        damage = []
+
+        # DOTA_COMBATLOG_GOLD
+        gold = []
+
+        from_cdata = dict()
+        from_ingame = dict()
+
+        for item in self.players.get_all():
+            from_cdata[item['hero_name_cdota']] = item
+
+            from_ingame[item['hero_npc_name']] = item
+            if item['hero_npc_name_alias']:
+                from_ingame[item['hero_npc_name_alias']] = item
+
+        wards_ehandle = dict()
+
         with open(self.path, 'r') as file:
-            interval = []  # interval
-            pings = []  # pings
-            wards = []  # obs / sen / sen_left / obs_left
-            deward = []  # sen_left / obs_left
-            # CHAT_MESSAGE_ITEM_PURCHASE
-            # CHAT_MESSAGE_RUNE_PICKUP
-            # CHAT_MESSAGE_SCAN_USED
-            # CHAT_MESSAGE_TOWER_KILL
-            # CHAT_MESSAGE_COURIER_LOST
-            chat_messages = []
-
-            # DOTA_COMBATLOG_DEATH
-            hero_deaths = []
-
-            roshan_deaths = []
-
-            # DOTA_COMBATLOG_DAMAGE
-            # DOTA_COMBATLOG_GOLD
-            # DOTA_COMBATLOG_XP
-            # DOTA_COMBATLOG_PURCHASE
-            # DOTA_COMBATLOG_ITEM
-            # combat_log = []
-
-            # DOTA_COMBATLOG_TEAM_BUILDING_KILL
-            building_kill = []
-
-            # DOTA_COMBATLOG_XP
-            xp = []
-
-            # DOTA_COMBATLOG_DAMAGE
-            damage = []
-
-            # DOTA_COMBATLOG_GOLD
-            gold = []
-
-            from_cdata = dict()
-            from_ingame = dict()
-
-            for item in self.players.get_all():
-                from_cdata[item['hero_name_cdota']] = item
-
-                from_ingame[item['hero_npc_name']] = item
-                if item['hero_npc_name_alias']:
-                    from_ingame[item['hero_npc_name_alias']] = item
-
-            wards_ehandle = dict()
             for line in file.readlines():
                 for pattern in ['"epilogue"',  #
                                 '"dotaplus"',  # dota plus info
@@ -393,12 +431,16 @@ class MatchAnalyser:
 
                 p_line = json.loads(line)
                 line_type: str = p_line['type']
+                line_time: int = p_line['time']
 
-                if line_type == 'interval' and p_line['time'] > -90:
+                if line_time <= -90:
+                    continue
+
+                if line_type == 'interval':
                     interval.append(p_line)
 
                     current_window_index = self._update_game_time_data(current_window_index=current_window_index,
-                                                                       time=p_line['time'], )
+                                                                       time=line_time, )
 
                 if line_type == 'DOTA_COMBATLOG_GOLD' and p_line['gold_reason'] == 5:
                     break
@@ -449,6 +491,7 @@ class MatchAnalyser:
                     roshan_deaths.append({x: p_line[x] for x in ['time', 'sourcename', ]})
 
         self._is_match_windows_set = True
+        self._set_incomplete_status()
 
         return {
             'interval': pd.DataFrame(interval),

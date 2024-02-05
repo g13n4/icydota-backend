@@ -47,7 +47,7 @@ def _get_leagues_from_main_page(soup: BeautifulSoup) -> List[Dict[str, str]]:
     return leagues_list
 
 
-@celery_app.task(name='look for new leagues')
+@celery_app.task(name='look_for_new_leagues')
 def check_for_leagues_in_lp(db_session: Session,
                             lowest_tier: int = 2,
                             qualifications_allowed: bool = False):

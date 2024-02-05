@@ -61,4 +61,4 @@ def get_replay_info(path):
 
 
 if __name__ == '__main__':
-    get_replay_info('replays/7254189995/7254189995.jsonl')
+    get_replay_info('replays/7559306183/7559306183.jsonl')

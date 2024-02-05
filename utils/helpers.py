@@ -1,4 +1,5 @@
 from decimal import Decimal
+from itertools import cycle
 from typing import Any, Dict
 
 import pandas as pd
@@ -115,3 +116,6 @@ def get_or_create(logger, *args, **kwargs):
             output = get_or_create_base(*args, **kwargs)
 
     return output
+
+
+bool_pool = cycle([True, False])

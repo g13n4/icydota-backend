@@ -1,6 +1,7 @@
 import time
 
 import requests
+from sqlmodel import select, Session
 
 from models import League
 from utils import get_stratz_league_data
@@ -14,15 +15,11 @@ def _is_a_value(dict_: dict, key_: str, ) -> bool:
 
 def _update_league_dates(league_obj: League,
                          start_date: int | None = None,
-                         end_date: int | None = None,
-                         use_obj_values: bool = False) -> None:
+                         end_date: int | None = None, ) -> None:
     unix_timestamp_now = int(time.time())
 
-    if not use_obj_values:
-        league_obj.has_dates = True
-    else:
-        start_date = league_obj.start_date
-        end_date = league_obj.end_date
+    league_obj.start_date = start_date
+    league_obj.end_date = end_date
 
     league_obj.has_started = bool(start_date < unix_timestamp_now)
     league_obj.has_ended = bool(end_date < unix_timestamp_now)
@@ -61,3 +58,16 @@ def create_league(league_id: int, **kwargs) -> League:
 
     else:
         raise requests.ConnectionError('STRATZ is not accessible right now')
+
+
+def get_or_create_league(league_id: int, db_session: Session, league_obj: League = None, ) -> League:
+    if league_obj is None:
+        league_q = db_session.execute(select(League).where(League.league_id == league_id)).first()
+        if not league_q:
+            league_obj = create_league(league_id)
+            db_session.add(league_obj)
+            db_session.commit()
+            db_session.refresh(league_obj)
+        else:
+            league_obj: League = league_q[0]
+    return league_obj

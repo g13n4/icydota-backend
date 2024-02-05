@@ -2,7 +2,7 @@ from ..celery_app import celery_app
 from ..models import League
 
 
-@celery_app.task(name='aggregate league data')
+@celery_app.task(name='aggregate_league_data')
 def process_aggregation(db_session, league_obj: League):
     pass
     # gad: GameAggregatedData | None = (db_session.execute(select(GameAggregatedData)

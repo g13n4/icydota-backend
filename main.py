@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from celery_app import celery_app
-from tasks import process_leagues_cron, update_leagues_dates_cron, process_league, process_game
+from tasks import process_leagues_cron, update_leagues_dates_cron, process_league, process_game_helper
 
 
 load_dotenv()
@@ -77,13 +77,13 @@ async def pong():
 #     return [League(name=league.name) for league in leagues]
 
 
-@app.get('/process/league/{league_id}', )
-async def process_league_api(league_id: int) -> TaskOut:
-    ctask = process_league.delay(league_id=league_id, )
-    return _to_task_out(ctask, name=process_league_api.__name__)
+@app.get('/process/league/{league_id}', status_code=202)
+async def process_league_api(league_id: int):
+    process_league(league_id=league_id, )
+    return {'status': 'processing'}
 
 
-@app.get('/process/match/{match_id}', )
-async def process_match_api(match_id: int) -> TaskOut:
-    ctask = process_game.delay(match_id=match_id, )
-    return _to_task_out(ctask, name=process_match_api.__name__)
+@app.get('/process/match/{match_id}', status_code=202)
+async def process_match_api(match_id: int):
+    process_game_helper(match_id=match_id, )
+    return {'status': 'processing'}

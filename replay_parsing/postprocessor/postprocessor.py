@@ -1,11 +1,13 @@
 import copy
+from functools import partial, reduce
 from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 
+from utils import get_both_slot_values
 from .columns_to_postprocess import LANE_COLUMNS, GAME_COLUMNS, SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA, \
-    COMPARE_DATA, COMPARE_DATA_SUPPORT
+    COMPARE_DATA_CORES, COMPARE_DATA_SUPPORT
 from ..modules import MatchPlayersData, MatchSplitter
 
 
@@ -17,6 +19,33 @@ def _flatten_for_pd(data: dict, db_names: list = None, ) -> list:
             for slot_k, slot_v in data.items() for ck, cv in slot_v.items()]
 
 
+def _clean_df_inplace(df_: pd.DataFrame) -> None:
+    df_.reset_index(inplace=True)
+    df_.replace([np.inf, -np.inf, np.nan], None, inplace=True)
+    del df_['slot']
+    return None
+
+
+def _get_df_slice(df: pd.DataFrame, index: list, slot: int | str, empty: bool = False) -> pd.DataFrame:
+    slot_str, slot_int = get_both_slot_values(slot)
+    df_index = pd.MultiIndex.from_tuples([(x, slot_str) for x in index], names=['data', 'slot'])
+
+    if empty:
+        return pd.DataFrame(np.nan, index=df_index, columns=df.columns).sort_index()
+
+    return df.loc[df_index, :].sort_index()
+
+
+def _reduce_dfs(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    df1_mask = (df1.isna() & ~df2.isna()).copy()
+    df2_mask = (df2.isna() & ~df1.isna()).copy()
+
+    df1[df1_mask] = 0
+    df2[df2_mask] = 0
+
+    return df1.add(df2, fill_value=np.nan).copy()
+
+
 def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, ) -> List[dict]:
     output = list()
     comparison_base = {
@@ -26,54 +55,73 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
         'slot_comparans': None,
         'position_comparans': None,
 
+        'general': False,
+
         'df_percent': None,
         'df_flat': None,
     }
 
     for player in MPD.get_all():
+        compare_columns = COMPARE_DATA_SUPPORT if player['position'] > 3 else COMPARE_DATA_CORES
+        get_df_slice = partial(_get_df_slice, df=data_df, index=compare_columns)  # columns are turned into index
+
+        player_df = get_df_slice(slot=player['slot'])
+
+        this_player_data = copy.deepcopy(comparison_base)
+        this_player_data['slot_comparandum'] = player['slot']
+        this_player_data['position_comparandum'] = player['position']
+
+        opponents_data_combined_percent = []
+        opponents_data_combined_flat = []
+
         for opponent_slot in player['opponents']:
             opponent = MPD[opponent_slot]
 
-            compare_columns = COMPARE_DATA_SUPPORT if player['position'] > 3 else COMPARE_DATA
-            comparison_df_index = pd.MultiIndex.from_tuples([(x, player['slot_text']) for x in compare_columns],
-                                                            names=['data', 'slot'])
-
-            comparison_df_percent = pd.DataFrame(np.nan,
-                                                 index=comparison_df_index,
-                                                 columns=data_df.columns).sort_index()
-
+            comparison_df_percent = get_df_slice(slot=player['slot'], empty=True)
             comparison_df_flat = comparison_df_percent.copy()
 
-            player_df_index = pd.MultiIndex.from_tuples([(x, player['slot_text']) for x in compare_columns],
-                                                        names=['data', 'slot'])
+            opponent_df = get_df_slice(slot=opponent['slot'])
 
-            opponent_df_index = pd.MultiIndex.from_tuples([(x, opponent['slot_text']) for x in compare_columns],
-                                                          names=['data', 'slot'])
+            this_opponent = copy.deepcopy(this_player_data)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                for comp_df, type_func, comp_list, comp_name in [
+                    (comparison_df_percent, np.divide, opponents_data_combined_percent, 'df_percent'),
+                    (comparison_df_flat, np.subtract, opponents_data_combined_flat, 'df_flat'),
+                ]:
+                    comp_df.loc[:, :] = type_func(player_df.values, opponent_df.values)
 
-            player_df = data_df.loc[player_df_index, :].sort_index()
-            opponent_df = data_df.loc[opponent_df_index, :].sort_index()
+                    comp_list.append(opponent_df.copy())
+                    if len(comp_list) > 1:
+                        reduce(_reduce_dfs, comp_list)
 
-            opponent_data = copy.deepcopy(comparison_base)
+                    _clean_df_inplace(comp_df)
+                    this_opponent[comp_name] = comp_df.copy()
+
+            this_opponent['slot_comparans'] = opponent['slot']
+            this_opponent['position_comparans'] = opponent['position']
+
+            output.append(this_opponent)
+
+        # COMBINE AGGREGATED DATA
+        if (opponents_number := len(player['opponents'])) != 1:
+
+            this_player_data['general'] = False
 
             with np.errstate(divide='ignore', invalid='ignore'):
-                comparison_df_percent.loc[comparison_df_index, :] = player_df.values / opponent_df.values
-                comparison_df_flat.loc[comparison_df_index, :] = player_df.values - opponent_df.values
+                for type_func, comp_list, comp_name in [
+                    (np.divide, opponents_data_combined_percent, 'df_percent'),
+                    (np.subtract, opponents_data_combined_flat, 'df_flat'),
+                ]:
+                    comparison_df_base = get_df_slice(slot=player['slot'], empty=True)
+                    aggregated_df: pd.DataFrame = opponents_data_combined_percent.pop()
 
-            for comp_df in [comparison_df_percent, comparison_df_flat]:
-                comp_df.reset_index(inplace=True)
-                comp_df.replace([np.inf, -np.inf, np.nan], None, inplace=True)
-                del comp_df['slot']
+                    comparison_df_base.loc[:, :] = type_func(player_df.values,
+                                                             np.divide(aggregated_df.values, opponents_number))
 
-            opponent_data['df_percent'] = comparison_df_percent.copy()
-            opponent_data['df_flat'] = comparison_df_flat.copy()
+                    _clean_df_inplace(comparison_df_base)
+                    this_player_data[comp_name] = comparison_df_base.copy()
 
-            opponent_data['slot_comparandum'] = player['slot']
-            opponent_data['position_comparandum'] = player['position']
-
-            opponent_data['slot_comparans'] = opponent['slot']
-            opponent_data['position_comparans'] = opponent['position']
-
-            output.append(opponent_data)
+            output.append(this_player_data)
 
     return output
 

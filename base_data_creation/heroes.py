@@ -6,12 +6,12 @@ from models import Hero
 
 
 def create_heroes(db_session: Session, update_heroes: bool = False) -> None:
-    sel_result = db_session.execute(select(Hero))
+    sel_result = db_session.exec(select(Hero))
     db_heroes = sel_result.all()
     if db_heroes and not update_heroes:
         return
 
-    heroes_db_dict = {x.odota_id: x for x in db_heroes}
+    heroes_db_dict = {x.id: x for x in db_heroes}
     r = requests.get('https://api.opendota.com/api/heroes')
     heroes = r.json()
     for hero in heroes:
@@ -19,7 +19,7 @@ def create_heroes(db_session: Session, update_heroes: bool = False) -> None:
             pass
 
         new_hero = Hero(
-            odota_id=hero['id'],
+            id=hero['id'],
             name=hero['localized_name'],
             npc_name=hero['name']
         )

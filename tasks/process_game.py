@@ -41,10 +41,9 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
         team_obj = get_or_create(logger=logger,
                                  db_session=db_session,
                                  model_obj=Team,
-                                 attribute='odota_id',
-                                 compare_to=data['team_id'],
+                                 get_key=data['team_id'],
                                  object_data=dict(
-                                     odota_id=data['team_id'],
+                                     id=data['team_id'],
                                      name=data['name'],
                                      tag=data['tag'],
                                  ))
@@ -59,7 +58,7 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
     players_dict: dict = {x: None for x in range(10)}
 
     for player in players:
-        this_steam_id = player['account_id']
+        this_account_id = player['account_id']
         this_nickname = player['name']
         this_current_acc_name = player['personaname']
         this_true_name_exists = True if this_nickname else False
@@ -69,11 +68,10 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
         player_obj = get_or_create(logger=logger,
                                    db_session=db_session,
                                    model_obj=Player,
-                                   attribute='steam_id',
-                                   compare_to=this_steam_id,
+                                   get_key=this_account_id,
                                    object_data=dict(
                                        nickname=this_name_to_use,
-                                       steam_id=this_steam_id,
+                                       account_id=this_account_id,
                                        official_name=this_true_name_exists,
                                    ))
 
@@ -86,15 +84,22 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 
 def process_game_helper(match_id: int, league_id: int | None = None):
     first_parser = next(bool_pool)
+
     (get_match_replay.s(match_id=match_id, first_parser=first_parser) |
-     process_game_data.s(league_id=league_id)).delay()
+     process_game_data.s(league_id=league_id))
 
 
-@shared_task(name='process_game_data', debug=True)
+@shared_task(name='process_game_data')
 def process_game_data(match_id: int, league_id: int | None = None):
     logger.info(f'Process replay for {match_id}')
 
     db_session: Session = get_sync_db_session()
+
+    game = db_session.get(Game, match_id)
+    if game:
+        logger.warning('Deleting already existing Game object')
+        db_session.delete(game)
+        db_session.commit()
 
     match_folder_path = Path(f'{BASE_PATH}/{match_id}/')
     json_path = Path(f'{BASE_PATH}/{match_id}/{match_id}.json')
@@ -115,10 +120,10 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     # DATA POOLS
     positions_all = get_all_sqlmodel_objs(db_session, Position)
-    positions_dict: Dict[int, Position] = {x.number: x for x in positions_all}  # "lane_role": 3,
+    positions_dict: Dict[int, Position] = {x.id: x for x in positions_all}  # "lane_role": 3,
 
     heroes_all = get_all_sqlmodel_objs(db_session, Hero)
-    heroes_dict: Dict[int, Hero] = {x.odota_id: x for x in heroes_all}  # "hero_id": 78,
+    heroes_dict: Dict[int, Hero] = {x.id: x for x in heroes_all}  # "hero_id": 78,
 
     # INITIAL DATA CREATION
     player_data_dict = dict()
@@ -132,7 +137,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
-            player_id=players_dict[this_slot].id,
+            player_id=players_dict[this_slot].account_id,
 
             position_id=positions_dict[this_position].id,
             hero_id=heroes_dict[this_hero].id,
@@ -145,19 +150,17 @@ def process_game_data(match_id: int, league_id: int | None = None):
             rank=player_info['rank_tier'],
             apm=player_info['actions_per_min'],
             slot=this_slot,
-            pings=player_info['pings'],
-
-        )
+            pings=player_info['pings'], )
 
         PGD_objs_dict[this_slot] = PGD_obj
 
         db_session.add(PGD_obj)
 
         player_data_dict[this_slot] = {
-            'position': positions_dict[this_position].number,
+            'position': positions_dict[this_position].id,
             'position_id': positions_dict[this_position].id,
             'hero_id': heroes_dict[this_hero].id,
-            'player_id': players_dict[this_slot].id,
+            'player_id': players_dict[this_slot].account_id,
 
         }
 
@@ -215,15 +218,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
     PGD_objs = []
     for this_slot in range(10):
         PGD_obj = PGD_objs_dict[this_slot]
-        GP_obj = game_performance_objs[this_slot]
+        GP_objs = game_performance_objs[this_slot]
 
-        PGD_obj.performance = GP_obj
+        PGD_obj.performance = GP_objs
         db_session.add(PGD_obj)
         PGD_objs.append(PGD_obj)
 
 
     game = Game(
-        match_id=match_id,
+        id=match_id,
 
         league=league_obj,
         league_id=league_obj.id,

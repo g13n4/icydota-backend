@@ -1,6 +1,7 @@
 from functools import partial
 from typing import Dict
 
+import numpy as np
 import pandas as pd
 
 from replay_parsing.modules import MatchSplitter
@@ -35,10 +36,11 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, ) -> Dict[str,
                 if not player_window['exists']:
                     continue
 
-                value = execute_window_aggregation(df=player_window['df'],
-                                                   column=column,
-                                                   agg_type=agg_type,
-                                                   df_agg=agg_window['df'])
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    value = execute_window_aggregation(df=player_window['df'],
+                                                       column=column,
+                                                       agg_type=agg_type,
+                                                       df_agg=agg_window['df'])
 
                 output_windows[player_df['name']][value_type][player_window['name']] = value
 

@@ -3,6 +3,7 @@ import logging
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 from celery.signals import after_setup_logger, after_setup_task_logger, task_prerun
 from dotenv import load_dotenv
 
@@ -57,3 +58,20 @@ def setup_task_loggers(logger, *args, **kwargs):
 @task_prerun.connect
 def setup_task_post_run(task, *args, **kwargs):
     logger.info(f"{task.name}|{task.request.id}|args: {args}|kwargs: {kwargs['kwargs']}")
+
+
+@celery_app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # Process league games
+    sender.add_periodic_task(
+        crontab(minute='0', hour='*/6'),
+        task='process_league_games_(cron)',
+        name='process league games every 6 hours',
+    )
+
+    # Update leagues dates
+    sender.add_periodic_task(
+        crontab(minute='0', hour='12', day_of_week='1,4'),
+        task='update_leagues_date_(cron)',
+        name='update leagues start and end date every 3-4 days',
+    )

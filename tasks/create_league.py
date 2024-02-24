@@ -29,7 +29,7 @@ def _update_league_dates(league_obj: League,
 
 def update_league_obj_dates(league_obj: League, league_data: dict | None = None) -> bool:
     if not league_data:
-        league_data = get_stratz_league_data(league_id=league_obj.league_id)
+        league_data = get_stratz_league_data(league_id=league_obj.id)
 
     updated_dates = False
 
@@ -48,7 +48,7 @@ def create_league(league_id: int, **kwargs) -> League:
 
     if league_data:
         league_obj = League(
-            league_id=league_id,
+            id=league_id,
             name=league_data['displayName'],
             **kwargs, )
 
@@ -62,12 +62,12 @@ def create_league(league_id: int, **kwargs) -> League:
 
 def get_or_create_league(league_id: int, db_session: Session, league_obj: League = None, ) -> League:
     if league_obj is None:
-        league_q = db_session.execute(select(League).where(League.league_id == league_id)).first()
+        league_q = db_session.exec(select(League).where(League.id == league_id)).first()
         if not league_q:
             league_obj = create_league(league_id)
             db_session.add(league_obj)
             db_session.commit()
             db_session.refresh(league_obj)
         else:
-            league_obj: League = league_q[0]
+            league_obj: League = league_q
     return league_obj

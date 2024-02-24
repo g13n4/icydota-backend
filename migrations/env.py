@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from models import SQLModel
 
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -29,11 +30,20 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def _include_name(name, type_, parent_names):
     if type_ == "schema":
         return name
     else:
         return True
+
+
+def skip_views(object, name: str, type_, reflected, compare_to):
+    if type_ == 'table' and name.endswith('_view'):
+        print(name)
+        return False
+
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -54,6 +64,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
+        include_object=skip_views,
         dialect_opts={"paramstyle": "named"},
     )
 
@@ -66,6 +77,7 @@ def do_run_migrations(connection: Connection) -> None:
                       target_metadata=target_metadata,
                       version_table_schema=target_metadata.schema,
                       compare_type=True,
+                      include_object=skip_views,
                       include_schemas=False, )
 
     with context.begin_transaction():

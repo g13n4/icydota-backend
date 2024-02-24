@@ -2,7 +2,7 @@ import os
 import pathlib
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 
 from models import PerformanceTotalData, GamePerformance
 from replay_parsing import MatchAnalyser, MatchSplitter
@@ -19,7 +19,7 @@ def process_game_replay(db_session,
                         PTD_objs_dict: Dict[int, PerformanceTotalData],
                         additional_player_data: Dict[int, Dict[str, Any]],
                         logger: Logger,
-                        ) -> Tuple[Dict[int, GamePerformance], Dict[str, Any]]:
+                        ) -> Tuple[Dict[int, List[GamePerformance]], Dict[str, Any]]:
     logger.info('Parsing raw replay data')
     match_path = os.path.join(match_replay_folder_path, Path(f'./{match_id}.jsonl'))
 
@@ -35,7 +35,10 @@ def process_game_replay(db_session,
                                                      ptd_dict=PTD_objs_dict)
 
     logger.info('Processing main replay data')
-    GP_objs_dict = process_main_replay_data(db_session=db_session, match=match, match_data=match_data, MS=MS,
+    GP_objs_dict = process_main_replay_data(db_session=db_session,
+                                            match=match,
+                                            match_data=match_data,
+                                            MS=MS,
                                             PerTotalData_dict=PTD_objs_dict)
 
     return (GP_objs_dict, additional_data)

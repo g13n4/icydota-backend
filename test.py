@@ -22,12 +22,6 @@ def get_replay_info(path):
     match = MatchAnalyser(pathlib.Path(path))
     match_data = match.get_match_data()
     match.players.set_position_from_list([1, 4, 5, 2, 3, 1, 2, 3, 4, 5])
-    match.players.set_player_data_from_dict({
-        x: {
-            'hero_id': 100,
-            'player_id': 100,
-        } for x in range(10)
-    })
 
     MS = MatchSplitter(game_length=match.game_length, match_windows=match.match_windows)
 

@@ -51,11 +51,11 @@ def _get_leagues_from_main_page(soup: BeautifulSoup) -> List[Dict[str, str]]:
 def check_for_leagues_in_lp(db_session: Session,
                             lowest_tier: int = 2,
                             qualifications_allowed: bool = False):
-    sel_result = db_session.execute(select(League).where(League.fully_parsed == False))
-    league_objs: List[League] = sel_result.scalars().all()
+    sel_result = db_session.exec(select(League).where(League.fully_parsed == False))
+    league_objs: List[League] = sel_result.all()
 
     db_leagues_dict_link: Dict[str, League] = {x.pd_link: x for x in league_objs}
-    db_leagues_dict_id: Dict[int, League] = {x.league_id: x for x in league_objs}
+    db_leagues_dict_id: Dict[int, League] = {x.id: x for x in league_objs}
 
     r = requests.get(BASE_SITE + "/dota2/Main_Page")
     if r.status_code == 200:

@@ -1,46 +1,102 @@
 import re
 from decimal import Decimal
-from typing import Tuple
-
-from pydantic.fields import ModelField
+from typing import Generator, TypeVar, Type
 
 
-def _comparable(mf: ModelField) -> Tuple[bool, bool]:
-    """Check if value can be compared i.e. not a model, id key, string, etc
-    :returns two booleans: first - can the value be compared, second - is it a boolean value
-    """
-    for func_ in [issubclass, isinstance]:
-        if func_(mf.outer_type_, bool):
-            return (True, True)
-
-    # we need to separate them to ensure that a bool type is not just an int
-    for func_ in [issubclass, isinstance]:
-        if func_(mf.outer_type_, (int, float, Decimal,)):
-            return (True, False)
-
-    return (False, False)
+SQLModelModel = TypeVar('SQLModelModel')
 
 
-def compare_performance(comparandum_obj, comparans_obj, output_obj, percent: bool):
-    output_dict = {}
-    for name, mf in output_obj.__fields__.items():
-        if name in ['id'] or re.search(r'_id$', name):
+def _get_fields(model: SQLModelModel) -> Generator:
+    schema = model.schema()
+
+    fields, req_fields = schema['properties'], schema['required']
+
+    for f_name, f_props in fields.items():
+        is_required = True if f_name in req_fields else False
+
+        is_comparable = True
+        match f_props['type']:
+            case 'integer':
+                func_ = int
+            case 'number':  # float
+                func_ = float
+            case 'boolean':
+                func_ = bool
+            case _:
+                func_ = None
+                is_comparable = False
+
+        if not is_comparable or re.search(r'(^|_)id$', f_name):
             continue
 
-        is_comparable, is_bool = _comparable(mf)
+        yield f_name, func_, f_props['type'], is_required
+
+
+def compare_performance(comparandum_obj: SQLModelModel,
+                        comparans_obj: SQLModelModel,
+                        output_obj: Type[SQLModelModel],
+                        percent: bool,
+                        coef: int = 1,
+                        ) -> SQLModelModel:
+    output_dict = dict()
+
+    for name, type_func, type_name, is_required in _get_fields(output_obj):
 
         comparandum_value = getattr(comparandum_obj, name)
         comparans_value = getattr(comparans_obj, name)
 
-        if (not is_comparable) or comparandum_value is None or comparans_value is None:
+        if (comparandum_value is None or comparans_value is None) and not is_required:
+            output_dict[name] = None
             continue
 
-        if is_bool:
-            output_dict[name] = comparandum_value == comparans_value
+        if type_func is bool:
+            output_dict[name] = (comparandum_value == comparans_value)
         else:
+            if (not comparandum_value or not comparans_value) and percent:
+                output_dict[name] = 0
+                continue
+
+            adjusted_cps_v = (comparans_value / coef)
+
             if percent:
-                output_dict[name] = comparandum_value / comparans_value
+                output_dict[name] = type_func(comparandum_value / adjusted_cps_v)
             else:
-                output_dict[name] = comparandum_value - comparans_value
+                output_dict[name] = type_func(comparandum_value - adjusted_cps_v)
+
+            if type_name == 'number':
+                output_dict[name] = round(Decimal(output_dict[name]))
+
+    return output_obj(**output_dict)
+
+
+def combine_total_performance(comparandum_obj: SQLModelModel,
+                              comparans_obj: SQLModelModel,
+                              output_obj: Type[SQLModelModel],
+                              ) -> SQLModelModel:
+    output_dict = dict()
+
+    for name, type_func, type_name, is_required in _get_fields(output_obj):
+
+        comparandum_value = getattr(comparandum_obj, name)
+        comparans_value = getattr(comparans_obj, name)
+
+        if (comparandum_value is None or comparans_value is None) and not is_required:
+            output_dict[name] = None
+            continue
+
+        if type_func is bool:
+            output_dict[name] = (comparandum_value == comparans_value)
+        else:
+            if (not comparandum_value or not comparans_value):
+                output_dict[name] = 0
+            elif not comparandum_value:
+                output_dict[name] = comparans_value
+            elif not comparans_value:
+                output_dict[name] = comparandum_value
+            else:
+                output_dict[name] = type_func(comparandum_value + comparans_value)
+
+            if type_name == 'number':
+                output_dict[name] = round(Decimal(output_dict[name]))
 
     return output_obj(**output_dict)

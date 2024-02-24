@@ -1,8 +1,8 @@
-"""create_base_data
+"""base_object_creation
 
-Revision ID: 59e623740d2d
-Revises: a24fa64db7cf
-Create Date: 2024-01-17 16:21:52.906428
+Revision ID: f57a2e451f95
+Revises: 804e69f61c41
+Create Date: 2024-02-19 02:01:06.300206
 
 """
 from typing import Sequence, Union
@@ -13,12 +13,13 @@ from sqlmodel.orm.session import Session
 from base_data_creation import create_buildings, delete_buildings
 from base_data_creation import create_heroes, delete_heroes
 from base_data_creation import create_performance_data_tags, delete_performance_data_tags
+from base_data_creation import create_players_and_teams, delete_all_players_and_teams
 from base_data_creation import create_positions, delete_positions
 
 
 # revision identifiers, used by Alembic.
-revision: str = '59e623740d2d'
-down_revision: Union[str, None] = 'c3b1ab7d2f39'
+revision: str = 'f57a2e451f95'
+down_revision: Union[str, None] = '804e69f61c41'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -30,7 +31,7 @@ def upgrade() -> None:
         create_buildings(sqlmodel_session)
         create_heroes(sqlmodel_session)
         create_positions(sqlmodel_session)
-    # ### end Alembic commands ###
+        create_players_and_teams(sqlmodel_session)
 
 
 def downgrade() -> None:
@@ -40,4 +41,4 @@ def downgrade() -> None:
         delete_buildings(sqlmodel_session)
         delete_heroes(sqlmodel_session)
         delete_positions(sqlmodel_session)
-    # ### end Alembic commands ###
+        delete_all_players_and_teams(sqlmodel_session)

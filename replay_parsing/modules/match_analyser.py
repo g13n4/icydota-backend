@@ -156,7 +156,7 @@ class MatchPlayersData:
             player_opponents_positions = POSITION_OPPONENTS[player_position]
 
             for opponent in players:
-                if player['side'] == opponent['side'] and not (opponent['position'] in player_opponents_positions):
+                if player['side'] == opponent['side'] or opponent['position'] not in player_opponents_positions:
                     continue
 
                 player['opponents'].append(opponent['slot'])

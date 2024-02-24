@@ -7,7 +7,29 @@ PERCENTAGE_DATA = ['damage|from_all__dmg_inst', 'damage|from_all__median', 'dama
 
 # Compare data = slot 0: [1, 2, 3, 4, 3], slot 1: [1, 1, 2, 5, 3]
 # for slot 0: [100%, 200%, 150%, 80%, 100%], for slot 1: [100%, 50%, 67%, 125%, 100%]
-COMPARE_DATA = ['damage|from_all__dmg_inst', 'damage|from_all__median', 'damage|from_all__sum', 'damage|from_buildings__dmg_inst', 'damage|from_buildings__median', 'damage|from_buildings__sum', 'damage|from_creatures__dmg_inst', 'damage|from_creatures__median', 'damage|from_creatures__sum', 'damage|from_heroes__dmg_inst', 'damage|from_heroes__median', 'damage|from_heroes__sum', 'damage|from_illusions__dmg_inst', 'damage|from_illusions__median', 'damage|from_illusions__sum', 'damage|to_all__dmg_inst', 'damage|to_all__median', 'damage|to_all__sum', 'damage|to_buildings__dmg_inst', 'damage|to_buildings__median', 'damage|to_buildings__sum', 'damage|to_creatures__dmg_inst', 'damage|to_creatures__median', 'damage|to_creatures__sum', 'damage|to_heroes__dmg_inst', 'damage|to_heroes__median', 'damage|to_heroes__sum', 'damage|to_illusions__dmg_inst', 'damage|to_illusions__median', 'damage|to_illusions__sum', 'damage|with_summons__dmg_inst', 'damage|with_summons__median', 'damage|with_summons__sum', 'gold|death penalty', 'gold|gold for assist', 'gold|gold for killing buildings', 'gold|gold for killing creeps', 'gold|gold for killing heroes', 'gold|gold for killing neutrals', 'interval|deaths__avg_(by_length)_pm', 'interval|deaths__max', 'interval|deaths__max_global_perc', 'interval|gold__gained_pm_median', 'interval|gold__gained_pw', 'interval|gold__max', 'interval|gold__max_global_perc', 'interval|kda__avg_(by_length)_pm', 'interval|kda__max', 'interval|kills__avg_(by_length)_pm', 'interval|kills__max', 'interval|kills__max_global_perc', 'interval|level__max', 'interval|lh__avg_(by_length)_pm', 'interval|lh__gained_pw', 'interval|lh__max', 'interval|movement__avg_(by_length)_pm', 'interval|movement__sum', 'interval|networth__gained_pw', 'interval|networth__max', 'interval|rune_pickups__max', 'interval|teamfight_participation__avg', 'interval|xp__gained_pm_median', 'interval|xp__gained_pw', 'interval|xp__max', 'interval|xp__max_global_perc', 'xp|xp for creeps', 'xp|xp for creeps pm', 'xp|xp for heroes', 'xp|xp for heroes pm']
+COMPARE_DATA_CORES = ['damage|from_all__dmg_inst', 'damage|from_all__median', 'damage|from_all__sum',
+                      'damage|from_buildings__dmg_inst', 'damage|from_buildings__median', 'damage|from_buildings__sum',
+                      'damage|from_creatures__dmg_inst', 'damage|from_creatures__median', 'damage|from_creatures__sum',
+                      'damage|from_heroes__dmg_inst', 'damage|from_heroes__median', 'damage|from_heroes__sum',
+                      'damage|from_illusions__dmg_inst', 'damage|from_illusions__median', 'damage|from_illusions__sum',
+                      'damage|to_all__dmg_inst', 'damage|to_all__median', 'damage|to_all__sum',
+                      'damage|to_buildings__dmg_inst', 'damage|to_buildings__median', 'damage|to_buildings__sum',
+                      'damage|to_creatures__dmg_inst', 'damage|to_creatures__median', 'damage|to_creatures__sum',
+                      'damage|to_heroes__dmg_inst', 'damage|to_heroes__median', 'damage|to_heroes__sum',
+                      'damage|to_illusions__dmg_inst', 'damage|to_illusions__median', 'damage|to_illusions__sum',
+                      'damage|with_summons__dmg_inst', 'damage|with_summons__median', 'damage|with_summons__sum',
+                      'gold|death penalty', 'gold|gold for assist', 'gold|gold for killing buildings',
+                      'gold|gold for killing creeps', 'gold|gold for killing heroes', 'gold|gold for killing neutrals',
+                      'interval|deaths__avg_(by_length)_pm', 'interval|deaths__max', 'interval|deaths__max_global_perc',
+                      'interval|gold__gained_pm_median', 'interval|gold__gained_pw', 'interval|gold__max',
+                      'interval|gold__max_global_perc', 'interval|kda__avg_(by_length)_pm', 'interval|kda__max',
+                      'interval|kills__avg_(by_length)_pm', 'interval|kills__max', 'interval|kills__max_global_perc',
+                      'interval|level__max', 'interval|lh__avg_(by_length)_pm', 'interval|lh__gained_pw',
+                      'interval|lh__max', 'interval|movement__avg_(by_length)_pm', 'interval|movement__sum',
+                      'interval|networth__gained_pw', 'interval|networth__max', 'interval|rune_pickups__max',
+                      'interval|teamfight_participation__avg', 'interval|xp__gained_pm_median',
+                      'interval|xp__gained_pw', 'interval|xp__max', 'interval|xp__max_global_perc', 'xp|xp for creeps',
+                      'xp|xp for creeps pm', 'xp|xp for heroes', 'xp|xp for heroes pm']
 
 
 COMPARE_DATA_SUPPORT = ['damage|from_all__dmg_inst', 'damage|from_all__median', 'damage|from_all__sum',
@@ -88,6 +110,6 @@ AVERAGE_TOTAL_DATA = ['damage|from_all__mean', 'damage|from_all__median', 'damag
                       'xp|xp for creeps pm', 'xp|xp for heroes pm']
 
 ALL_DATA_TO_COMPARE = {
-    'carry': COMPARE_DATA,
+    'carry': COMPARE_DATA_CORES,
     'support': COMPARE_DATA_SUPPORT,
 }

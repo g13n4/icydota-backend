@@ -1,12 +1,15 @@
+import re
 from decimal import Decimal
 from itertools import cycle
-from typing import Any, Dict
+from typing import Any, Dict, List, TypeVar, Type
 
 import pandas as pd
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
 from tabulate import tabulate
 
+
+T = TypeVar('T')
 
 def print_unique_values(df: pd.DataFrame, column: str):
     for x in sorted([x for x in df[column].unique().tolist() if isinstance(x, str)]):
@@ -29,8 +32,8 @@ def is_numeric_type(value, none_is_true: bool = True) -> bool:
 
 
 def get_all_sqlmodel_objs(db_session: Session, model, ) -> list:
-    sel_result = db_session.execute(select(model))
-    return sel_result.scalars().all()
+    sel_result = db_session.exec(select(model))
+    return sel_result.all()
 
 
 def get_both_slot_values(key: str | int) -> (str, int):
@@ -83,15 +86,12 @@ def refresh_objects(db_session: Session, objects, ) -> None:
 
 
 def get_or_create_base(db_session: Session,
-                       model_obj,
-                       attribute: str,
-                       compare_to: Any,
-                       object_data: Dict[str, Any]):
-    object_qr = (db_session
-                 .execute(select(model_obj)
-                          .where(getattr(model_obj, attribute) == compare_to))
-                 .first())
-    if not object_qr:
+                       model_obj: Type[T],
+                       get_key: Any,
+                       object_data: Dict[str, Any]) -> T:
+    obj = db_session.get(model_obj, get_key)
+
+    if not obj:
         new_obj = model_obj(**object_data)
 
         db_session.add(new_obj)
@@ -100,7 +100,7 @@ def get_or_create_base(db_session: Session,
 
         return new_obj
     else:
-        return object_qr[0]
+        return obj
 
 
 def get_or_create(logger, *args, **kwargs):
@@ -119,3 +119,9 @@ def get_or_create(logger, *args, **kwargs):
 
 
 bool_pool = cycle([True, False])
+
+
+def get_sqlmodel_fields(model) -> List[str]:
+    schema = model.schema()
+    fields = schema['properties']
+    return [field_name for field_name in fields.keys() if not re.search(r'(^|_)id$', field_name)]

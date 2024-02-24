@@ -6,7 +6,7 @@ from replay_parsing.windows import ALL_WINDOWS
 
 
 def create_performance_data_tags(db_session: Session, ) -> None:
-    test_obj = db_session.execute(select(PerformanceDataCategory))
+    test_obj = db_session.exec(select(PerformanceDataCategory))
     PDC_ojbs = test_obj.all()
     if PDC_ojbs:
         return
@@ -31,7 +31,7 @@ def create_performance_data_tags(db_session: Session, ) -> None:
 
 
 def delete_performance_data_tags(db_session: Session, ) -> None:
-    test_obj = db_session.execute(select(PerformanceDataCategory))
+    test_obj = db_session.exec(select(PerformanceDataCategory))
     PDC_ojbs = test_obj.all()
     for PDC_obj in PDC_ojbs:
         db_session.delete(PDC_obj)

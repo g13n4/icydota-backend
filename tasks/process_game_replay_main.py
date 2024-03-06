@@ -10,7 +10,7 @@ from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_window
     process_wards_windows, process_deward_windows, process_damage_windows, \
     process_xp_windows, process_gold_windows, postprocess_data, MatchPlayersData
 from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
-    compare_performance, combine_total_performance
+    compare_performance, combine_total_performance, to_dec
 
 
 def _get_PDT_objects(db_session,
@@ -26,8 +26,6 @@ def _get_PDT_objects(db_session,
     return PDT_dict
 
 
-def _to_dec(number: float | int | None):
-    return number and round(Decimal(number), 2)
 
 
 def _fill_basic_PWDs(db_session,
@@ -43,7 +41,7 @@ def _fill_basic_PWDs(db_session,
         wit_type, wi_name = data_name.split('|')
         _, slot_num = get_both_slot_values(slot_text)
 
-        pwd_dict = {x: _to_dec(line[x]) for x in model_fields}
+        pwd_dict = {x: to_dec(line[x]) for x in model_fields}
 
         pwd_dict['data_type'] = PDT_dict[wi_name]
 
@@ -72,37 +70,43 @@ def _fill_comparison_pws(db_session,
                          PerfTotalData_dict: Dict[int, PerformanceTotalData],
                          players_data: MatchPlayersData,
                          PDT_dict: Dict[str, PerformanceDataType],
-                         model_fields: List[str],
-                         ) -> Dict[int, List[GamePerformance]]:
+                         model_fields: List[str], ) -> Dict[int, List[GamePerformance]]:
+    # WINDOW DATA
     game_performance_objs = {x: [] for x in range(10)}
-    for item in sorted(comparison_data, key=lambda x: x['general']):
+    # we iterate over list that contains two types of dfs: flat and perc comparisons
+    for idx, item in enumerate(sorted(comparison_data, key=lambda x: not x['basic'])):  # We want to start with True's
         combine_tdp_func = partial(combine_total_performance, output_obj=PerformanceTotalData)
-        total_data_objs = {x: [] for x in range(10)}
+
+        # iterate over these dfs one by one
         for df, flat_comparison in [(item['df_flat'], True), (item['df_percent'], False)]:
 
             window_objs = []
+            # iterate over data in these dfs
             for index, line in iterate_df(df, use_offset=False):
                 w_type, w_name = line['data'].split('|')
 
-                pwd_dict = {x: _to_dec(line[x]) for x in model_fields}
+                pwd_dict = {x: to_dec(line[x]) for x in model_fields}
                 pwd_dict['data_type'] = PDT_dict[w_name]
                 ppws_obj = PerformanceWindowData(**pwd_dict)
 
                 db_session.add(ppws_obj)
                 window_objs.append(ppws_obj)
 
+            # TOTAL DATA
             comparandum_slot = item['slot_comparandum']
             comparandum_data = players_data[comparandum_slot]
             comparandum_total_obj = PerfTotalData_dict[comparandum_slot]
-            if not item['general']:
+            adjustment_coef = 1
+
+            # NOT A COMBINATION
+            if item['basic']:
                 comparans_slot = item['slot_comparans']
                 comparans_data = players_data[comparans_slot]
                 comparans_total_obj = PerfTotalData_dict[comparans_slot]
 
-                total_data_objs[comparandum_slot].append(comparans_total_obj)
-
                 CT_obj = ComparisonType(
                     flat=flat_comparison,
+                    basic=True,
 
                     player_cpd_id=comparandum_data['player_id'],
                     player_cps_id=comparans_data['player_id'],
@@ -114,12 +118,12 @@ def _fill_comparison_pws(db_session,
                     pos_cps_id=comparans_data['position_id'],
                 )
                 db_session.add(CT_obj)
-
-                adjustment_coef = 1
             else:
+                # COMBINATION OF SEVERAL DATA
+
                 CT_obj = ComparisonType(
                     flat=flat_comparison,
-                    general=True,
+                    basic=False,
 
                     player_cpd_id=comparandum_data['player_id'],
                     hero_cpd_id=comparandum_data['hero_id'],
@@ -127,11 +131,14 @@ def _fill_comparison_pws(db_session,
                 )
                 db_session.add(CT_obj)
 
-                adjustment_coef = len(total_data_objs[comparandum_slot])
-                reduce(combine_tdp_func, total_data_objs[comparandum_slot])
-                comparans_total_obj: PerformanceTotalData = total_data_objs[comparandum_slot].pop()
+                opponents: List[int] = players_data[comparandum_slot]['opponents']
+                adjustment_coef = len(opponents)
+                opponents_PTDs = [PerfTotalData_dict[x] for x in opponents]
+                reduce(combine_tdp_func, opponents_PTDs)
+                comparans_total_obj: PerformanceTotalData = opponents_PTDs.pop()
 
             # FILLING GAME PERFORMANCE
+            # CREATE A TOTAL DATA COMPARISON
             ctp_obj: PerformanceTotalData = compare_performance(comparandum_total_obj,
                                                                 comparans_total_obj,
                                                                 PerformanceTotalData,
@@ -149,7 +156,7 @@ def _fill_comparison_pws(db_session,
 
             game_performance_objs[comparandum_slot].append(game_performance_obj)
 
-        return game_performance_objs
+    return game_performance_objs
 
 
 def process_main_replay_data(db_session,

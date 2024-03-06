@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import sqlalchemy as db
 from pydantic import condecimal
@@ -16,9 +16,29 @@ def _fk(column: str, key_name: str = 'id', bigint: int = False, cascade: bool = 
                                      **column_kwargs), )
 
 
-DELETE_CASCADE = {"cascade": "all,delete"}
-LAZY_SELECT = {"lazy": "select"}
-CASCADE_AND_LAZY = {**DELETE_CASCADE, **LAZY_SELECT}
+DEFAULT_SA_KWARGS = {
+    "cascade": "all,delete",
+    "join_depth": 3,
+    "lazy": "selectin"
+}
+
+
+def sa_kwargs_setter(add_default: bool = False, *args, **kwargs) -> Dict[str, str | int]:
+    if add_default:
+        kwargs = {**DEFAULT_SA_KWARGS, **kwargs, }
+
+    sa_kwargs = dict()
+    for arg in args:
+        if arg not in DEFAULT_SA_KWARGS:
+            raise KeyError
+        else:
+            sa_kwargs[arg] = DEFAULT_SA_KWARGS[arg]
+
+    for k, v in kwargs.items():
+        sa_kwargs[k] = v
+
+    return sa_kwargs
+
 
 
 # BASE IN GAME DATA
@@ -63,7 +83,7 @@ class Team(SQLModel, table=True):
 class League(SQLModel, table=True):
     __tablename__ = 'leagues'
 
-    id: int = Field(default=None, primary_key=True)  # steam league id
+    id: int = Field(default=None, primary_key=True, index=True)  # steam league id
 
     pd_link: Optional[str]
     name: Optional[str]
@@ -77,15 +97,21 @@ class League(SQLModel, table=True):
     has_ended: Optional[bool] = Field(default=None)
     fully_parsed: bool = Field(default=False)
 
-    games: List["Game"] = Relationship(back_populates="league")
+    games: List["Game"] = Relationship(back_populates="league", sa_relationship_kwargs=sa_kwargs_setter(False,
+                                                                                                        "cascade",
+                                                                                                        "lazy",
+                                                                                                        order_by="Game.id",
+                                                                                                        join_depth=4))
 
 
 # GAME DATA
 class Game(SQLModel, table=True):
-    id: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, primary_key=True), )  # match_id
+    id: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, primary_key=True, index=True), )  # match_id
+
+    name: Optional[str]
 
     league: Optional[League] = Relationship(back_populates='games')
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
 
     patch = int
 
@@ -94,7 +120,7 @@ class Game(SQLModel, table=True):
     dire_win: bool
 
     players_data: List["PlayerGameData"] = Relationship(back_populates="game",
-                                                        sa_relationship_kwargs=CASCADE_AND_LAZY)
+                                                        sa_relationship_kwargs=sa_kwargs_setter())
 
     average_roshan_window_time: Optional[int]
     roshan_death: List["RoshanDeath"] = Relationship(back_populates="game")
@@ -132,11 +158,11 @@ class PlayerGameData(SQLModel, table=True):
     apm: int
     pings: int
 
-    game_id: Optional[int] = _fk('games', bigint=True)
+    game_id: Optional[int] = _fk('games', bigint=True, index=True)
     game: Optional["Game"] = Relationship(back_populates="players_data")
 
     performance: List["GamePerformance"] = Relationship(back_populates="player_game_data",
-                                                        sa_relationship_kwargs=CASCADE_AND_LAZY)
+                                                        sa_relationship_kwargs=sa_kwargs_setter(add_default=True))
 
     created_at: datetime = Field(sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), })
 
@@ -151,7 +177,7 @@ class ComparisonType(SQLModel, table=True):
 
     flat: bool  # percent or flat
 
-    general: bool = Field(default=False)  # general = pos 1 gets compared to pos sum(1, 3) / 2
+    basic: Optional[bool] = Field(default=True)  # basic != pos 1 gets compared to pos sum(1, 3) / 2
     player_cpd_id: Optional[int] = _fk('players', 'account_id')
     player_cps_id: Optional[int] = _fk('players', 'account_id')
 
@@ -198,22 +224,21 @@ class DataAggregationType(SQLModel, table=True):
 class GamePerformance(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    is_comparison: bool = Field(default=False)
-    comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id")
-    comparison: Optional["ComparisonType"] = Relationship(back_populates='performance',
-                                                          sa_relationship_kwargs={"cascade": "delete"})
+    is_comparison: bool = Field(default=False, index=True)
+    comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id", index=True)
+    comparison: Optional["ComparisonType"] = Relationship(back_populates='performance', )
 
-    is_aggregation: bool = Field(default=False)
-    aggregation_id: Optional[int] = Field(default=None, foreign_key="data_aggregation_types.id")
+    is_aggregation: bool = Field(default=False, index=True)
+    aggregation_id: Optional[int] = Field(default=None, foreign_key="data_aggregation_types.id", index=True)
     aggregation: Optional["DataAggregationType"] = Relationship(back_populates='performance',
-                                                                sa_relationship_kwargs={"cascade": "delete"})
+                                                                sa_relationship_kwargs={"cascade": "delete", })
 
     window_data: List["PerformanceWindowData"] = Relationship(back_populates="game_performance",
-                                                              sa_relationship_kwargs=CASCADE_AND_LAZY)
+                                                              sa_relationship_kwargs=sa_kwargs_setter(add_default=True))
     total_data: List["PerformanceTotalData"] = Relationship(back_populates="game_performance",
-                                                            sa_relationship_kwargs=CASCADE_AND_LAZY)
+                                                            sa_relationship_kwargs=sa_kwargs_setter(add_default=True))
 
-    player_game_data_id: Optional[int] = Field(default=None, foreign_key="players_game_data.id")
+    player_game_data_id: Optional[int] = Field(default=None, foreign_key="players_game_data.id", index=True)
     player_game_data: Optional["PlayerGameData"] = Relationship(back_populates="performance")
 
     __tablename__ = 'games_performance'
@@ -224,7 +249,8 @@ class PerformanceDataCategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # damage / interval
 
-    data_type: List["PerformanceDataType"] = Relationship(back_populates='data_category')
+    data_type: List["PerformanceDataType"] = Relationship(back_populates='data_category',
+                                                          sa_relationship_kwargs={'lazy': "selectin"}, )
 
     __tablename__ = 'performance_data_categories'
 
@@ -233,7 +259,7 @@ class PerformanceDataType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-    data_category_id: Optional[int] = Field(default=None, foreign_key="performance_data_categories.id")
+    data_category_id: Optional[int] = Field(default=None, foreign_key="performance_data_categories.id", index=True)
     data_category: Optional["PerformanceDataCategory"] = Relationship(back_populates='data_type', )
 
     pwd: List["PerformanceWindowData"] = Relationship(back_populates='data_type')
@@ -242,13 +268,8 @@ class PerformanceDataType(SQLModel, table=True):
 
 
 # PERFORMANCE DATA INFO
-class PerformanceWindowData(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-
-    data_type_id: Optional[int] = Field(default=None, foreign_key="performance_data_types.id")
-    data_type: Optional["PerformanceDataType"] = Relationship(back_populates='pwd')
-
-    # laning
+# PERFORMANCE WINDOW
+class PerformanceWindowBase(SQLModel):
     l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     l4: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     l6: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -256,7 +277,6 @@ class PerformanceWindowData(SQLModel, table=True):
     l10: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     ltotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    # next phase
     g15: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     g30: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     g45: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -264,15 +284,23 @@ class PerformanceWindowData(SQLModel, table=True):
     g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
-    game_performance: Optional["GamePerformance"] = Relationship(back_populates='window_data',
-                                                                 sa_relationship_kwargs=CASCADE_AND_LAZY)
 
+class PerformanceWindowData(PerformanceWindowBase, table=True):
     __tablename__ = 'performance_windows_data'
 
-
-class PerformanceTotalData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+    data_type_id: Optional[int] = Field(default=None, foreign_key="performance_data_types.id")
+    data_type: Optional["PerformanceDataType"] = Relationship(back_populates='pwd')
+
+    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
+    game_performance: Optional["GamePerformance"] = Relationship(back_populates='window_data',
+                                                                 sa_relationship_kwargs=sa_kwargs_setter(add_default=True,
+                                                                                                         join_depth=0))
+
+
+# PERFORMANCE TOTAL
+class PerformanceTotalBase(SQLModel):
 
     total_gold: int
     total_xp: int
@@ -298,26 +326,29 @@ class PerformanceTotalData(SQLModel, table=True):
     lane_efficiency: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     lane_efficiency_pct: int
 
-    first_blood_claimed: bool = Field(default=False, nullable=True)
+    first_blood_claimed: condecimal(max_digits=5, decimal_places=2) = Field(default=None, nullable=True)
     first_kill_time: Optional[int]
 
-    died_first: bool = Field(default=False, nullable=True)
+    died_first: condecimal(max_digits=5, decimal_places=2) = Field(default=None, nullable=True)
     first_death_time: Optional[int]
 
-    lost_tower_first: bool = Field(default=False, nullable=True)
+    lost_tower_first: condecimal(max_digits=5, decimal_places=2) = Field(default=None, nullable=True)
     lost_tower_lane: Optional[int]
     lost_tower_time: Optional[int]
 
-    destroyed_tower_first: bool = Field(default=False, nullable=True)
+    destroyed_tower_first: condecimal(max_digits=5, decimal_places=2) = Field(default=None, nullable=True)
     destroyed_tower_lane: Optional[int]
     destroyed_tower_time: Optional[int]
 
+
+class PerformanceTotalData(PerformanceTotalBase, table=True):
+    __tablename__ = 'performance_totals_data'
+    id: Optional[int] = Field(default=None, primary_key=True)
+
     game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
     game_performance: Optional["GamePerformance"] = Relationship(back_populates='total_data',
-                                                                 sa_relationship_kwargs=CASCADE_AND_LAZY)
-
-    __tablename__ = 'performance_totals_data'
-
+                                                                 sa_relationship_kwargs=sa_kwargs_setter(add_default=True,
+                                                                                                         join_depth=0))
 
 
 # ADDITIONAL DATA
@@ -449,6 +480,10 @@ class BuildingData(SQLModel, table=True):
 
 # VIEW DATA
 class PerformanceViewBase(SQLModel):
+    __table_args__ = {'info': {
+        'is_view': True
+    }}
+
     match_id: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, primary_key=True), )  # match_id
     league_id: Optional[int] = Field(default=None)
     dire_win: bool
@@ -475,7 +510,7 @@ class PerformanceViewBase(SQLModel):
     aggregation_id: Optional[int] = Field(default=None)
 
     flat: bool  # percent or flat
-    general: bool = Field(default=True)  # general = pos 1 gets compared to pos sum(1, 3) / 2
+    basic: bool = Field(default=True)  # general = pos 1 gets compared to pos sum(1, 3) / 2
     player_cpd_id: Optional[int] = Field(default=True)
     player_cps_id: Optional[int] = Field(default=True)
     hero_cpd_id: Optional[int] = Field(default=True)
@@ -483,6 +518,7 @@ class PerformanceViewBase(SQLModel):
     pos_cpd_id: Optional[int] = Field(default=True)
     pos_cps_id: Optional[int] = Field(default=True)
 
+    agg_less3: bool
     agg_league_id: Optional[int] = Field(default=True)
     agg_by_win: Optional[bool]
     agg_by_player: bool = Field(default=False)
@@ -494,63 +530,11 @@ class PerformanceViewBase(SQLModel):
     agg_position_id: Optional[int] = Field(default=True)
 
 
-class PerformanceTotalView(PerformanceViewBase, table=True):
+class PerformanceTotalView(PerformanceViewBase, PerformanceTotalBase, table=True):
     __tablename__ = 'performance_total_view'
 
-    total_gold: int
-    total_xp: int
-    kills_per_min: condecimal(max_digits=10, decimal_places=2) = Field(nullable=False)
-    kda: condecimal(max_digits=5, decimal_places=2) = Field(nullable=False)
 
-    neutral_kills: int
-    tower_kills: int
-    courier_kills: int
-
-    lane_kills: int
-    hero_kills: int
-    observer_kills: int
-    sentry_kills: int
-    roshan_kills: int
-    runes_picked_up: int
-
-    ancient_kills: int
-    buyback_count: int
-    observer_uses: int
-    sentry_uses: int
-
-    lane_efficiency: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    lane_efficiency_pct: int
-
-    first_blood_claimed: bool = Field(default=False, nullable=True)
-    first_kill_time: Optional[int]
-
-    died_first: bool = Field(default=False, nullable=True)
-    first_death_time: Optional[int]
-
-    lost_tower_first: bool = Field(default=False, nullable=True)
-    lost_tower_lane: Optional[int]
-    lost_tower_time: Optional[int]
-
-    destroyed_tower_first: bool = Field(default=False, nullable=True)
-    destroyed_tower_lane: Optional[int]
-    destroyed_tower_time: Optional[int]
-
-
-class PerformanceWindowView(PerformanceViewBase, table=True):
+class PerformanceWindowView(PerformanceViewBase, PerformanceWindowBase, table=True):
     __tablename__ = 'performance_window_view'
 
     data_type_id: Optional[int]
-
-    l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l4: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l6: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l8: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    l10: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    ltotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-
-    g15: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g30: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g45: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g60: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)

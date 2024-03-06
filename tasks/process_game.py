@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-from celery import shared_task
+from celery import shared_task, chain
 from celery.utils.log import get_task_logger
 from sqlmodel import Session
 
@@ -86,7 +86,7 @@ def process_game_helper(match_id: int, league_id: int | None = None):
     first_parser = next(bool_pool)
 
     (get_match_replay.s(match_id=match_id, first_parser=first_parser) |
-     process_game_data.s(league_id=league_id))
+     process_game_data.s(league_id=league_id)).apply_async()
 
 
 @shared_task(name='process_game_data')
@@ -189,11 +189,6 @@ def process_game_data(match_id: int, league_id: int | None = None):
             lane_efficiency=player_info['lane_efficiency'],
             lane_efficiency_pct=player_info['lane_efficiency_pct'],
 
-            # first_death_time fill later
-            # first_kill_time fill later
-
-            # first_blood_claimed=player_info['rune_pickups'],
-            # died_first=player_info['rune_pickups'],
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field
@@ -225,11 +220,13 @@ def process_game_data(match_id: int, league_id: int | None = None):
         PGD_objs.append(PGD_obj)
 
 
+
     game = Game(
         id=match_id,
 
         league=league_obj,
         league_id=league_obj.id,
+        name=f"{teams_dict['radiant'].name} vs {teams_dict['dire'].name} [{match_id}]",
 
         patch=game_data['patch'],
 

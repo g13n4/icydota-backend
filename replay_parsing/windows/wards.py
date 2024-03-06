@@ -1,6 +1,6 @@
 WARDS_WINDOWS = {
-    'placed_wards_sen': 'placed_wards_sen',
-    'placed_wards_obs': 'placed_wards_obs',
+    'Placed sentries': 'placed_wards_sen',
+    'Placed observers': 'placed_wards_obs',
 }
 
 DEWARD_WINDOWS = {

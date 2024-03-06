@@ -40,7 +40,6 @@ def _include_name(name, type_, parent_names):
 
 def skip_views(object, name: str, type_, reflected, compare_to):
     if type_ == 'table' and name.endswith('_view'):
-        print(name)
         return False
 
     return True

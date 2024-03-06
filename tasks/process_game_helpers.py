@@ -4,7 +4,6 @@ from replay_parsing import ODOTAPositionNormaliser
 
 
 def fix_odota_data(odota_data: Dict[str, Any]) -> None:
-    # TEST
     slots_are_broken = False
     position_tester = {
         'dire': set(),

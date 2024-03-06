@@ -55,7 +55,7 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
         'slot_comparans': None,
         'position_comparans': None,
 
-        'general': False,
+        'basic': True,
 
         'df_percent': None,
         'df_flat': None,
@@ -90,10 +90,12 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
                 ]:
                     comp_df.loc[:, :] = type_func(player_df.values, opponent_df.values)
 
+                    # AGGREGATION PREPARATIONS
                     comp_list.append(opponent_df.copy())
                     if len(comp_list) > 1:
                         reduce(_reduce_dfs, comp_list)
 
+                    # COPY AND CLEAN AFTER THE REDUCTION
                     _clean_df_inplace(comp_df)
                     this_opponent[comp_name] = comp_df.copy()
 
@@ -105,7 +107,8 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
         # COMBINE AGGREGATED DATA
         if (opponents_number := len(player['opponents'])) != 1:
 
-            this_player_data['general'] = False
+            this_player_agged_data = copy.deepcopy(this_player_data)
+            this_player_agged_data['basic'] = False
 
             with np.errstate(divide='ignore', invalid='ignore'):
                 for type_func, comp_list, comp_name in [
@@ -113,15 +116,15 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
                     (np.subtract, opponents_data_combined_flat, 'df_flat'),
                 ]:
                     comparison_df_base = get_df_slice(slot=player['slot'], empty=True)
-                    aggregated_df: pd.DataFrame = opponents_data_combined_percent.pop()
+                    aggregated_df: pd.DataFrame = comp_list.pop()
 
                     comparison_df_base.loc[:, :] = type_func(player_df.values,
                                                              np.divide(aggregated_df.values, opponents_number))
 
                     _clean_df_inplace(comparison_df_base)
-                    this_player_data[comp_name] = comparison_df_base.copy()
+                    this_player_agged_data[comp_name] = comparison_df_base.copy()
 
-            output.append(this_player_data)
+            output.append(this_player_agged_data)
 
     return output
 

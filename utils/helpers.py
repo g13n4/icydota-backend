@@ -1,7 +1,7 @@
-import re
+import re, enum
 from decimal import Decimal
 from itertools import cycle
-from typing import Any, Dict, List, TypeVar, Type
+from typing import Any, Dict, List, TypeVar, Type, Set
 
 import pandas as pd
 from psycopg2.errors import IntegrityError
@@ -121,7 +121,25 @@ def get_or_create(logger, *args, **kwargs):
 bool_pool = cycle([True, False])
 
 
-def get_sqlmodel_fields(model) -> List[str]:
+def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) -> List[str] | Set[str]:
     schema = model.schema()
     fields = schema['properties']
-    return [field_name for field_name in fields.keys() if not re.search(r'(^|_)id$', field_name)]
+    output = []
+    for field_name in fields.keys():
+        if re.search(r'(^|_)id$', field_name) and not include_ids:
+            continue
+        output.append(field_name)
+    return output if not to_set else set(output)
+
+
+def to_dec(number: float | int | None, rounding: int = 2):
+    return number and round(Decimal(number), rounding)
+
+
+class CaseInsensitiveEnum(str, enum.Enum):
+    @classmethod
+    def _missing_(cls, value: str):
+        for member in cls:
+            if member.lower() == value.lower():
+                return member
+        return None

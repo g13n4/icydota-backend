@@ -160,14 +160,13 @@ def process_building_kill_df(df: pd.DataFrame) -> pd.DataFrame:
 
 def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
     new_df = process_building_kill_df(df)
-    # TODO: check 7254189995 KeyError: 'targetname'
 
     position_towers_status = {x: {
-        'lost_tower_first': False,
+        'lost_tower_first': 0.0,
         'lost_tower_lane': None,
         'lost_tower_time': None,
 
-        'destroyed_tower_first': False,
+        'destroyed_tower_first': 0.0,
         'destroyed_tower_lane': None,
         'destroyed_tower_time': None,
     } for x in range(10)}
@@ -217,14 +216,14 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
             for pos in lost_t_pos:
                 slot = pos_to_slot[lost_t][pos]
 
-                position_towers_status[slot]['lost_tower_first'] = True
+                position_towers_status[slot]['lost_tower_first'] = 100.0
                 position_towers_status[slot]['lost_tower_lane'] = values['lane']
                 position_towers_status[slot]['lost_tower_time'] = values['time']
 
             for pos in killed_t_pos:
                 slot = pos_to_slot[killed_t][pos]
 
-                position_towers_status[slot]['destroyed_tower_first'] = True
+                position_towers_status[slot]['destroyed_tower_first'] = 100.0
                 position_towers_status[slot]['destroyed_tower_lane'] = values['lane']
                 position_towers_status[slot]['destroyed_tower_time'] = values['time']
 

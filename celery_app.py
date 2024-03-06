@@ -13,7 +13,8 @@ load_dotenv()
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
 tasks = ['tasks.process_leagues_and_match',
-         'tasks.process_game', ]
+         'tasks.process_game',
+         'main']
 
 celery_app = Celery(
     main='icydota',

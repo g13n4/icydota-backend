@@ -13,7 +13,7 @@ do
 		break
 		;;
 	1)
-		celery --app=celery_app worker -l INFO -E
+		celery --app=celery_app worker --concurrency=4 -l INFO -E
 		break
 		;;
 	2)

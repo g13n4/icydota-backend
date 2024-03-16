@@ -8,9 +8,9 @@ from sqlmodel import select, Session
 from db import get_sync_db_session
 from models import Game
 from models import League
-from tasks import process_game_helper
 from tasks.create_league import update_league_obj_dates, get_or_create_league
-
+from tasks_agg.approximate_positions import approximate_positions
+from tasks.process_game import process_game_helper
 
 logger = get_task_logger(__name__)
 
@@ -36,6 +36,7 @@ def process_league(league_obj: League | None = None,
 
             new_games_found += 1
 
+    approximate_positions.s(league_id=league_id)
     return new_games_found
 
 

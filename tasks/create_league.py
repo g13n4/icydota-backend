@@ -44,25 +44,33 @@ def update_league_obj_dates(league_obj: League, league_data: dict | None = None)
 
 
 def create_league(league_id: int, **kwargs) -> League:
-    league_data = get_stratz_league_data(league_id=league_id)
-
-    if league_data:
+    try:
+        # TRY TO GET THE LEAGUE DATA FROM STRATZ FIRST
+        league_data = get_stratz_league_data(league_id=league_id)
         league_obj = League(
             id=league_id,
             name=league_data['displayName'],
             **kwargs, )
 
         update_league_obj_dates(league_obj, league_data)
+    except ConnectionError:
+        # TRY IT AGAIN USING OPENDOTA NOW (OPENDOTA DOESN'T PROVIDE ADDITIONAL DATA)
+        r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/')
+        if r.status_code == 200:
+            data = r.json()
+            league_obj = League(
+                id=league_id,
+                name=data['name'], )
 
-        return league_obj
+        else:
+            raise ConnectionError("STRATZ and OPENDOTA don't respond. Connection problems?")
 
-    else:
-        raise requests.ConnectionError('STRATZ is not accessible right now')
+    return league_obj
 
 
 def get_or_create_league(league_id: int, db_session: Session, league_obj: League = None, ) -> League:
     if league_obj is None:
-        league_q = db_session.exec(select(League).where(League.id == league_id)).first()
+        league_q = db_session.get(League, league_id)
         if not league_q:
             league_obj = create_league(league_id)
             db_session.add(league_obj)

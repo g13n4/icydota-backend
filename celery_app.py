@@ -12,16 +12,17 @@ load_dotenv()
 
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
-tasks = ['tasks.process_leagues_and_match',
-         'tasks.process_game',
-         'main']
+tasks = ['tasks',
+         'tasks_agg',]
 
 celery_app = Celery(
     main='icydota',
     enable_utc=True,
     timezone='Europe/Moscow',
     broker=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
-    backend=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
+    broker_url=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
+    celery_broker_url=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
+    broker_transport='redis',
     broker_connection_retry_on_startup=True,
     worker_hijack_root_logger=False,
     include=tasks,

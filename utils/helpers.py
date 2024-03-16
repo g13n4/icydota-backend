@@ -136,6 +136,12 @@ def to_dec(number: float | int | None, rounding: int = 2):
     return number and round(Decimal(number), rounding)
 
 
+def get_positions_approximations(db_session: Session, model, league_id) -> Dict[int, int]:
+    objs = db_session.exec(select(model.player_id, model.position_id).
+                           where(model.league_id == league_id))
+
+    return {pid: poid for pid, poid in objs}
+
 class CaseInsensitiveEnum(str, enum.Enum):
     @classmethod
     def _missing_(cls, value: str):

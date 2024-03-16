@@ -143,6 +143,8 @@ def upgrade() -> None:
     op.create_table('performance_data_types',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+                    sa.Column('is_comparable', sa.Boolean(), nullable=True),
+                    sa.Column('system_name', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
                     sa.Column('data_category_id', sa.Integer(), nullable=True),
                     sa.ForeignKeyConstraint(['data_category_id'], ['performance_data_categories.id'], ),
                     sa.PrimaryKeyConstraint('id')

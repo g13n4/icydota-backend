@@ -52,7 +52,3 @@ def get_sync_db_session() -> Session:
     with sync_session() as session:
         return session
 
-
-async def get_web_client():
-    async with httpx.AsyncClient() as client:
-        yield client

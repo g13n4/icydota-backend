@@ -9,13 +9,13 @@ from sqlmodel import Session
 
 from db import get_sync_db_session
 from models import Player, Team
-from models import PlayerGameData, Game, PerformanceTotalData
+from models import PlayerGameData, Game, PerformanceTotalData, PositionApproximation
 from models import Position, Hero
 from tasks.create_league import get_or_create_league
 from tasks.download_replay import get_match_replay
 from tasks.proces_game_replay import process_game_replay
 from tasks.process_game_helpers import fix_odota_data
-from utils import get_all_sqlmodel_objs, none_to_zero, get_or_create, bool_pool
+from utils import get_all_sqlmodel_objs, none_to_zero, get_or_create, bool_pool, get_positions_approximations
 
 
 CURRENT_DIR = Path.cwd().absolute()
@@ -61,9 +61,9 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
         this_account_id = player['account_id']
         this_nickname = player['name']
         this_current_acc_name = player['personaname']
-        this_true_name_exists = True if this_nickname else False
 
-        this_name_to_use = this_nickname if this_true_name_exists else this_current_acc_name
+        this_name_to_use = this_nickname or this_current_acc_name or str(this_account_id)
+        official_name = (this_nickname == this_name_to_use)
 
         player_obj = get_or_create(logger=logger,
                                    db_session=db_session,
@@ -72,8 +72,12 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
                                    object_data=dict(
                                        nickname=this_name_to_use,
                                        account_id=this_account_id,
-                                       official_name=this_true_name_exists,
+                                       official_name=official_name,
                                    ))
+
+        if this_nickname and this_nickname != player_obj.nickname:
+            player_obj.nickname = this_nickname
+            db_session.add(player_obj)
 
         players_dict[player['player_slot']] = player_obj
 
@@ -116,14 +120,17 @@ def process_game_data(match_id: int, league_id: int | None = None):
     teams_dict = process_teams(db_session,
                                dire_data=game_data['dire_team'],
                                radiant_data=game_data['radiant_team'])
+
     players_dict = process_players(db_session, game_data['players'])
 
     # DATA POOLS
-    positions_all = get_all_sqlmodel_objs(db_session, Position)
-    positions_dict: Dict[int, Position] = {x.id: x for x in positions_all}  # "lane_role": 3,
-
     heroes_all = get_all_sqlmodel_objs(db_session, Hero)
     heroes_dict: Dict[int, Hero] = {x.id: x for x in heroes_all}  # "hero_id": 78,
+
+    # APPROXIMATION POSITIONS
+    approx_pos: dict = get_positions_approximations(db_session=db_session,
+                                                    model=PositionApproximation,
+                                                    league_id=league_id)
 
     # INITIAL DATA CREATION
     player_data_dict = dict()
@@ -133,13 +140,16 @@ def process_game_data(match_id: int, league_id: int | None = None):
         this_team = teams_dict['radiant'] if player_info['isRadiant'] else teams_dict['dire']
         this_hero: int = player_info['hero_id']
         this_slot: int = player_info['player_slot']
-        this_position: int = player_info['lane_role']
+
+        position_id: int = player_info['lane_role']
+        this_position: int = approx_pos.get(players_dict[this_slot].account_id, position_id)
+
 
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
             player_id=players_dict[this_slot].account_id,
 
-            position_id=positions_dict[this_position].id,
+            position_id=this_position,
             hero_id=heroes_dict[this_hero].id,
             lane=player_info['lane'],
             is_roaming=player_info['is_roaming'],
@@ -157,8 +167,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
         db_session.add(PGD_obj)
 
         player_data_dict[this_slot] = {
-            'position': positions_dict[this_position].id,
-            'position_id': positions_dict[this_position].id,
+            'position': this_position,
+            'position_id': this_position,
             'hero_id': heroes_dict[this_hero].id,
             'player_id': players_dict[this_slot].account_id,
 

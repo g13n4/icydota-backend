@@ -1,18 +1,19 @@
-from sqlmodel import Session, select, col
-from functools import partial
-from typing import Dict, List, Tuple, Any, Optional, Callable
+from typing import Dict, List, Tuple, Any, Callable
 
 import numpy as np
 import pandas as pd
+from celery import shared_task
+from celery.utils.log import get_task_logger
 from sqlmodel import Session, select, col
 
 from db import get_sync_db_session
-from models import DataAggregationType, League, PerformanceWindowData, GamePerformance, PerformanceTotalView, \
-    PerformanceTotalData, ComparisonType
+from models import DataAggregationType, PerformanceWindowData, GamePerformance, PerformanceTotalData, ComparisonType, \
+    PlayerGameData
+from models import League, Game
 from utils import get_sqlmodel_fields, to_dec
 
 
-# logger = get_task_logger(__name__)
+logger = get_task_logger(__name__)
 
 # AGGREGATION FIELDS
 AGG_REQUIRED_FIELDS = [
@@ -30,86 +31,65 @@ TOTAL_DATA_FIELDS = get_sqlmodel_fields(PerformanceTotalData)
 WINDOW_AGG_REQUIRED_FIELDS = WINDOW_DATA_FIELDS + AGG_REQUIRED_FIELDS + ['data_type_id']
 TOTAL_AGG_REQUIRED_FIELDS = TOTAL_DATA_FIELDS + AGG_REQUIRED_FIELDS
 
+
 # AGGREGATION FIELDS FOR COMPARISON
-AGG_REQUIRED_COMPARISON_FIELDS = [
-    'basic',
-    'flat',
-    'player_cpd_id',
-    'player_cps_id',
-    'hero_cpd_id',
-    'hero_cps_id',
-    'pos_cpd_id',
-    'pos_cps_id',
-]
+def get_league_data(db_session: Session,
+                    league_id: int,
+                    total: bool,
+                    comparison: bool,
+                    flat: bool = False) -> List[Dict[str, Any]]:
+    clauses = [Game.league_id == league_id]
 
-
-def add_performance_data(obj, fields: list, data, comp_obj: Optional[ComparisonType] = None) -> Dict[str, Any]:
-    if not comp_obj:
-        comp_obj = {}
+    # TOTAL OR WINDOW DATA
+    if total:
+        model = PerformanceTotalData
+        model_join = PerformanceTotalData.game_performance_id == GamePerformance.id
+        fields = get_sqlmodel_fields(PerformanceTotalData, include_ids=False, to_set=True)
     else:
-        comp_obj = comp_obj.dict(include=set(AGG_REQUIRED_COMPARISON_FIELDS))
+        model = PerformanceWindowData
+        model_join = PerformanceWindowData.game_performance_id == GamePerformance.id
+        fields = get_sqlmodel_fields(PerformanceWindowData, include_ids=True, to_set=True)
 
-    return {**obj.dict(include=set(fields)), **data, **comp_obj}
+    select_fields = [model, PlayerGameData.hero_id, PlayerGameData.player_id, PlayerGameData.position_id]
 
+    if comparison:
+        select_fields.append(ComparisonType.flat)
 
-def get_data(league_obj: League,
-             ) -> Tuple[
-    List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]], Dict[str, set]]:
-    total_data = []
-    window_data = []
+    # QUERY BUILDING
+    select_query = (select(*select_fields)
+                    .join(GamePerformance, model_join)
+                    .join(PlayerGameData, PlayerGameData.id == GamePerformance.player_game_data_id)
+                    .join(Game, Game.id == PlayerGameData.game_id))
 
-    total_data_comp = []
-    window_data_comp = []
+    # COMPARISON CHECK
+    if comparison:
+        select_query = select_query.join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
+        clauses.extend([
+            GamePerformance.is_comparison == True,
+            ComparisonType.basic == True,
+            ComparisonType.flat == flat, ])
+    else:
+        clauses.append(GamePerformance.is_comparison == False)
 
-    keys = {
-        'player_id': set(),
-        'hero_id': set(),
-        'position_id': set(),
-    }
+    # FINAL QUERY
+    select_query = select_query.where(*clauses)
 
-    for game in league_obj.games:
-        for player_data in game.players_data:
-            this_data = dict(
-                player_id=player_data.player_id,
-                hero_id=player_data.hero_id,
-                position_id=player_data.position_id, )
-
-            keys['player_id'].add(player_data.player_id)
-            keys['hero_id'].add(player_data.hero_id)
-            keys['position_id'].add(player_data.position_id)
-
-            unpack_window_ = partial(add_performance_data, fields=WINDOW_AGG_REQUIRED_FIELDS, data=this_data)
-            unpack_total_ = partial(add_performance_data, fields=TOTAL_AGG_REQUIRED_FIELDS, data=this_data)
-
-            for performance in player_data.performance:
-                for pdata, unpack_func, data, data_comp in \
-                        [(performance.window_data, unpack_window_, window_data, window_data_comp),
-                         (performance.total_data, unpack_total_, total_data, total_data_comp)]:
-                    for obj in pdata:
-                        if performance.comparison and not performance.comparison.basic:
-                            continue
-
-                        unpacked_data = unpack_func(obj=obj, comp_obj=performance.comparison)
-                        if performance.comparison:
-                            data_comp.append(unpacked_data)
-                        else:
-                            data.append(unpacked_data)
-
-    return (total_data, window_data, total_data_comp, window_data_comp, keys)
+    output = db_session.exec(select_query)
+    return [{
+        'position_id': position_id,
+        'hero_id': hero_id,
+        'player_id': player_id,
+        **{"flat": flat},
+        **model_obj.model_dump(include=fields), } for model_obj, hero_id, player_id, position_id, *flat in output.all()]
 
 
-def process_comparison(data: List[Dict[str, Any]], process_function: Callable) \
+def process_comparison(data_flat: List[Dict[str, Any]],
+                       data_perct: List[Dict[str, Any]],
+                       process_function: Callable) \
         -> Tuple[Dict[str, Dict[int, List[Dict]]], Dict[str, Dict[int, List[Dict]]]]:
-    flat_data = []
-    perc_data = []
-    for obj in data:
-        if obj['flat']:
-            flat_data.append(obj)
-        else:
-            perc_data.append(obj)
 
-    flat_output = process_function(flat_data)
-    perc_output = process_function(perc_data)
+    flat_output = process_function(data_flat)
+    perc_output = process_function(data_perct)
     return flat_output, perc_output
 
 
@@ -192,6 +172,7 @@ def _create_obj(item: dict, data_type, total: bool = False):
         new_obj = dict()
         for field in WINDOW_DATA_FIELDS:
             new_obj[field] = to_dec(item[field])
+        new_obj['data_type_id'] = item['data_type_id']
 
     else:
         dt_properties: dict = data_type.schema()['properties']
@@ -203,13 +184,12 @@ def _create_obj(item: dict, data_type, total: bool = False):
             else:
                 new_obj[field] = item[field] and to_dec(item[field])
 
-    new_obj['data_type_id'] = item['data_type_id']
     return data_type(**new_obj)
 
 
-# @shared_task(name='aggregate_league_data')
+@shared_task(name="aggregate_league", rate_limit='3/h')
 def process_aggregation(league_id: int):
-    # logger.info(f'Aggregating data for {league_id}')
+    logger.info(f'Aggregating data for {league_id}')
 
     db_session: Session = get_sync_db_session()
 
@@ -234,34 +214,42 @@ def process_aggregation(league_id: int):
         db_session.commit()
         del aggregated_games_obj
 
-    # new aggregations
-    print('Getting league data')
-    total_data, window_data, total_data_comp, window_data_comp, id_keys = get_data(league_obj)
 
-    print('Getting processing windows data')
-    process_wd = process_windows(data=window_data)
-    del window_data
 
-    print('Getting processing windows comparison data')
-    process_wd_flat, process_wd_perc = process_comparison(data=window_data_comp, process_function=process_windows)
-    del window_data_comp
+    logger.info('Getting processing windows data')
+    window_data = get_league_data(db_session=db_session, league_id=league_id, total=False, comparison=False)
+    window_data = process_windows(data=window_data)
 
-    print('Getting processing totals data')
-    process_td = process_totals(data=total_data)
-    del total_data
 
-    print('Getting processing totals comparison data')
-    process_td_flat, process_td_perc = process_comparison(data=total_data_comp, process_function=process_totals)
-    del total_data_comp
+    logger.info('Getting processing windows comparison data')
+    process_wd_flat = get_league_data(db_session=db_session, league_id=league_id, total=False, comparison=True, flat=True)
+    process_wd_perc = get_league_data(db_session=db_session, league_id=league_id, total=False, comparison=True, flat=False)
+    process_wd_flat, process_wd_perc = process_comparison(data_flat=process_wd_flat,
+                                                          data_perct=process_wd_perc,
+                                                          process_function=process_windows)
 
-    print('Writing data down')
-    for agg_cat_idx, agg_category in enumerate(['player_id', 'hero_id', 'position_id', ]):
-        this_wd_data = process_wd[agg_category]
+    logger.info('Getting processing totals data')
+    process_td = get_league_data(db_session=db_session, league_id=league_id, total=True, comparison=False)
+    process_td = process_totals(data=process_td)
+
+
+    logger.info('Getting processing totals comparison data')
+    process_td_flat = get_league_data(db_session=db_session, league_id=league_id, total=True, comparison=True, flat=True)
+    process_td_perc = get_league_data(db_session=db_session, league_id=league_id, total=True, comparison=True, flat=False)
+    process_td_flat,  process_td_perc = process_comparison(data_flat=process_td_flat,
+                                                           data_perct=process_td_perc,
+                                                           process_function=process_totals)
+
+
+
+    logger.info('Writing data down')
+    for agg_category in ['player_id', 'hero_id', 'position_id', ]:
+        this_wd_data = window_data[agg_category]
         this_td_data = process_td[agg_category]
 
         for key in this_wd_data.keys():
 
-            if agg_cat_idx == 0:
+            if agg_category == "player_id":
                 agg_obj_data = {
                     'by_player': True,
                     'player_id': key,
@@ -270,7 +258,7 @@ def process_aggregation(league_id: int):
                 comp_obj_data = {
                     'player_cpd_id': key,
                 }
-            elif agg_cat_idx == 1:
+            elif agg_category == "hero_id":
                 agg_obj_data = {
                     'by_hero': True,
                     'hero_id': key,
@@ -337,6 +325,3 @@ def process_aggregation(league_id: int):
                 db_session.add(GP_comp)
 
     db_session.commit()
-
-
-process_aggregation(15475)

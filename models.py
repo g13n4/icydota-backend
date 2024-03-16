@@ -95,7 +95,16 @@ class League(SQLModel, table=True):
 
     has_started: Optional[bool] = Field(default=None)
     has_ended: Optional[bool] = Field(default=None)
+
+    # UNIX TIME STAMP
+    last_parsing_date: Optional[int] = Field(sa_column=db.Column(db.BIGINT, nullable=True, unique=False), )
+    parsed_before: Optional[bool] = Field(default=False)
     fully_parsed: bool = Field(default=False)
+
+
+    # UNIX TIME STAMP
+    last_aggregation_date: Optional[int] = Field(sa_column=db.Column(db.BIGINT, nullable=True, unique=False), )
+    fully_aggregated: Optional[bool] = Field(default=False)
 
     games: List["Game"] = Relationship(back_populates="league", sa_relationship_kwargs=sa_kwargs_setter(False,
                                                                                                         "cascade",
@@ -177,15 +186,22 @@ class ComparisonType(SQLModel, table=True):
 
     flat: bool  # percent or flat
 
-    basic: Optional[bool] = Field(default=True)  # basic != pos 1 gets compared to pos sum(1, 3) / 2
+    # if basic == True = pos 1 is compared to pos 1 and 3
+    # if basic == False = pos 1 is compared to sum(1, 3) / 2
+    basic: Optional[bool] = Field(default=True)
+
+
     player_cpd_id: Optional[int] = _fk('players', 'account_id')
     player_cps_id: Optional[int] = _fk('players', 'account_id')
+
 
     hero_cpd_id: Optional[int] = _fk('heroes')
     hero_cps_id: Optional[int] = _fk('heroes')
 
+
     pos_cpd_id: Optional[int] = _fk('positions')
     pos_cps_id: Optional[int] = _fk('positions')
+
 
     performance: Optional["GamePerformance"] = Relationship(back_populates='comparison')
 
@@ -206,15 +222,28 @@ class DataAggregationType(SQLModel, table=True):
     # additional parameter for aggregation
     by_win: Optional[bool]
 
+    pos_player_cross: Optional[bool] = Field(default=False)
+    pos_hero_cross: Optional[bool] = Field(default=False)
+
+    sup_cross: Optional[bool] = Field(default=False)
+    carry_cross: Optional[bool] = Field(default=False)
+    mid_cross: Optional[bool] = Field(default=False)
+
     by_player: bool = Field(default=False)
     player_id: Optional[int] = _fk('players', 'account_id')
+    player_cross_cps_id: Optional[int] = _fk('players', 'account_id')
+
 
     by_hero: bool = Field(default=False)
     hero_id: Optional[int] = _fk('heroes')
+    hero_cross_cps_id: Optional[int] = _fk('heroes')
+
     by_hero_pos_spec: Optional[int]  # introduced to create new aggregated data if the hero is flexed
+
 
     by_position: bool = Field(default=False)
     position_id: Optional[int] = _fk('positions')
+    position_cross_cps_id: Optional[int] = _fk('positions')
 
     performance: Optional["GamePerformance"] = Relationship(back_populates='aggregation')
 
@@ -223,6 +252,8 @@ class DataAggregationType(SQLModel, table=True):
 # PERFORMANCE DATA
 class GamePerformance(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+    cross_comparison: Optional[bool] = Field(default=False)
 
     is_comparison: bool = Field(default=False, index=True)
     comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id", index=True)
@@ -258,6 +289,10 @@ class PerformanceDataCategory(SQLModel, table=True):
 class PerformanceDataType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    system_name: Optional[str]
+    is_comparable: Optional[bool] = Field(default=False, )
+    sum_to_agg: Optional[bool]  # or average
+
 
     data_category_id: Optional[int] = Field(default=None, foreign_key="performance_data_categories.id", index=True)
     data_category: Optional["PerformanceDataCategory"] = Relationship(back_populates='data_type', )
@@ -538,3 +573,14 @@ class PerformanceWindowView(PerformanceViewBase, PerformanceWindowBase, table=Tr
     __tablename__ = 'performance_window_view'
 
     data_type_id: Optional[int]
+
+
+# POSITION APPROXIMATION
+class PositionApproximation(SQLModel, table=True):
+    __tablename__ = 'approximated_positions'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    player_id: Optional[int] = Field(default=None, foreign_key="players.account_id")
+    position_id: Optional[int] = Field(default=None, foreign_key="positions.id")

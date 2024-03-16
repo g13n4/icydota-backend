@@ -14,5 +14,5 @@ def get_stratz_league_data(league_id: int) -> dict | None:
                      }, )
     if r.status_code == 200:
         return r.json()
-
-    return None
+    else:
+        raise ConnectionError(f"Can't access STRATZ. Request code {r.status_code} {r.content}")

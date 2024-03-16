@@ -1,6 +1,8 @@
 from typing import Optional
+from celery_app import celery_app
 
 import uvicorn
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,15 +10,24 @@ from sqlmodel import select
 
 from crud import get_items, get_categories_menu, \
     get_league_header, get_league_games, \
-    get_performance_data, get_aggregated_performance_data
+    get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, get_data_types_menu
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League, Game
 from tasks import process_league, process_game_helper
+from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
 from utils import (to_table_format, CaseInsensitiveEnum, )
+from fastapi.middleware.gzip import GZipMiddleware
+
+from utils.model_processor import to_table_format_cross_comparison
 
 
+load_dotenv()
+
+# FASTAPI
 icydota_api = FastAPI()
 
+
+# CORS
 origins = [
     "*"
 ]
@@ -28,28 +39,26 @@ icydota_api.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"], )
 
-load_dotenv()
+icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 
-
-# TEST
-@icydota_api.get('/test/')
-async def get_performance_data_api(db=Depends(get_sync_db_session)):
-    items = await get_performance_data(db_session=db,
-                                       match_id=7206846711,
-                                       data_type="total",
-                                       comparison=None,
-                                       flat=False)
-
-    output = to_table_format(items, ['player'])
-
-    return output
+# CHECKING IF CELERY IS RUNNING
+try:
+    celery_app.broker_connection().ensure_connection(max_retries=3)
+except Exception as ex:
+    raise RuntimeError("Failed to connect to celery broker, {}".format(str(ex)))
 
 
 # MENUS
 @icydota_api.get('/menu_tc/')
-async def get_menu_types_and_categories(db=Depends(get_async_db_session)):
-    categories = await get_categories_menu(db, PerformanceDataCategory)
+async def get_menu_types_and_categories(comparison: bool | None = None, db=Depends(get_async_db_session)):
+    categories = await get_categories_menu(db, PerformanceDataCategory, include_disabled=not comparison)
     return categories
+
+
+@icydota_api.get('/menu_data_types/')
+async def get_menu_data_types():
+    data_types = await get_data_types_menu()
+    return data_types
 
 
 @icydota_api.get('/league_header/')
@@ -65,33 +74,41 @@ class AggregationTypes(CaseInsensitiveEnum):
     player = "player"
 
 
-class ComparisonTypes(CaseInsensitiveEnum):
-    general = "general"
+class CrossAggregationTypes(CaseInsensitiveEnum):
+    hero = "hero"
     player = "player"
-    none = None
+
+
+class CrossAggregationPositions(CaseInsensitiveEnum):
+    support = "support"
+    carry = "carry"
+    mid = "mid"
 
 
 @icydota_api.get('/performance_data/{match_id}/')
 async def get_performance_data_api(match_id: int,
-                                   data_type: int | str | None = None,
-                                   comparison: ComparisonTypes | None = None,
-                                   flat: bool = True,
+                                   data_type: int | str,
+                                   comparison: Optional[str] = None,
+                                   lane_data: bool = True,
+                                   flat: bool = None,
                                    db=Depends(get_async_db_session)):
-    print(data_type, flat, comparison.value)
-
     if not data_type:
         raise HTTPException(status_code=400, detail="Provide data_type_id or total parameters")
 
-    if comparison and flat is None:
+    if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
-    items = await get_performance_data(db_session=db,
-                                       match_id=match_id,
-                                       data_type=data_type,
-                                       comparison=(comparison and comparison.value),
-                                       flat=flat)
+    items, data_info, sum_total = await get_performance_data(db_session=db,
+                                                             match_id=match_id,
+                                                             data_type=data_type,
+                                                             lane_data=lane_data,
+                                                             comparison=comparison,
+                                                             flat=flat)
 
-    output = to_table_format(items, ['player'])
+    if not items:
+        raise HTTPException(status_code=404)
+
+    output = to_table_format(items, data_info, ['player'], sum_total=sum_total)
 
     return output
 
@@ -100,41 +117,72 @@ async def get_performance_data_api(match_id: int,
 async def get_performance_aggregated_data_api(league_id: int,
                                               aggregation_type: AggregationTypes,
                                               data_type: int | str | None = None,
-                                              comparison: ComparisonTypes | None = None,
+                                              comparison: Optional[str] = None,
+                                              lane_data: bool = True,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
-    items = await get_aggregated_performance_data(db_session=db,
-                                                  league_id=league_id,
-                                                  aggregation_type=aggregation_type.value,
-                                                  data_type=data_type,
-                                                  comparison=(comparison and comparison.value),
-                                                  flat=flat)
+    items, data_info, sum_total = await get_aggregated_performance_data(db_session=db,
+                                                                        league_id=league_id,
+                                                                        aggregation_type=aggregation_type,
+                                                                        data_type=data_type,
+                                                                        lane_data=lane_data,
+                                                                        comparison=(comparison and comparison),
+                                                                        flat=flat)
 
-    output = to_table_format(items, [aggregation_type.value])
+    if not items:
+        raise HTTPException(status_code=404)
+
+    output = to_table_format(items, data_info, [aggregation_type], sum_total=sum_total)
+
+    return output
+
+
+@icydota_api.get('/performance_cross_comparison/{league_id}/{aggregation_type}/{position}/')
+async def get_performance_cross_comparison_data_api(league_id: int,
+                                                    aggregation_type: CrossAggregationTypes,
+                                                    position: CrossAggregationPositions,
+                                                    data_field: str,
+                                                    data_type: int | str | None = None,
+                                                    flat: bool = True,
+                                                    db=Depends(get_async_db_session)):
+    data_dict, values_info = await get_cross_comparison_performance_data(db_session=db,
+                                                                         league_id=league_id,
+                                                                         aggregation_type=aggregation_type.value,
+                                                                         position=position.value,
+                                                                         data_type=data_type,
+                                                                         data_field=data_field,
+                                                                         flat=flat)
+
+    if not data_dict.keys():
+        raise HTTPException(status_code=404)
+
+    output = to_table_format_cross_comparison(data=data_dict,
+                                              values_info=values_info,
+                                              aggregation_type=aggregation_type.value, )
 
     return output
 
 
 # LISTS
 @icydota_api.get('/types/')
-def get_performance_types(db=Depends(get_sync_db_session)):
-    categories = get_items(db, PerformanceDataType)
-    return categories
+async def get_performance_types(db=Depends(get_async_db_session)):
+    categories = await get_items(db, PerformanceDataType)
+    return categories.all()
 
 
 @icydota_api.get('/leagues/')
-def get_leagues(db=Depends(get_sync_db_session)):
-    league_objs = get_items(db, League)
-    return league_objs
+async def get_leagues(db=Depends(get_async_db_session)):
+    league_objs = await get_items(db, League)
+    return league_objs.all()
 
 
 @icydota_api.get('/categories/')
-def get_performance_categories(db=Depends(get_sync_db_session)):
-    categories = get_items(db, PerformanceDataCategory)
-    return categories
+async def get_performance_categories(db=Depends(get_sync_db_session)):
+    categories = await get_items(db, PerformanceDataCategory)
+    return categories.all()
 
 
 @icydota_api.get('/types/{type_id}')
@@ -153,7 +201,7 @@ async def get_league_games_api(league_id: int, db=Depends(get_sync_db_session)):
 
 
 # PROCESSING WITH CELERY
-@icydota_api.get('/process/league/{league_id}', status_code=202)
+@icydota_api.get('/process/league/{league_id}/', status_code=202)
 async def process_league_api(league_id: int, overwrite: bool = False):
     new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
     if new_games_number:
@@ -162,17 +210,26 @@ async def process_league_api(league_id: int, overwrite: bool = False):
     return {'status': 'processed'}
 
 
-@icydota_api.get('/process/match/{match_id}', status_code=202)
+@icydota_api.get('/process/match/{match_id}/', status_code=202)
 async def process_match_api(match_id: int):
     process_game_helper(match_id=match_id, )
     return {'status': 'processing'}
 
 
-@icydota_api.get('/aggregate_league/{league_id}', status_code=202)
+@icydota_api.get('/aggregate/league/{league_id}/', status_code=202)
 async def aggregate_league_api(league_id: int):
-    process_league(league_id=league_id, )
-    return {'status': 'processing'}
+    aggregate_league_helper(league_id=league_id, )
+
+
+@icydota_api.get('/aggregate/cross_comparison/{league_id}/', status_code=202)
+async def create_cross_comparison_api(league_id: int):
+    cross_compare_league_helper(league_id=league_id, )
+
+
+@icydota_api.get('/approximate_positions/{league_id}/', status_code=202)
+async def approximate_positions_api(league_id: int):
+    approximate_positions_helper(league_id=league_id)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=True, workers=3)
+    uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)

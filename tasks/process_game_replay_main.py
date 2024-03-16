@@ -11,6 +11,14 @@ from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_window
     process_xp_windows, process_gold_windows, postprocess_data, MatchPlayersData
 from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
     compare_performance, combine_total_performance, to_dec
+from replay_parsing.postprocessor import (SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA,
+                                          COMPARE_DATA_CORES, COMPARE_DATA_SUPPORT)
+
+PDT_ADDITIONAL_DATA = {
+    'sum': [x.split('|')[1] for x in SUM_TOTAL_DATA],
+    'avg': [x.split('|')[1] for x in AVERAGE_TOTAL_DATA],
+    'comparison': [x.split('|')[1] for x in COMPARE_DATA_CORES + COMPARE_DATA_SUPPORT],
+}
 
 
 def _get_PDT_objects(db_session,
@@ -19,13 +27,25 @@ def _get_PDT_objects(db_session,
     PDT_dict = dict()
     for column_name, category_obj_name in column_to_category_obj.items():
         PDT_obj: PerformanceDataType = get_obj_from_list(PDT_objs, name=category_obj_name)
+        if not PDT_obj.system_name:
+            PDT_obj.system_name = column_name
 
+        if PDT_obj.sum_to_agg is None:
+            if column_name in PDT_ADDITIONAL_DATA['sum']:
+                PDT_obj.sum_to_agg = True
+
+            if column_name in PDT_ADDITIONAL_DATA['avg']:
+                PDT_obj.sum_to_agg = False
+
+
+        if not PDT_obj.is_comparable and column_name in PDT_ADDITIONAL_DATA['comparison']:
+            PDT_obj.is_comparable = True
+
+        db_session.add(PDT_obj)
         PDT_dict[column_name] = PDT_obj
         PDT_dict[category_obj_name] = PDT_obj
 
     return PDT_dict
-
-
 
 
 def _fill_basic_PWDs(db_session,
@@ -86,7 +106,10 @@ def _fill_comparison_pws(db_session,
                 w_type, w_name = line['data'].split('|')
 
                 pwd_dict = {x: to_dec(line[x]) for x in model_fields}
-                pwd_dict['data_type'] = PDT_dict[w_name]
+                data_type_obj = PDT_dict[w_name]
+
+                pwd_dict['data_type'] = data_type_obj
+
                 ppws_obj = PerformanceWindowData(**pwd_dict)
 
                 db_session.add(ppws_obj)

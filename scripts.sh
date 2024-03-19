@@ -9,7 +9,7 @@ do
   read -r INT_INPUT
   case $INT_INPUT in
 	0)
-		uvicorn main:icydota_api --reload
+		uvicorn main:icydota_api --reload --workers 1
 		break
 		;;
 	1)

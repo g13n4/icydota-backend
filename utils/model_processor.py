@@ -65,7 +65,7 @@ def _key_sort_func(name: str) -> int:
         if re_match[1] == 'total':
             return 100
         if 'plus' in re_match[1]:
-            return 90
+            return 110
         else:
             return int(re_match[1])
     else:

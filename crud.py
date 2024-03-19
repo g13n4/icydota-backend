@@ -1,13 +1,14 @@
 # from sqlmodel.ext.asyncio.session import AsyncSession
-import copy
 import re
 from typing import Dict, Any, Optional, List, Callable, Tuple
+
+from functools import partial
 
 from sqlmodel import Session, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models import ComparisonType, DataAggregationType
-from models import Hero, Player, Position
+from models import ComparisonType, DataAggregationType, PerformanceDataCategory
+from models import Hero, Player, Position, League, Game
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData, PerformanceDataType
 
 
@@ -22,6 +23,24 @@ for name in WINDOW_FIELDS:
         TO_EXCLUDE_FOR_LANE.append(name)
     if not name.startswith('g'):
         TO_EXCLUDE_FOR_GAME.append(name)
+
+
+TOTAL_FIELDS_FILTERED = [x for x in TOTAL_FIELDS if not x.endswith('_id')]
+WINDOW_FIELDS_FILTERED = [x for x in WINDOW_FIELDS if not x.endswith('_id')]
+
+
+def _to_item(label, value, key, capitalise: bool) -> Dict[str, Any]:
+    if capitalise:
+        label = ' '.join([x.capitalize() for x in label.split('_')])
+
+    return {'label': label, 'value': value, 'key': key}
+
+
+async def get_field_types(field_type: str) -> list:
+    if field_type == 'total':
+        return [_to_item(x, x, idx, True) for idx, x in enumerate(TOTAL_FIELDS_FILTERED)]
+    else:
+        return [_to_item(x, x, idx, True) for idx, x in enumerate(WINDOW_FIELDS_FILTERED)]
 
 
 async def get_items(db: AsyncSession, model, ):
@@ -41,7 +60,7 @@ def _to_menu_item(key: str, label: str, children: List[dict] = None, disabled: b
     return item
 
 
-def _process_menu_item(item, key_add: Optional[str], children_key: Optional[str] = None, name_is_id: bool = False,
+def _process_menu_item(item, key_add: Optional[str] = None, children_key: Optional[str] = None, name_is_id: bool = False,
                        child_kwargs: Optional[dict] = None, id_is_key: bool = False, include_disabled: bool = True) -> Dict[str, Any]:
     output = _to_menu_item(key=item.id if id_is_key else f"{key_add}{item.id}",
                            label=item.id if name_is_id else item.name)
@@ -56,14 +75,13 @@ def _process_menu_item(item, key_add: Optional[str], children_key: Optional[str]
 
         output['children'] = [_process_menu_item(item=x, include_disabled=include_disabled, **child_kwargs)
                               for x in getattr(item, children_key)
-                              if not (hasattr(x, 'disabled') and getattr(x, 'disabled') and not include_disabled)]
+                              if not (hasattr(x, 'is_comparable') and getattr(x, 'is_comparable') and not include_disabled)]
         return output
 
 
-async def get_categories_menu(db: AsyncSession, model, include_disabled: bool | None) -> list:
-    categories = await db.exec(select(model))
-    child_params = {
-        'id_is_key': True, }
+async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -> list:
+    categories = await db.exec(select(PerformanceDataCategory))
+    child_params = {'id_is_key': True, }
 
 
     totals = [{"key": 'total', 'label': 'Total data'}]
@@ -71,15 +89,28 @@ async def get_categories_menu(db: AsyncSession, model, include_disabled: bool | 
                                         child_kwargs=child_params) for x in categories.all()]
 
 
-async def get_league_header(db: AsyncSession, league_model, ) -> list:
-    leagues = await db.exec(select(league_model).order_by(league_model.id.desc()))
-    return [_process_menu_item(item, 'l', id_is_key=True) for item in leagues]
+async def get_categories_both(db: AsyncSession):
+    cats = await db.exec(select(PerformanceDataCategory))
+
+    all_cats = cats.all()
+
+    child_params = {'id_is_key': True, }
+    pmi = partial(_process_menu_item, key_add='c', children_key='data_type',  child_kwargs=child_params)
+
+    totals = [{"key": 'total', 'label': 'Total data'}]
+    return (totals + [pmi(x, include_disabled=True,) for x in all_cats],
+            totals + [pmi(x, include_disabled=False,) for x in all_cats])
 
 
-async def get_league_games(db_session: AsyncSession, game_model, league_id: int):
-    league_objs = (db_session.exec(select(game_model)
-                                   .where(game_model.league_id == league_id)
-                                   .order_by(game_model.id)))
+async def get_league_header(db: AsyncSession, ) -> list:
+    leagues = await db.exec(select(League).order_by(League.id.desc()))
+    return [_process_menu_item(item, id_is_key=True) for item in leagues.all()]
+
+
+async def get_league_games(db_session: AsyncSession, league_id: int):
+    league_objs = await (db_session.exec(select(Game)
+                                   .where(Game.league_id == league_id)
+                                   .order_by(Game.id)))
 
     return [{'value': league.id, 'label': league.name or league.id, } for league in league_objs.all()]
 
@@ -90,12 +121,48 @@ async def get_data_types_menu():
         {'label': 'Data comparison', 'value': 'data_comparison', 'key': 'data_comparison'},
         {'label': 'Aggregation ', 'value': 'aggregation', 'key': 'aggregation'},
         {'label': 'Aggregation comparison', 'value': 'aggregation_comparison', 'key': 'aggregation_comparison'},
-        {'label': 'Cross-comparison', 'value': 'aggregation_cross_comparison', 'key': 'aggregation_cross_comparison'}
+        {'label': 'Cross-comparison', 'value': 'cross_comparison', 'key': 'cross_comparison'}
     ]
 
 
+def to_default_selected_key(list_: List[dict]) -> List[str]:
+    if list_:
+        return [str(list_[0]['key'])]
+    return []
+
+
+async def get_default_menu_data(db: AsyncSession, ) -> Dict[str, Any]:
+    leagues = await get_league_header(db)
+    menu = await get_data_types_menu()
+    sub_menu, sub_menu_comp = await get_categories_both(db)
+
+    games = await get_league_games(db, league_id=leagues[0]['key'])
+    total_fields = await get_field_types('total')
+    window_fields = await get_field_types('window')
+
+
+    return {
+        'leagueMenu': leagues,
+        'leagueMenuDefault': to_default_selected_key(leagues),
+        'leagueGames': games,
+        'leagueGamesDefault': to_default_selected_key(leagues),
+        'menu': menu,
+        'menuDefault': to_default_selected_key(menu),
+        'submenu': sub_menu,
+        'submenuDefault': to_default_selected_key(sub_menu),
+        'submenuComparison': sub_menu_comp,
+        'submenuComparisonDefault': to_default_selected_key(sub_menu_comp),
+        'totalFields': total_fields,
+        'windowFields': window_fields,
+        'loaded': True,
+    }
+
+
 # DATA FOR DB PROCESSING
-def _processing_db_output(output, item_fields: dict, exclude: list = None, exists_total: bool = False) -> Tuple[list, list]:
+def _processing_db_output(output,
+                          item_fields: dict,
+                          exclude: list = None,
+                          exists_total: bool = False) -> Tuple[list, list, bool]:
     if exclude is None:
         exclude = []
 
@@ -126,38 +193,38 @@ def _processing_db_output(output, item_fields: dict, exclude: list = None, exist
         processed_output.append(item)
 
     # LOOKING FOR DIFFERENCE VALUES
+    total = False
     for value_info_key in data_values_info.keys():
         mvi_max = data_values_info[value_info_key]["max"]
         mvi_min = data_values_info[value_info_key]["min"]
 
         data_values_info[value_info_key]["diff"] = mvi_max - mvi_min
+        if re.match(r'[g|l]total', value_info_key):
+            total = True
 
-    return processed_output, [{**v, 'col': k} for k, v in data_values_info.items()]
+    return processed_output, [{**v, 'col': k} for k, v in data_values_info.items()], total
 
 
 async def get_performance_data(db_session: AsyncSession,
                                match_id: int,
                                data_type: int | str,
-                               lane_data: Optional[bool],
+                               game_stage: str,
                                comparison: Optional[str],
                                flat: Optional[bool], ):
     clauses = [PlayerGameData.game_id == match_id]
-    total = None
 
     item_fields = {'position': 2,
                    'hero': 0,
                    'player': 1, }
 
     # TOTAL OR WINDOW DATA
-    exclude = ['game_performance_id, id']
+    exclude = ['game_performance_id, id', 'data_type_id']
     if data_type == 'total':
         model = PerformanceTotalData
     else:
-        dt_obj = await db_session.get(PerformanceDataType, data_type)
-        total = dt_obj.sum_to_agg
-        if lane_data:
+        if game_stage == 'lane':
             exclude.extend(TO_EXCLUDE_FOR_LANE)
-        else:
+        elif game_stage == 'game':
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
@@ -165,12 +232,12 @@ async def get_performance_data(db_session: AsyncSession,
 
     select_models = [model, Hero.name, Player.nickname, Position.name]
     if comparison == 'player':
-        select_models = [model, Hero.name, Player.nickname, Position.name, ComparisonType.pos_cps_id]
+        select_models.append(ComparisonType.pos_cps_id)
         item_fields['opponents_pos'] = 3
 
     # QUERY BUILDING
     select_query = (select(*select_models)
-                    .join(GamePerformance, onclause=GamePerformance.id==model.game_performance_id)
+                    .join(GamePerformance, onclause=GamePerformance.id == model.game_performance_id)
                     .join(PlayerGameData, onclause=GamePerformance.player_game_data_id == PlayerGameData.id)
                     .join(Position, onclause=PlayerGameData.position_id == Position.id)
                     .join(Hero, onclause=PlayerGameData.hero_id == Hero.id)
@@ -193,8 +260,7 @@ async def get_performance_data(db_session: AsyncSession,
 
     output = await db_session.exec(select_query)
 
-    data, limits = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields,
-                                         exists_total=total is None)
+    data, limits, total = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields, )
 
     return data, limits, total
 
@@ -203,10 +269,9 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
                                           league_id: int,
                                           aggregation_type: str,
                                           data_type: str | int,
-                                          lane_data: Optional[bool],
+                                          game_stage: str,
                                           comparison: Optional[str],
                                           flat: Optional[bool], ):
-    total = None
     agg_type_dict = {
         "position": Position.name,
         "hero": Hero.name,
@@ -222,11 +287,9 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
     if data_type == 'total':
         model = PerformanceTotalData
     else:
-        dt_obj = await db_session.get(PerformanceDataType, data_type)
-        total = dt_obj.sum_to_agg
-        if lane_data:
+        if game_stage == 'lane':
             exclude.extend(TO_EXCLUDE_FOR_LANE)
-        else:
+        elif game_stage == 'game':
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
@@ -239,7 +302,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
                     .join(DataAggregationType))
 
     # COMPARISON
-    if comparison in ["player", "general"]:
+    if comparison in ["general"]:
         select_query = select_query.join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
         clauses.extend([
             GamePerformance.is_comparison == True,
@@ -264,8 +327,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     output = await db_session.exec(select_query)
 
-    data, limits = _processing_db_output(output=output, item_fields={aggregation_type: 0, }, exclude=exclude,
-                                         exists_total=total is None)
+    data, limits, total = _processing_db_output(output=output, item_fields={aggregation_type: 0, }, exclude=exclude, )
 
     return data, limits, total
 
@@ -275,8 +337,8 @@ def _update_variable(dict_: dict, key_: int | str, new_var: int | str):
     return dict_
 
 
-def _order_dict(dict_) -> dict:
-    return {k: v for k, v in sorted(dict_.items(), key=lambda item: item[1]['player'])}
+def _order_dict(dict_: dict, field: str) -> dict:
+    return {k: v for k, v in sorted(dict_.items(), key=lambda item: item[1][field])}
 
 
 async def get_cross_comparison_performance_data(db_session: AsyncSession,
@@ -286,6 +348,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 data_field: str,
                                                 data_type: str | int,
                                                 flat: bool, ):
+    print(f'{league_id}, {aggregation_type}, {position}, {data_field}, {data_type}, {flat}')
 
     fields_dict = {
         "hero": [Hero.name, Hero.id,  DataAggregationType.hero_cross_cps_id],
@@ -304,16 +367,13 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
         model = PerformanceTotalData
     else:
         model = PerformanceWindowData
-
         clauses.append(model.data_type_id == data_type)
 
     select_fields.append(getattr(model, data_field))
-    join_clause = GamePerformance.id == model.game_performance_id
-
 
     # QUERY BUILDING
     select_query = (select(*select_fields)
-                    .join(GamePerformance, join_clause)
+                    .join(GamePerformance, GamePerformance.id == model.game_performance_id)
                     .join(DataAggregationType, DataAggregationType.id == GamePerformance.aggregation_id)
                     .join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id))
 
@@ -327,7 +387,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
 
     if position == 'support':
         clauses.append(DataAggregationType.sup_cross == True)
-    elif position == 'carry':
+    elif position == 'core':
         clauses.append(DataAggregationType.carry_cross == True)
     else:
         clauses.append(DataAggregationType.mid_cross == True)
@@ -338,11 +398,13 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
     query_output = await db_session.exec(select_query)
 
     # REFORMATTED _processing_db_output
-    output_dict = {}
+    output_dict = dict()
     data_values_info = dict()
     rename_dict = dict()
     # hero/player name | id in db | id in db of the comparans player/hero
     for this_actor, this_actor_id, this_cps, value in query_output.all():
+        print(f'{this_actor}, {this_actor_id}, {this_cps}, {value}')
+
         rename_dict[this_actor_id] = this_actor
 
         if this_actor not in output_dict:
@@ -380,6 +442,6 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
 
         new_output[item_name] = temp_dict
 
-    new_output = _order_dict(new_output)
+    new_output = _order_dict(new_output, aggregation_type)
 
     return (new_output, [{**v, 'col': rename_dict[k]} for k, v in data_values_info.items()])

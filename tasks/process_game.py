@@ -160,7 +160,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
             rank=player_info['rank_tier'],
             apm=player_info['actions_per_min'],
             slot=this_slot,
-            pings=player_info['pings'], )
+            pings=player_info.get('pings', 0), )
 
         PGD_objs_dict[this_slot] = PGD_obj
 
@@ -175,29 +175,29 @@ def process_game_data(match_id: int, league_id: int | None = None):
         }
 
         PTD_obj = PerformanceTotalData(
-            total_gold=player_info['total_gold'],
-            total_xp=player_info['total_xp'],
+            total_gold=none_to_zero(player_info['total_gold']),
+            total_xp=none_to_zero(player_info['total_xp']),
             kills_per_min=none_to_zero(player_info.get('kills_per_min', None)),
             kda=none_to_zero(player_info['kda']),
 
-            neutral_kills=player_info['neutral_kills'],
-            tower_kills=player_info['tower_kills'],
-            courier_kills=player_info['courier_kills'],
+            neutral_kills=none_to_zero(player_info['neutral_kills']),
+            tower_kills=none_to_zero(player_info['tower_kills']),
+            courier_kills=none_to_zero(player_info['courier_kills']),
 
-            lane_kills=player_info['lane_kills'],
-            hero_kills=player_info['hero_kills'],
-            observer_kills=player_info['observer_kills'],
-            sentry_kills=player_info['sentry_kills'],
-            roshan_kills=player_info['roshan_kills'],
-            runes_picked_up=player_info['rune_pickups'],
+            lane_kills=none_to_zero(player_info['lane_kills']),
+            hero_kills=none_to_zero(player_info['hero_kills']),
+            observer_kills=none_to_zero(player_info['observer_kills']),
+            sentry_kills=none_to_zero(player_info['sentry_kills']),
+            roshan_kills=none_to_zero(player_info['roshan_kills']),
+            runes_picked_up=none_to_zero(player_info['rune_pickups']),
 
-            ancient_kills=player_info['ancient_kills'],
-            buyback_count=player_info['buyback_count'],
-            observer_uses=player_info['observer_uses'],
-            sentry_uses=player_info['sentry_uses'],
+            ancient_kills=none_to_zero(player_info['ancient_kills']),
+            buyback_count=none_to_zero(player_info['buyback_count']),
+            observer_uses=none_to_zero(player_info['observer_uses']),
+            sentry_uses=none_to_zero(player_info['sentry_uses']),
 
-            lane_efficiency=player_info['lane_efficiency'],
-            lane_efficiency_pct=player_info['lane_efficiency_pct'],
+            lane_efficiency=none_to_zero(player_info['lane_efficiency']),
+            lane_efficiency_pct=none_to_zero(player_info['lane_efficiency_pct']),
 
         )
 

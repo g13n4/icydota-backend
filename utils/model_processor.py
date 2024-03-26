@@ -1,39 +1,6 @@
 import re
 from typing import List, Optional, Dict
-
-
-COLUMNS_DICT = {
-    'l2': '-1.5m - 2m',
-    'l4': '2m - 4m',
-    'l6': '4m - 6m',
-    'l8': '6m - 8m',
-    'l10': '8m - 10m',
-    'ltotal': '<10m',
-
-    # next phase
-    'g15': '-1.5m - 15m',
-    'g30': '15m - 30m',
-    'g45': '30m - 45m',
-    'g60': '45m - 60m',
-    'g60plus': '60m - the game\'s end',
-    'gtotal': 'by the game\'s end',
-
-    # names
-    'player_id': 'player id',
-    'player_name': 'nickname',
-
-    'position_id': 'position',
-    'opponents_pos': 'opponents position',
-
-    'hero_id': 'hero id',
-    'hero_name': 'hero',
-
-    # game stage
-    'l_data': 'Early game',
-    'g_data': 'Late game',
-
-    'game_stage': 'Game stage',
-}
+from .translation_dictionary import PERFORMANCE_FIELD_DICT
 
 
 def to_proper_name(value: str, split: str = '_') -> str:
@@ -42,7 +9,7 @@ def to_proper_name(value: str, split: str = '_') -> str:
 
 def get_field_name(value: str, sum_total: Optional[bool] = None):
     if value.endswith('total'):
-        field_name = COLUMNS_DICT[value]
+        field_name = PERFORMANCE_FIELD_DICT[value]
         if sum_total is None:
             field_name += ' (not calculated)'
         elif sum_total:
@@ -52,8 +19,8 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
 
         return field_name
 
-    if value in COLUMNS_DICT:
-        return COLUMNS_DICT[value]
+    if value in PERFORMANCE_FIELD_DICT:
+        return PERFORMANCE_FIELD_DICT[value]
 
     return to_proper_name(value)
 
@@ -61,13 +28,12 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
 
 def _key_sort_func(name: str) -> int:
     # WINDOWS
-    if (re_match := re.match(r'^[l|g]((\d+)|total)(plus)?', name)):
-        if re_match[1] == 'total':
-            return 100
-        if 'plus' in re_match[1]:
-            return 110
-        else:
-            return int(re_match[1])
+    if (re_match := re.match(r'^([lg])(\d+|total)(plus)?', name)):
+        code, value, *plus = re_match.groups()
+
+        return ((1000 if code == 'g' else 0) +
+                (int(value) if value != 'total' else 100) +
+                (0 if plus[0] is None else 1))
     else:
         # TOTALS
         if 'gold' in name:
@@ -148,6 +114,7 @@ def to_table_format(data: List[dict], data_info: List[dict],  rows: list, sum_to
                 "layoutWidthType": 'colAdaptive', },
         },
         "table_values": data_info,
+        "loading": False,
     }
 
 
@@ -160,7 +127,8 @@ def to_table_format_cross_comparison(data: Dict[int, list],
 
     fields = {'rows': [aggregation_type],  # hero/pos/player | l2/g2/etc
               'columns': [],
-              'values': sorted(data.keys()),  # classic windows/ total_values
+              'values': sorted(data.keys(),
+                               key=lambda x: str(x).lower()),  # classic windows/ total_values
               'valueInCols': True, }
 
     return {
@@ -168,12 +136,6 @@ def to_table_format_cross_comparison(data: Dict[int, list],
             'fields': fields,
             'data': [x for x in data.values()],
         },
-        "table_options": {
-            "style": {
-                "layoutWidthType": 'colAdaptive', },
-            'interaction': {
-            'hoverHighlight': 'true',
-            }
-        },
         "table_values": values_info,
+        "loading": False,
     }

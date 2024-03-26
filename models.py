@@ -287,6 +287,8 @@ class PerformanceDataCategory(SQLModel, table=True):
 
 
 class PerformanceDataType(SQLModel, table=True):
+    __tablename__ = 'performance_data_types'
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     system_name: Optional[str]
@@ -299,7 +301,6 @@ class PerformanceDataType(SQLModel, table=True):
 
     pwd: List["PerformanceWindowData"] = Relationship(back_populates='data_type')
 
-    __tablename__ = 'performance_data_types'
 
 
 # PERFORMANCE DATA INFO
@@ -337,29 +338,29 @@ class PerformanceWindowData(PerformanceWindowBase, table=True):
 # PERFORMANCE TOTAL
 class PerformanceTotalBase(SQLModel):
 
-    total_gold: int
-    total_xp: int
+    total_gold: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    total_xp: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     kills_per_min: condecimal(max_digits=10, decimal_places=2) = Field(nullable=False)
     kda: condecimal(max_digits=5, decimal_places=2) = Field(nullable=False)
 
-    neutral_kills: int
-    tower_kills: int
-    courier_kills: int
+    neutral_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    tower_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    courier_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    lane_kills: int
-    hero_kills: int
-    observer_kills: int
-    sentry_kills: int
-    roshan_kills: int
-    runes_picked_up: int
+    lane_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    hero_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    observer_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    sentry_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    roshan_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    runes_picked_up: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
-    ancient_kills: int
-    buyback_count: int
-    observer_uses: int
-    sentry_uses: int
+    ancient_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    buyback_count: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    observer_uses: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    sentry_uses: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
     lane_efficiency: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    lane_efficiency_pct: int
+    lane_efficiency_pct: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
 
     first_blood_claimed: condecimal(max_digits=5, decimal_places=2) = Field(default=None, nullable=True)
     first_kill_time: Optional[int]

@@ -37,6 +37,9 @@ def execute_window_aggregation(df: pd.DataFrame,
     else:
         ser = df[column]
 
+    if not len(ser):
+        return 0
+
     if column in df_agg:
         ser_agg = df_agg[column]
     else:

@@ -162,4 +162,3 @@ cython_debug/
 replays/
 temp_data/
 
-alembic.ini

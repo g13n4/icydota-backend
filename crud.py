@@ -10,6 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from models import ComparisonType, DataAggregationType, PerformanceDataCategory
 from models import Hero, Player, Position, League, Game
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData, PerformanceDataType
+from utils.translation_dictionary import PERFORMANCE_FIELD_DICT
 
 
 TOTAL_FIELDS = PerformanceTotalData.schema()['properties'].keys()
@@ -24,9 +25,10 @@ for name in WINDOW_FIELDS:
     if not name.startswith('g'):
         TO_EXCLUDE_FOR_GAME.append(name)
 
+id_search = re.compile(r'.*_?id$')
 
-TOTAL_FIELDS_FILTERED = [x for x in TOTAL_FIELDS if not x.endswith('_id')]
-WINDOW_FIELDS_FILTERED = [x for x in WINDOW_FIELDS if not x.endswith('_id')]
+TOTAL_FIELDS_FILTERED = [x for x in TOTAL_FIELDS if not id_search.match(x)]
+WINDOW_FIELDS_FILTERED = [x for x in WINDOW_FIELDS if not id_search.match(x)]
 
 
 def _to_item(label, value, key, capitalise: bool) -> Dict[str, Any]:
@@ -38,9 +40,11 @@ def _to_item(label, value, key, capitalise: bool) -> Dict[str, Any]:
 
 async def get_field_types(field_type: str) -> list:
     if field_type == 'total':
-        return [_to_item(x, x, idx, True) for idx, x in enumerate(TOTAL_FIELDS_FILTERED)]
+        return [_to_item(x, x, x, True)
+                for idx, x in enumerate(TOTAL_FIELDS_FILTERED)]
     else:
-        return [_to_item(x, x, idx, True) for idx, x in enumerate(WINDOW_FIELDS_FILTERED)]
+        return [_to_item(PERFORMANCE_FIELD_DICT[x], x, x, True)
+                for idx, x in enumerate(WINDOW_FIELDS_FILTERED)]
 
 
 async def get_items(db: AsyncSession, model, ):
@@ -59,9 +63,12 @@ def _to_menu_item(key: str, label: str, children: List[dict] = None, disabled: b
         item['children'] = children
     return item
 
+def _is_comparable_obj(obj) -> bool:
+    return (hasattr(obj, 'is_comparable') and getattr(obj, 'is_comparable'))
 
 def _process_menu_item(item, key_add: Optional[str] = None, children_key: Optional[str] = None, name_is_id: bool = False,
-                       child_kwargs: Optional[dict] = None, id_is_key: bool = False, include_disabled: bool = True) -> Dict[str, Any]:
+                       child_kwargs: Optional[dict] = None, id_is_key: bool = False, include_disabled: bool = True,
+                       sorted_func: Optional[Callable] = None) -> Dict[str, Any]:
     output = _to_menu_item(key=item.id if id_is_key else f"{key_add}{item.id}",
                            label=item.id if name_is_id else item.name)
 
@@ -73,9 +80,13 @@ def _process_menu_item(item, key_add: Optional[str] = None, children_key: Option
         if key_add not in child_kwargs:
             child_kwargs['key_add'] = children_key[:3]
 
+        children_objs = getattr(item, children_key)
+        if sorted_func is not None:
+            children_objs = sorted(children_objs, key=sorted_func)
+
         output['children'] = [_process_menu_item(item=x, include_disabled=include_disabled, **child_kwargs)
-                              for x in getattr(item, children_key)
-                              if not (hasattr(x, 'is_comparable') and getattr(x, 'is_comparable') and not include_disabled)]
+                              for x in children_objs
+                              if _is_comparable_obj(x) or include_disabled]
         return output
 
 
@@ -92,14 +103,17 @@ async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -
 async def get_categories_both(db: AsyncSession):
     cats = await db.exec(select(PerformanceDataCategory))
 
-    all_cats = cats.all()
+    all_cats = [x for x in sorted(cats.all(), key=lambda item: item.name)]
 
     child_params = {'id_is_key': True, }
-    pmi = partial(_process_menu_item, key_add='c', children_key='data_type',  child_kwargs=child_params)
+    pmi = partial(_process_menu_item, key_add='c', children_key='data_type',  child_kwargs=child_params,
+                  sorted_func=lambda item: item.name)
 
     totals = [{"key": 'total', 'label': 'Total data'}]
-    return (totals + [pmi(x, include_disabled=True,) for x in all_cats],
-            totals + [pmi(x, include_disabled=False,) for x in all_cats])
+    total_dict = {'total': 'Total data'}
+    return (totals + [pmi(x, include_disabled=True, ) for x in all_cats],
+            totals + [pmi(x, include_disabled=False,) for x in all_cats],
+            {**total_dict, **{str(sub_cat.id): sub_cat.name for cat in all_cats for sub_cat in cat.data_type}} )
 
 
 async def get_league_header(db: AsyncSession, ) -> list:
@@ -109,32 +123,30 @@ async def get_league_header(db: AsyncSession, ) -> list:
 
 async def get_league_games(db_session: AsyncSession, league_id: int):
     league_objs = await (db_session.exec(select(Game)
-                                   .where(Game.league_id == league_id)
-                                   .order_by(Game.id)))
+                                         .where(Game.league_id == league_id)
+                                         .order_by(Game.id)))
 
-    return [{'value': league.id, 'label': league.name or league.id, } for league in league_objs.all()]
+    return [{'value': str(league.id), 'label': league.name or str(league.id), } for league in league_objs.all()]
 
 
 async def get_data_types_menu():
     return [
-        {'label': 'Data', 'value': 'data', 'key': 'data'},
-        {'label': 'Data comparison', 'value': 'data_comparison', 'key': 'data_comparison'},
-        {'label': 'Aggregation ', 'value': 'aggregation', 'key': 'aggregation'},
-        {'label': 'Aggregation comparison', 'value': 'aggregation_comparison', 'key': 'aggregation_comparison'},
-        {'label': 'Cross-comparison', 'value': 'cross_comparison', 'key': 'cross_comparison'}
+        {'label': 'Data', 'key': 'data'},
+        {'label': 'Data comparison', 'key': 'data_comparison'},
+        {'label': 'Aggregation ', 'key': 'aggregation'},
+        {'label': 'Aggregation comparison', 'key': 'aggregation_comparison'},
+        {'label': 'Cross-comparison', 'key': 'cross_comparison'}
     ]
 
 
-def to_default_selected_key(list_: List[dict]) -> List[str]:
-    if list_:
-        return [str(list_[0]['key'])]
-    return []
+def to_default_selected_key(list_: List[dict]) -> str:
+    return str(list_[0]['key'])
 
 
 async def get_default_menu_data(db: AsyncSession, ) -> Dict[str, Any]:
     leagues = await get_league_header(db)
     menu = await get_data_types_menu()
-    sub_menu, sub_menu_comp = await get_categories_both(db)
+    sub_menu, sub_menu_comp, categories_dict = await get_categories_both(db)
 
     games = await get_league_games(db, league_id=leagues[0]['key'])
     total_fields = await get_field_types('total')
@@ -143,17 +155,15 @@ async def get_default_menu_data(db: AsyncSession, ) -> Dict[str, Any]:
 
     return {
         'leagueMenu': leagues,
-        'leagueMenuDefault': to_default_selected_key(leagues),
         'leagueGames': games,
-        'leagueGamesDefault': to_default_selected_key(leagues),
         'menu': menu,
-        'menuDefault': to_default_selected_key(menu),
         'submenu': sub_menu,
-        'submenuDefault': to_default_selected_key(sub_menu),
         'submenuComparison': sub_menu_comp,
-        'submenuComparisonDefault': to_default_selected_key(sub_menu_comp),
         'totalFields': total_fields,
         'windowFields': window_fields,
+        'categoriesDict': categories_dict,
+        'lastEditDate': '26/03/2024',
+        'appVersion': '1.0',
         'loaded': True,
     }
 
@@ -172,8 +182,8 @@ def _processing_db_output(output,
         item = {k: item_data[v] for k, v in item_fields.items()}
 
         for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
-            if (model_obj_key.lower() in ['game_performance_id', 'id'] or
-                    (not exists_total and re.match(r'[g|l]total',model_obj_key, re.IGNORECASE ))):
+            if (model_obj_key.lower() in ['game_performance_id', 'data_type_id', 'id'] or
+                    (not exists_total and re.match(r'[g|l]total', model_obj_key, re.IGNORECASE))):
                 continue
 
             item[model_obj_key] = model_obj_value
@@ -338,7 +348,7 @@ def _update_variable(dict_: dict, key_: int | str, new_var: int | str):
 
 
 def _order_dict(dict_: dict, field: str) -> dict:
-    return {k: v for k, v in sorted(dict_.items(), key=lambda item: item[1][field])}
+    return {k: v for k, v in sorted(dict_.items(), key=lambda item: str(item[1][field]).lower(), )}
 
 
 async def get_cross_comparison_performance_data(db_session: AsyncSession,
@@ -348,8 +358,6 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 data_field: str,
                                                 data_type: str | int,
                                                 flat: bool, ):
-    print(f'{league_id}, {aggregation_type}, {position}, {data_field}, {data_type}, {flat}')
-
     fields_dict = {
         "hero": [Hero.name, Hero.id,  DataAggregationType.hero_cross_cps_id],
         "player": [Player.nickname, Player.account_id,  DataAggregationType.player_cross_cps_id],
@@ -403,8 +411,6 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
     rename_dict = dict()
     # hero/player name | id in db | id in db of the comparans player/hero
     for this_actor, this_actor_id, this_cps, value in query_output.all():
-        print(f'{this_actor}, {this_actor_id}, {this_cps}, {value}')
-
         rename_dict[this_actor_id] = this_actor
 
         if this_actor not in output_dict:
@@ -412,6 +418,9 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                 aggregation_type: this_actor,
             }
         output_dict[this_actor][this_cps] = value
+
+        if not value:
+            continue
 
         if this_cps not in data_values_info:
             data_values_info[this_cps] = {
@@ -431,16 +440,18 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
 
         data_values_info[value_info_key]["diff"] = mvi_max - mvi_min
 
-    ordered_names = sorted([act_name for act_name in rename_dict.values()])
+    ordered_names = sorted(rename_dict.values(), key=lambda x: (x).lower())
     # REMOVING OLD VALUES FROM DICTIONARY
     new_output = dict()
     for item_name, item in output_dict.items():
         temp_dict = dict()
-        for k, v in item.items():
+        for k, v in item.items():  # id / value
             cps_name = rename_dict.get(k, k)
             temp_dict[cps_name] = v
 
-        new_output[item_name] = temp_dict
+        new_output[item_name] = {(o_name if o_name != item_name else aggregation_type):
+                                     (temp_dict.get(o_name, None) if o_name != item_name else temp_dict[aggregation_type])
+                                 for o_name in ordered_names }
 
     new_output = _order_dict(new_output, aggregation_type)
 

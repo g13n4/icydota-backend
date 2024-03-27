@@ -122,7 +122,7 @@ class Game(SQLModel, table=True):
     league: Optional[League] = Relationship(back_populates='games')
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
 
-    patch = int
+    patch: int
 
     sent_team_id: int = _fk('teams')
     dire_team_id: int = _fk('teams')
@@ -565,15 +565,15 @@ class PerformanceViewBase(SQLModel):
     agg_by_position: bool = Field(default=False)
     agg_position_id: Optional[int] = Field(default=True)
 
-
-class PerformanceTotalView(PerformanceViewBase, PerformanceTotalBase, table=True):
-    __tablename__ = 'performance_total_view'
-
-
-class PerformanceWindowView(PerformanceViewBase, PerformanceWindowBase, table=True):
-    __tablename__ = 'performance_window_view'
-
-    data_type_id: Optional[int]
+#
+# class PerformanceTotalView(PerformanceViewBase, PerformanceTotalBase, table=True):
+#     __tablename__ = 'performance_total_view'
+#
+#
+# class PerformanceWindowView(PerformanceViewBase, PerformanceWindowBase, table=True):
+#     __tablename__ = 'performance_window_view'
+#
+#     data_type_id: Optional[int]
 
 
 # POSITION APPROXIMATION

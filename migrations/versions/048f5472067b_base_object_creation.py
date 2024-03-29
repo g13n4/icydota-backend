@@ -1,3 +1,4 @@
+
 """base_object_creation
 
 Revision ID: f57a2e451f95
@@ -18,8 +19,8 @@ from base_data_creation import create_positions, delete_positions
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f57a2e451f95'
-down_revision: Union[str, None] = '804e69f61c41'
+revision: str = '048f5472067b'
+down_revision: Union[str, None] = 'e082f48fedaf'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

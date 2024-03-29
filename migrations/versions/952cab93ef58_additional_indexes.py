@@ -44,7 +44,7 @@ def upgrade() -> None:
             text("""DROP VIEW IF EXISTS performance_window_view"""),
         )
         sqlmodel_session.execute(
-            text("""DROP VIEW IF EXISTS performance_totals_data""")
+            text("""DROP VIEW IF EXISTS performance_total_view""")
         )
 
 def downgrade() -> None:

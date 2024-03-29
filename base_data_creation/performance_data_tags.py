@@ -1,7 +1,7 @@
 from sqlmodel import Session
 from sqlmodel import select
 
-from models import PerformanceDataCategory, PerformanceDataTypeBasic
+from models import PerformanceDataCategory, PerformanceDataType
 from replay_parsing.windows import ALL_WINDOWS
 
 
@@ -15,7 +15,7 @@ def create_performance_data_tags(db_session: Session, ) -> None:
 
         pdt_objs = []
         for pdt_name in wdict.keys():
-            pdt_obj = PerformanceDataTypeBasic(
+            pdt_obj = PerformanceDataType(
                 name=pdt_name,
             )
             pdt_objs.append(pdt_obj)
@@ -35,7 +35,7 @@ def delete_performance_data_tags(db_session: Session, ) -> None:
     for cat_obj in cat_objs.all():
         db_session.delete(cat_obj)
 
-    cat_objs = db_session.exec(select(PerformanceDataTypeBasic))
+    cat_objs = db_session.exec(select(PerformanceDataType))
     for cat_obj in cat_objs.all():
         db_session.delete(cat_obj)
 

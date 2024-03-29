@@ -20,8 +20,8 @@ def create_players_and_teams(db_session: Session, ) -> None:
         new_player = Player(
             nickname=player['name'],
             official_name=True,
-            account_id=player['account_id'],
-            steam_id=player['steamid'], )
+            account_id=int(player['account_id']),
+            steam_id=player['steamid'] and int(player['steamid']), )
 
         db_session.add(new_player)
         players_counter += 1

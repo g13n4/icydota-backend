@@ -286,11 +286,14 @@ class PerformanceDataCategory(SQLModel, table=True):
     __tablename__ = 'performance_data_categories'
 
 
-class PerformanceDataType(SQLModel, table=True):
+class PerformanceDataTypeBasic(SQLModel, table=True):
     __tablename__ = 'performance_data_types'
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+
+
+class PerformanceDataType(PerformanceDataTypeBasic):
     system_name: Optional[str]
     is_comparable: Optional[bool] = Field(default=False, index=True)
     sum_to_agg: Optional[bool]  # or average

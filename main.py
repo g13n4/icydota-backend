@@ -22,7 +22,8 @@ from utils.model_processor import to_table_format_cross_comparison
 
 load_dotenv()
 
-CORS_ADDRESS = os.getenv('CORS_ADDRESS')
+API_PREFIX = os.getenv('API_PREFIX', default='')
+CORS_ADDRESS = os.getenv('CORS_ADDRESS', default="*")
 # FASTAPI
 icydota_api = FastAPI()
 
@@ -32,12 +33,12 @@ origins = [
     "*"
 ]
 
-icydota_api.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"], )
+# icydota_api.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"], )
 
 icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 
@@ -47,6 +48,12 @@ icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 # except Exception as ex:
 #     raise RuntimeError("Failed to connect to celery broker, {}".format(str(ex)))
 #
+
+# TEST
+@icydota_api.get('/index/', status_code=200)
+async def get_index():
+    return {'hello': 'world'}
+
 
 # MENUS
 @icydota_api.get('/menu_tc/')
@@ -256,5 +263,5 @@ async def approximate_positions_api(league_id: int):
     approximate_positions_helper(league_id=league_id)
 
 
-if __name__ == "__main__":
-    uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)
+# if __name__ == "__main__":
+#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)

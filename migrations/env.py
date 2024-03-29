@@ -19,10 +19,26 @@ load_dotenv()
 
 # env
 section = config.config_ini_section
-config.set_section_option(section, "POSTGRES_DB", os.environ.get("POSTGRES_DB"))
+
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+POSTGRES_PASSWORD =  os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+
+PRODUCTION = os.environ.get("PRODUCTION", default=0)
+
+if PRODUCTION:
+    POSTGRES_ADDRESS = "postgres:5432"
+    print("PRODUCTION MODE IS ON")
+else:
+    POSTGRES_ADDRESS = os.environ.get("POSTGRES_ADDRESS")
+
 config.set_section_option(section, "POSTGRES_ADDRESS", os.environ.get("POSTGRES_ADDRESS"))
-config.set_section_option(section, "POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD"))
-config.set_section_option(section, "POSTGRES_USER", os.environ.get("POSTGRES_USER"))
+config.set_section_option(section, "POSTGRES_DB", POSTGRES_DB)
+config.set_section_option(section, "POSTGRES_PASSWORD", POSTGRES_PASSWORD)
+config.set_section_option(section, "POSTGRES_USER", POSTGRES_USER)
+
+config.set_main_option('sqlalchemy.url', f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_ADDRESS}/{POSTGRES_DB}")
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

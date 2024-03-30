@@ -1,3 +1,4 @@
+import re
 from decimal import Decimal
 from functools import partial, reduce
 from typing import Dict, List
@@ -7,7 +8,7 @@ import pandas as pd
 from models import PerformanceDataType, PerformanceTotalData, ComparisonType, \
     PerformanceWindowData, GamePerformance
 from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_windows, process_pings_windows, \
-    process_wards_windows, process_deward_windows, process_damage_windows, \
+    process_wards_windows, process_deward_windows, process_damage_windows, TotalPerformanceAnalyser, \
     process_xp_windows, process_gold_windows, postprocess_data, MatchPlayersData
 from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
     compare_performance, combine_total_performance, to_dec
@@ -91,11 +92,13 @@ def _fill_comparison_pws(db_session,
                          players_data: MatchPlayersData,
                          PDT_dict: Dict[str, PerformanceDataType],
                          model_fields: List[str], ) -> Dict[int, List[GamePerformance]]:
+
+    TPA = TotalPerformanceAnalyser(PerfTotalData_dict)
     # WINDOW DATA
+
     game_performance_objs = {x: [] for x in range(10)}
     # we iterate over list that contains two types of dfs: flat and perc comparisons
     for idx, item in enumerate(sorted(comparison_data, key=lambda x: not x['basic'])):  # We want to start with True's
-        combine_tdp_func = partial(combine_total_performance, output_obj=PerformanceTotalData)
 
         # iterate over these dfs one by one
         for df, flat_comparison in [(item['df_flat'], True), (item['df_percent'], False)]:
@@ -118,14 +121,11 @@ def _fill_comparison_pws(db_session,
             # TOTAL DATA
             comparandum_slot = item['slot_comparandum']
             comparandum_data = players_data[comparandum_slot]
-            comparandum_total_obj = PerfTotalData_dict[comparandum_slot]
-            adjustment_coef = 1
 
             # NOT A COMBINATION
             if item['basic']:
                 comparans_slot = item['slot_comparans']
                 comparans_data = players_data[comparans_slot]
-                comparans_total_obj = PerfTotalData_dict[comparans_slot]
 
                 CT_obj = ComparisonType(
                     flat=flat_comparison,
@@ -141,6 +141,8 @@ def _fill_comparison_pws(db_session,
                     pos_cps_id=comparans_data['position_id'],
                 )
                 db_session.add(CT_obj)
+
+                ctp_data = TPA.compare_to_one(comparandum_slot, comparans_slot, flat=flat_comparison)
             else:
                 # COMBINATION OF SEVERAL DATA
 
@@ -155,18 +157,12 @@ def _fill_comparison_pws(db_session,
                 db_session.add(CT_obj)
 
                 opponents: List[int] = players_data[comparandum_slot]['opponents']
-                adjustment_coef = len(opponents)
-                opponents_PTDs = [PerfTotalData_dict[x] for x in opponents]
-                reduce(combine_tdp_func, opponents_PTDs)
-                comparans_total_obj: PerformanceTotalData = opponents_PTDs.pop()
+                ctp_data = TPA.compare_to_many(comparandum_slot, comparans_list=opponents, flat=flat_comparison)
+
 
             # FILLING GAME PERFORMANCE
             # CREATE A TOTAL DATA COMPARISON
-            ctp_obj: PerformanceTotalData = compare_performance(comparandum_total_obj,
-                                                                comparans_total_obj,
-                                                                PerformanceTotalData,
-                                                                not flat_comparison,
-                                                                coef=adjustment_coef)
+            ctp_obj: PerformanceTotalData = PerformanceTotalData(**ctp_data)
             db_session.add(ctp_obj)
 
             game_performance_obj = GamePerformance(
@@ -209,21 +205,21 @@ def process_main_replay_data(db_session,
     filled_totals_data, comparison_data = postprocess_data(match_info, match.get_players_object(), MS, )
 
     # all fields in window data are Decimal's
-    dec_fields = [k for k, v in PerformanceWindowData.schema()['properties'].items()
-                  if v['type'] in ['number']]
+    fields = [x for x in PerformanceWindowData.schema()['properties'].keys()
+              if not re.search(r'(^|_)id$', x)]
 
     GP_basic_dict = _fill_basic_PWDs(db_session=db_session,
                                      final_data=filled_totals_data,
                                      PDT_dict=PTD_dict,
                                      PTD_dict=PerTotalData_dict,
-                                     model_fields=dec_fields)
+                                     model_fields=fields)
 
     GP_comparison_dict = _fill_comparison_pws(db_session=db_session,
                                               comparison_data=comparison_data,
                                               players_data=match.players,
                                               PerfTotalData_dict=PerTotalData_dict,
                                               PDT_dict=PTD_dict,
-                                              model_fields=dec_fields)
+                                              model_fields=fields)
 
     all_GPs = dict()
     for x in range(10):

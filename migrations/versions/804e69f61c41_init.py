@@ -162,6 +162,7 @@ def upgrade() -> None:
                     sa.Column('dire_building_status_id', sa.Integer(), nullable=True),
                     sa.Column('sent_building_status_id', sa.Integer(), nullable=True),
                     sa.Column('duration', sa.Integer(), nullable=False),
+                    sa.Column('patch', sa.Integer(), nullable=False),
                     sa.Column('replay_url', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
                     sa.ForeignKeyConstraint(['dire_building_status_id'], ['buildings_data.id'], ),
                     sa.ForeignKeyConstraint(['dire_team_id'], ['teams.id'], ondelete='SET NULL'),

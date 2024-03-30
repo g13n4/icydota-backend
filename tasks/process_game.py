@@ -1,5 +1,8 @@
 import json
 import os
+import sys
+import warnings
+
 from pathlib import Path
 from typing import Dict, List
 
@@ -24,6 +27,9 @@ BASE_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
 assert Path(BASE_PATH).is_dir() == True
 
 logger = get_task_logger(__name__)
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:

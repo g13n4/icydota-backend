@@ -21,18 +21,13 @@ load_dotenv()
 section = config.config_ini_section
 
 POSTGRES_DB = os.environ.get("POSTGRES_DB")
-POSTGRES_PASSWORD =  os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_ADDRESS = os.environ.get("POSTGRES_ADDRESS")
 
 PRODUCTION = os.environ.get("PRODUCTION", default=0)
 
-if PRODUCTION:
-    POSTGRES_ADDRESS = "postgres:5432"
-    print("PRODUCTION MODE IS ON")
-else:
-    POSTGRES_ADDRESS = os.environ.get("POSTGRES_ADDRESS")
-
-config.set_section_option(section, "POSTGRES_ADDRESS", os.environ.get("POSTGRES_ADDRESS"))
+config.set_section_option(section, "POSTGRES_ADDRESS", POSTGRES_ADDRESS)
 config.set_section_option(section, "POSTGRES_DB", POSTGRES_DB)
 config.set_section_option(section, "POSTGRES_PASSWORD", POSTGRES_PASSWORD)
 config.set_section_option(section, "POSTGRES_USER", POSTGRES_USER)

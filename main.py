@@ -50,25 +50,25 @@ icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 #
 
 # TEST
-@icydota_api.get('/index/', status_code=200)
+@icydota_api.get(API_PREFIX + '/index/', status_code=200)
 async def get_index():
     return {'hello': 'world'}
 
 
 # MENUS
-@icydota_api.get('/menu_tc/')
+@icydota_api.get(API_PREFIX + '/menu_tc/')
 async def get_menu_types_and_categories(comparison: bool | None = None, db=Depends(get_async_db_session)):
     categories = await get_categories_menu(db, include_disabled=not comparison)
     return categories
 
 
-@icydota_api.get('/menu_data_types/')
+@icydota_api.get(API_PREFIX + '/menu_data_types/')
 async def get_menu_data_types():
     data_types = await get_data_types_menu()
     return data_types
 
 
-@icydota_api.get('/league_header/')
+@icydota_api.get(API_PREFIX + '/league_header/')
 async def get_league_header_api(db=Depends(get_async_db_session)):
     items = await get_league_header(db)
     return items
@@ -103,7 +103,7 @@ class FieldTypes(CaseInsensitiveEnum):
     total = "total"
 
 
-@icydota_api.get('/performance_data/{match_id}/')
+@icydota_api.get(API_PREFIX + '/performance_data/{match_id}/')
 async def get_performance_data_api(match_id: int,
                                    data_type: int | str,
                                    game_stage: GameStage,
@@ -131,7 +131,7 @@ async def get_performance_data_api(match_id: int,
     return output
 
 
-@icydota_api.get('/performance_aggregated_data/{league_id}/{aggregation_type}/')
+@icydota_api.get(API_PREFIX + '/performance_aggregated_data/{league_id}/{aggregation_type}/')
 async def get_performance_aggregated_data_api(league_id: int,
                                               aggregation_type: AggregationTypes,
                                               game_stage: GameStage,
@@ -158,7 +158,7 @@ async def get_performance_aggregated_data_api(league_id: int,
     return output
 
 
-@icydota_api.get('/performance_cross_comparison/{league_id}/{aggregation_type}/{position}/')
+@icydota_api.get(API_PREFIX + '/performance_cross_comparison/{league_id}/{aggregation_type}/{position}/')
 async def get_performance_cross_comparison_data_api(league_id: int,
                                                     aggregation_type: CrossAggregationTypes,
                                                     position: CrossAggregationPositions,
@@ -187,31 +187,31 @@ async def get_performance_cross_comparison_data_api(league_id: int,
 
 
 # LISTS
-@icydota_api.get('/field/{field_type}/')
+@icydota_api.get(API_PREFIX + '/field/{field_type}/')
 async def get_field_types_api(field_type: FieldTypes):
     field_types = await get_field_types(field_type)
     return field_types
 
 
-@icydota_api.get('/types/')
+@icydota_api.get(API_PREFIX + '/types/')
 async def get_performance_types(db=Depends(get_async_db_session)):
     categories = await get_items(db, PerformanceDataType)
     return categories.all()
 
 
-@icydota_api.get('/leagues/')
+@icydota_api.get(API_PREFIX + '/leagues/')
 async def get_leagues(db=Depends(get_async_db_session)):
     league_objs = await get_items(db, League)
     return league_objs.all()
 
 
-@icydota_api.get('/categories/')
+@icydota_api.get(API_PREFIX + '/categories/')
 async def get_performance_categories(db=Depends(get_async_db_session)):
     categories = await get_items(db, PerformanceDataCategory)
     return categories.all()
 
 
-@icydota_api.get('/types/{type_id}')
+@icydota_api.get(API_PREFIX + '/types/{type_id}')
 def get_performance_types(type_id: Optional[int],
                           db=Depends(get_sync_db_session)):
     types = db.exec(select(PerformanceDataType)
@@ -220,20 +220,20 @@ def get_performance_types(type_id: Optional[int],
     return types
 
 
-@icydota_api.get('/games/{league_id}')
+@icydota_api.get(API_PREFIX + '/games/{league_id}')
 async def get_league_games_api(league_id: int, db=Depends(get_async_db_session)):
     categories = await get_league_games(db, league_id)
     return categories
 
 
-@icydota_api.get('/default_menu_data/')
+@icydota_api.get(API_PREFIX + '/default_menu_data/')
 async def get_default_menu_data_api(db=Depends(get_async_db_session)):
     data = await get_default_menu_data(db)
     return data
 
 
 # PROCESSING WITH CELERY
-@icydota_api.get('/process/league/{league_id}/', status_code=202)
+@icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
 async def process_league_api(league_id: int, overwrite: bool = False):
     new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
     if new_games_number:
@@ -242,23 +242,23 @@ async def process_league_api(league_id: int, overwrite: bool = False):
     return {'status': 'processed'}
 
 
-@icydota_api.get('/process/match/{match_id}/', status_code=202)
+@icydota_api.get(API_PREFIX + '/process/match/{match_id}/', status_code=202)
 async def process_match_api(match_id: int):
     process_game_helper(match_id=match_id, )
     return {'status': 'processing'}
 
 
-@icydota_api.get('/aggregate/league/{league_id}/', status_code=202)
+@icydota_api.get(API_PREFIX + '/aggregate/league/{league_id}/', status_code=202)
 async def aggregate_league_api(league_id: int):
     aggregate_league_helper(league_id=league_id, )
 
 
-@icydota_api.get('/aggregate/cross_comparison/{league_id}/', status_code=202)
+@icydota_api.get(API_PREFIX + '/aggregate/cross_comparison/{league_id}/', status_code=202)
 async def create_cross_comparison_api(league_id: int):
     cross_compare_league_helper(league_id=league_id, )
 
 
-@icydota_api.get('/approximate_positions/{league_id}/', status_code=202)
+@icydota_api.get(API_PREFIX + '/approximate_positions/{league_id}/', status_code=202)
 async def approximate_positions_api(league_id: int):
     approximate_positions_helper(league_id=league_id)
 

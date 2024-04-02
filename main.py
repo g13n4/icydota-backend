@@ -13,8 +13,6 @@ from crud import get_items, get_categories_menu, get_field_types, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League
-from tasks import process_league, process_game_helper
-from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
 from utils import (to_table_format, CaseInsensitiveEnum, )
 from utils.model_processor import to_table_format_cross_comparison
 
@@ -23,6 +21,9 @@ load_dotenv()
 
 API_PREFIX = os.getenv('API_PREFIX', default='')
 CORS_ADDRESS = os.getenv('CORS_ADDRESS', default="*")
+LIGHT_MODE = os.getenv('CORS_ADDRESS', default="*")
+LIGHT_VERSION = os.getenv('LIGHT_VERSION', default=True)
+
 # FASTAPI
 icydota_api = FastAPI()
 
@@ -230,37 +231,41 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
     data = await get_default_menu_data(db)
     return data
 
-
 # PROCESSING WITH CELERY
-@icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
-async def process_league_api(league_id: int, overwrite: bool = False):
-    new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
-    if new_games_number:
-        return {'status': f'processing {new_games_number} games'}
-
-    return {'status': 'processed'}
+if not LIGHT_VERSION:
+    from tasks import process_league, process_game_helper
+    from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
 
 
-@icydota_api.get(API_PREFIX + '/process/match/{match_id}/', status_code=202)
-async def process_match_api(match_id: int):
-    process_game_helper(match_id=match_id, )
-    return {'status': 'processing'}
+    @icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
+    async def process_league_api(league_id: int, overwrite: bool = False):
+        new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
+        if new_games_number:
+            return {'status': f'processing {new_games_number} games'}
+
+        return {'status': 'processed'}
 
 
-@icydota_api.get(API_PREFIX + '/aggregate/league/{league_id}/', status_code=202)
-async def aggregate_league_api(league_id: int):
-    aggregate_league_helper(league_id=league_id, )
+    @icydota_api.get(API_PREFIX + '/process/match/{match_id}/', status_code=202)
+    async def process_match_api(match_id: int):
+        process_game_helper(match_id=match_id, )
+        return {'status': 'processing'}
 
 
-@icydota_api.get(API_PREFIX + '/aggregate/cross_comparison/{league_id}/', status_code=202)
-async def create_cross_comparison_api(league_id: int):
-    cross_compare_league_helper(league_id=league_id, )
+    @icydota_api.get(API_PREFIX + '/aggregate/league/{league_id}/', status_code=202)
+    async def aggregate_league_api(league_id: int):
+        aggregate_league_helper(league_id=league_id, )
 
 
-@icydota_api.get(API_PREFIX + '/approximate_positions/{league_id}/', status_code=202)
-async def approximate_positions_api(league_id: int):
-    approximate_positions_helper(league_id=league_id)
+    @icydota_api.get(API_PREFIX + '/aggregate/cross_comparison/{league_id}/', status_code=202)
+    async def create_cross_comparison_api(league_id: int):
+        cross_compare_league_helper(league_id=league_id, )
 
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)
+    @icydota_api.get(API_PREFIX + '/approximate_positions/{league_id}/', status_code=202)
+    async def approximate_positions_api(league_id: int):
+        approximate_positions_helper(league_id=league_id)
+
+
+    # if __name__ == "__main__":
+    #     uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)

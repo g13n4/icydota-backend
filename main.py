@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,12 +32,12 @@ origins = [
     "*"
 ]
 
-# icydota_api.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"], )
+icydota_api.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"], )
 
 icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 

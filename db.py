@@ -1,6 +1,5 @@
 import os
 
-import httpx
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import create_engine, Session

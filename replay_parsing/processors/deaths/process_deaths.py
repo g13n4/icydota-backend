@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 import pandas as pd
 
-from utils import iterate_df
+from parsing_utils.pd_helpers import iterate_df
 
 
 def _count_fk(fk_list: List[bool]) -> bool | None:

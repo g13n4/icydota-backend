@@ -31,7 +31,7 @@ def _get_fields(model: SQLModelModel) -> Generator:
 
         yield f_name, func_, f_props['type'], is_required
 
-
+# DEPRECATED
 def compare_performance(comparandum_obj: SQLModelModel,
                         comparans_obj: SQLModelModel,
                         output_obj: Type[SQLModelModel],
@@ -68,7 +68,7 @@ def compare_performance(comparandum_obj: SQLModelModel,
 
     return output_obj(**output_dict)
 
-
+# DEPRECATED
 def combine_total_performance(comparandum_obj: SQLModelModel,
                               comparans_obj: SQLModelModel,
                               output_obj: Type[SQLModelModel],

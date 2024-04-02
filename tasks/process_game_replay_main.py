@@ -10,8 +10,9 @@ from models import PerformanceDataType, PerformanceTotalData, ComparisonType, \
 from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_windows, process_pings_windows, \
     process_wards_windows, process_deward_windows, process_damage_windows, TotalPerformanceAnalyser, \
     process_xp_windows, process_gold_windows, postprocess_data, MatchPlayersData
-from utils import get_both_slot_values, iterate_df, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
-    compare_performance, combine_total_performance, to_dec
+from utils import get_both_slot_values, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
+    to_dec
+from parsing_utils.pd_helpers import iterate_df
 from replay_parsing.postprocessor import (SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA,
                                           COMPARE_DATA_CORES, COMPARE_DATA_SUPPORT)
 

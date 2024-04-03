@@ -308,7 +308,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
-        clauses.append(PerformanceWindowData.data_type_id == data_type)
+        clauses.append(PerformanceWindowData.data_type_id == int(data_type))
 
 
     # QUERY BUILDING

@@ -21,7 +21,6 @@ load_dotenv()
 
 API_PREFIX = os.getenv('API_PREFIX', default='')
 CORS_ADDRESS = os.getenv('CORS_ADDRESS', default="*")
-LIGHT_MODE = os.getenv('CORS_ADDRESS', default="*")
 LIGHT_VERSION = os.getenv('LIGHT_VERSION', default=True)
 
 # FASTAPI
@@ -105,7 +104,7 @@ class FieldTypes(CaseInsensitiveEnum):
 
 @icydota_api.get(API_PREFIX + '/performance_data/{match_id}/')
 async def get_performance_data_api(match_id: int,
-                                   data_type: int | str,
+                                   data_type: str,
                                    game_stage: GameStage,
                                    comparison: Optional[str] = None,
                                    flat: bool = None,
@@ -135,7 +134,7 @@ async def get_performance_data_api(match_id: int,
 async def get_performance_aggregated_data_api(league_id: int,
                                               aggregation_type: AggregationTypes,
                                               game_stage: GameStage,
-                                              data_type: int | str | None = None,
+                                              data_type: Optional[str] = None,
                                               comparison: Optional[str] = None,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
@@ -163,7 +162,7 @@ async def get_performance_cross_comparison_data_api(league_id: int,
                                                     aggregation_type: CrossAggregationTypes,
                                                     position: CrossAggregationPositions,
                                                     data_field: str,
-                                                    data_type: int | str | None = None,
+                                                    data_type: Optional[str] = None,
                                                     flat: bool = True,
                                                     db=Depends(get_async_db_session)):
     # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&flat=false HTTP/1.1"

@@ -2,7 +2,7 @@ import re
 import enum
 from decimal import Decimal
 from itertools import cycle
-from typing import Any, Dict, List, TypeVar, Type, Set
+from typing import Any, Dict, List, TypeVar, Type, Set, Tuple
 
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
@@ -25,8 +25,8 @@ def get_all_sqlmodel_objs(db_session: Session, model, ) -> list:
     return sel_result.all()
 
 
-def get_both_slot_values(key: str | int) -> (str, int):
-    if type(key) is str:
+def get_both_slot_values(key: str | int) -> Tuple[str, int]:
+    if isinstance(key, str):
         num = int(key[-1])
         return key, num
     else:
@@ -125,6 +125,7 @@ def get_positions_approximations(db_session: Session, model, league_id) -> Dict[
 
     return {pid: poid for pid, poid in objs}
 
+
 class CaseInsensitiveEnum(str, enum.Enum):
     @classmethod
     def _missing_(cls, value: str):
@@ -132,3 +133,9 @@ class CaseInsensitiveEnum(str, enum.Enum):
             if member.lower() == value.lower():
                 return member
         return None
+
+
+def is_na_decimal(value: Any) -> bool:
+    if (isinstance(value, Decimal)) and value.is_nan():
+        return True
+    return False

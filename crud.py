@@ -1,6 +1,7 @@
 # from sqlmodel.ext.asyncio.session import AsyncSession
 import re
 from typing import Dict, Any, Optional, List, Callable, Tuple
+from decimal import Decimal
 
 from functools import partial
 
@@ -11,7 +12,7 @@ from models import ComparisonType, DataAggregationType, PerformanceDataCategory
 from models import Hero, Player, Position, League, Game
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData, PerformanceDataType
 from utils.translation_dictionary import PERFORMANCE_FIELD_DICT
-
+from utils import is_na_decimal
 
 TOTAL_FIELDS = PerformanceTotalData.schema()['properties'].keys()
 WINDOW_FIELDS = PerformanceWindowData.schema()['properties'].keys()
@@ -179,6 +180,7 @@ def _processing_db_output(output,
     processed_output = []
     data_values_info = dict()
     for model_obj, *item_data in output.all():
+        print(model_obj)
         item = {k: item_data[v] for k, v in item_fields.items()}
 
         for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
@@ -189,7 +191,7 @@ def _processing_db_output(output,
             item[model_obj_key] = model_obj_value
 
             # LOOKING FOR MIN AND MAX VALUES
-            if model_obj_value is not None:
+            if model_obj_value is not None and not is_na_decimal(model_obj_value):
                 # CREATE THE BASE DICT OR START COMPARING
                 if model_obj_key not in data_values_info:
                     data_values_info[model_obj_key] = {
@@ -197,6 +199,7 @@ def _processing_db_output(output,
                         "min": model_obj_value,
                         "diff": None, }
                 else:
+                    print(model_obj_value)
                     data_values_info[model_obj_key]["max"] = max(data_values_info[model_obj_key]["max"], model_obj_value)
                     data_values_info[model_obj_key]["min"] = min(data_values_info[model_obj_key]["min"], model_obj_value)
 
@@ -217,7 +220,7 @@ def _processing_db_output(output,
 
 async def get_performance_data(db_session: AsyncSession,
                                match_id: int,
-                               data_type: int | str,
+                               data_type: str,
                                game_stage: str,
                                comparison: Optional[str],
                                flat: Optional[bool], ):
@@ -238,7 +241,7 @@ async def get_performance_data(db_session: AsyncSession,
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
-        clauses.append(PerformanceWindowData.data_type_id == data_type)
+        clauses.append(PerformanceWindowData.data_type_id == int(data_type))
 
     select_models = [model, Hero.name, Player.nickname, Position.name]
     if comparison == 'player':
@@ -278,7 +281,7 @@ async def get_performance_data(db_session: AsyncSession,
 async def get_aggregated_performance_data(db_session: AsyncSession,
                                           league_id: int,
                                           aggregation_type: str,
-                                          data_type: str | int,
+                                          data_type: str,
                                           game_stage: str,
                                           comparison: Optional[str],
                                           flat: Optional[bool], ):
@@ -356,7 +359,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 aggregation_type: str,
                                                 position: str,
                                                 data_field: str,
-                                                data_type: str | int,
+                                                data_type: str,
                                                 flat: bool, ):
     fields_dict = {
         "hero": [Hero.name, Hero.id,  DataAggregationType.hero_cross_cps_id],
@@ -419,7 +422,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
             }
         output_dict[this_actor][this_cps] = value
 
-        if not value:
+        if value is None or is_na_decimal(value):
             continue
 
         if this_cps not in data_values_info:

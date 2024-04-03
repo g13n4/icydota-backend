@@ -266,5 +266,6 @@ if not LIGHT_VERSION:
         approximate_positions_helper(league_id=league_id)
 
 
-    # if __name__ == "__main__":
-    #     uvicorn.run("main:icydota_api", host='0.0.0.0', port=8000, reload=False, workers=1)
+    if __name__ == "__main__":
+        import uvicorn
+        uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, )

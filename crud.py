@@ -180,18 +180,20 @@ def _processing_db_output(output,
     processed_output = []
     data_values_info = dict()
     for model_obj, *item_data in output.all():
-        print(model_obj)
+
         item = {k: item_data[v] for k, v in item_fields.items()}
 
         for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
             if (model_obj_key.lower() in ['game_performance_id', 'data_type_id', 'id'] or
                     (not exists_total and re.match(r'[g|l]total', model_obj_key, re.IGNORECASE))):
                 continue
+            if is_na_decimal(model_obj_value):
+                model_obj_value = None
 
             item[model_obj_key] = model_obj_value
 
             # LOOKING FOR MIN AND MAX VALUES
-            if model_obj_value is not None and not is_na_decimal(model_obj_value):
+            if model_obj_value is not None:
                 # CREATE THE BASE DICT OR START COMPARING
                 if model_obj_key not in data_values_info:
                     data_values_info[model_obj_key] = {
@@ -199,7 +201,7 @@ def _processing_db_output(output,
                         "min": model_obj_value,
                         "diff": None, }
                 else:
-                    print(model_obj_value)
+
                     data_values_info[model_obj_key]["max"] = max(data_values_info[model_obj_key]["max"], model_obj_value)
                     data_values_info[model_obj_key]["min"] = min(data_values_info[model_obj_key]["min"], model_obj_value)
 
@@ -420,9 +422,13 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
             output_dict[this_actor] = {
                 aggregation_type: this_actor,
             }
+
+        if is_na_decimal(value):
+            value = None
+
         output_dict[this_actor][this_cps] = value
 
-        if value is None or is_na_decimal(value):
+        if value is None:
             continue
 
         if this_cps not in data_values_info:

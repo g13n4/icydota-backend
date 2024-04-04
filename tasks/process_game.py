@@ -202,9 +202,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
             observer_uses=none_to_zero(player_info['observer_uses']),
             sentry_uses=none_to_zero(player_info['sentry_uses']),
 
-            lane_efficiency=none_to_zero(player_info['lane_efficiency']),
-            lane_efficiency_pct=none_to_zero(player_info['lane_efficiency_pct']),
-
+            lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None), nullify=False),
+            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None), nullify=False),
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field

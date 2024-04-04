@@ -141,21 +141,13 @@ def process_data(data: List[Dict[str, Any]], total: bool) -> Dict[str, Dict[int,
 
 
 def _create_obj(item: dict, data_type, total: bool = False):
-    if not total:
-        new_obj = dict()
-        for field in WINDOW_DATA_FIELDS:
-            new_obj[field] = to_dec(item[field])
-        new_obj['data_type_id'] = item['data_type_id']
+    fields = TOTAL_DATA_FIELDS if total else WINDOW_DATA_FIELDS
+    new_obj = dict()
+    for field in fields:
+        new_obj[field] = item[field] and to_dec(item[field])
 
-    else:
-        dt_properties: dict = data_type.schema()['properties']
-        new_obj = dict()
-        for field in TOTAL_DATA_FIELDS:
-            field_type = dt_properties[field]['type']
-            if field_type == 'integer':
-                new_obj[field] = item[field] and int(item[field])
-            else:
-                new_obj[field] = item[field] and to_dec(item[field])
+    if not total:
+        new_obj['data_type_id'] = item['data_type_id']
 
     return data_type(**new_obj)
 

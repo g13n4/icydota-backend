@@ -2,7 +2,7 @@ import re
 import enum
 from decimal import Decimal
 from itertools import cycle
-from typing import Any, Dict, List, TypeVar, Type, Set, Tuple
+from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
 
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
@@ -56,10 +56,11 @@ def get_obj_from_list(objs_list: list, **kwargs):
     return None
 
 
-def none_to_zero(value: Any) -> Decimal:
+def none_to_zero(value: Any, nullify: bool = True) -> Optional[Decimal]:
     if value:
         return Decimal(value)
-    return Decimal(0.0)
+
+    return Decimal(0.0) if nullify else None
 
 
 def refresh_objects(db_session: Session, objects, ) -> None:

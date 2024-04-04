@@ -21,7 +21,19 @@ load_dotenv()
 
 API_PREFIX = os.getenv('API_PREFIX', default='')
 CORS_ADDRESS = os.getenv('CORS_ADDRESS', default="*")
-LIGHT_VERSION = os.getenv('LIGHT_VERSION', default=True)
+LIGHT_MODE = os.getenv('LIGHT_MODE', default='off')
+
+if LIGHT_MODE == 'on':
+    LIGHT_MODE = True
+    print("THE APP IS IN LIGHT MODE. DATA PARSING IS NOT POSSIBLE")
+elif LIGHT_MODE == 'off':
+    LIGHT_MODE = False
+    print("THE APP IS IN FULL MODE. YOU CAN PARSE REPLAY DATA")
+else:
+    LIGHT_MODE = True
+    print("WARNING, \"LIGHT_MODE\" VARIABLE IS NOT SET! IT WILL BE FORCEFULLY SET AS FALSE. PARSING IS DISABLED ")
+    print(LIGHT_MODE)
+
 
 # FASTAPI
 icydota_api = FastAPI()
@@ -231,7 +243,7 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
     return data
 
 # PROCESSING WITH CELERY
-if not LIGHT_VERSION:
+if not LIGHT_MODE:
     from tasks import process_league, process_game_helper
     from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
 
@@ -266,6 +278,6 @@ if not LIGHT_VERSION:
         approximate_positions_helper(league_id=league_id)
 
 
-    if __name__ == "__main__":
-        import uvicorn
-        uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, )
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, )

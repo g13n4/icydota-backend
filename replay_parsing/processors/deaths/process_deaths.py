@@ -1,4 +1,5 @@
 import copy
+import re
 from typing import Dict, List, Tuple
 
 import pandas as pd
@@ -14,10 +15,16 @@ def _count_fk(fk_list: List[bool]) -> bool | None:
     return None
 
 
+def is_bear(slot: int | str) -> bool:
+    if re.search(r'lone_druid_bear', str(slot)):
+        return True
+    return False
+
+
 def process_hero_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> tuple[dict, bool | None, list]:
     df[['sourcename', 'targetname', ]] = df[['sourcename', 'targetname', ]].replace(players_to_slot)
-    # 7483084944
-    # TODO: KeyError: "None of [Index(['sourcename', 'targetname'], dtype='object')] are in the [columns]"
+
+    df = df[df['targetname'].apply(lambda x: not is_bear(x))]
 
     player_data = {x: {
         'first_blood_claimed': 0.0,

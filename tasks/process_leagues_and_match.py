@@ -40,6 +40,8 @@ def process_league(league_obj: League | None = None,
     return new_games_found
 
 
+
+
 @shared_task(name='process_league_games_(cron)')
 def process_leagues_cron() -> None:
     db_session: Session = get_sync_db_session()

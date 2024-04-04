@@ -152,7 +152,7 @@ def _create_obj(item: dict, data_type, total: bool = False):
     return data_type(**new_obj)
 
 
-@shared_task(name="create_cross_comparison")
+@shared_task(name="create_cross_comparison", ignore_result=True)
 def create_cross_comparison_aggregation(league_id: int):
     logger.info(f'Creating cross-comparison for {league_id}')
 

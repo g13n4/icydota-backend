@@ -13,6 +13,7 @@ from crud import get_items, get_categories_menu, get_field_types, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League
+from tasks_agg.process_full_cycle import process_full_cycle
 from utils import (to_table_format, CaseInsensitiveEnum, )
 from utils.model_processor import to_table_format_cross_comparison
 
@@ -276,6 +277,11 @@ if not LIGHT_MODE:
     @icydota_api.get(API_PREFIX + '/approximate_positions/{league_id}/', status_code=202)
     async def approximate_positions_api(league_id: int):
         approximate_positions_helper(league_id=league_id)
+
+
+    @icydota_api.get(API_PREFIX + '/process/all/{league_id}/', status_code=202)
+    async def process_full_cycle_api(league_id: int):
+        process_full_cycle(league_id=league_id)
 
 
 # if __name__ == "__main__":

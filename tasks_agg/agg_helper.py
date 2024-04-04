@@ -15,16 +15,3 @@ def aggregate_league_helper(league_id: int) -> None:
 
 def cross_compare_league_helper(league_id: int) -> None:
     create_cross_comparison_aggregation.delay(league_id)
-
-
-def post_process_league_id(league_id: int,
-                           approx: bool = True,
-                           aggregate: bool = True,
-                           cross_compare: bool = True) -> None:
-    if approx:
-        approximate_positions(league_id=league_id)
-    if aggregate:
-        aggregate_league_helper(league_id=league_id)
-    if cross_compare:
-        cross_compare_league_helper(league_id=league_id)
-

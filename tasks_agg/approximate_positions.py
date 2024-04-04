@@ -10,8 +10,8 @@ from models import PlayerGameData, Game, PositionApproximation
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='approximate_positions_for_league', bind=True)
-def approximate_positions(self, league_id: int) -> None:
+@shared_task(name='approximate_positions_for_league', ignore_result=True)
+def approximate_positions(league_id: int) -> None:
     logger.info(f"Approximating positions for league {league_id}")
 
     db_session: Session = get_sync_db_session()

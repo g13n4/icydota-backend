@@ -179,7 +179,7 @@ def _create_obj(item: dict, data_type, total: bool = False):
     return data_type(**new_obj)
 
 
-@shared_task(name="aggregate_league")
+@shared_task(name="aggregate_league", ignore_result=True)
 def process_aggregation(league_id: int):
     logger.info(f'Aggregating data for {league_id}')
 

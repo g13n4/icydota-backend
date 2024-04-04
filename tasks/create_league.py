@@ -56,7 +56,7 @@ def create_league(league_id: int, **kwargs) -> League:
     except ConnectionError:
         # TRY IT AGAIN USING OPENDOTA NOW (OPENDOTA DOESN'T PROVIDE ADDITIONAL DATA)
         r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/')
-        if r.status_code == 200:
+        if r.status_code == 200 and r.content:
             data = r.json()
             league_obj = League(
                 id=league_id,

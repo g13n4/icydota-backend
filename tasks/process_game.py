@@ -4,7 +4,7 @@ import sys
 import warnings
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from celery import shared_task, chain
 from celery.utils.log import get_task_logger
@@ -92,14 +92,18 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
     return players_dict
 
 
-def process_game_helper(match_id: int, league_id: int | None = None):
+def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
     first_parser = next(bool_pool)
 
-    (get_match_replay.s(match_id=match_id, first_parser=first_parser) |
-     process_game_data.s(league_id=league_id)).apply_async()
+    match_chain = (get_match_replay.si(match_id=match_id, first_parser=first_parser) |
+                   process_game_data.si(match_id=match_id, league_id=league_id))
+    if get_chain:
+        return match_chain
+
+    match_chain.apply_async()
 
 
-@shared_task(name='process_game_data')
+@shared_task(name='process_game_data', ignore_result=True)
 def process_game_data(match_id: int, league_id: int | None = None):
     logger.info(f'Process replay for {match_id}')
 

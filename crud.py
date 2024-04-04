@@ -169,19 +169,40 @@ async def get_default_menu_data(db: AsyncSession, ) -> Dict[str, Any]:
     }
 
 
+def create_combined_field_item(field_name: str, pattern: str, fields_to_use: list):
+    return {
+        'pattern': pattern,
+        'fields_to_use': fields_to_use,
+        'field_name': field_name,
+    }
+
+
+def combine_dict_fields(dict_: dict, cfi: dict) -> dict:
+    dict_[cfi['field_name']] = cfi['pattern'].format(**dict_)
+    dict_ = {k: v for k, v in dict_.items() if k not in cfi['fields_to_use']}
+    return dict_
+
+
 # DATA FOR DB PROCESSING
 def _processing_db_output(output,
                           item_fields: dict,
                           exclude: list = None,
-                          exists_total: bool = False) -> Tuple[list, list, bool]:
+                          exists_total: bool = False,
+                          combined_fields_data: Optional[list] = None) -> Tuple[list, list, bool]:
     if exclude is None:
         exclude = []
+
+    if combined_fields_data is None:
+        combined_fields_data = []
 
     processed_output = []
     data_values_info = dict()
     for model_obj, *item_data in output.all():
 
         item = {k: item_data[v] for k, v in item_fields.items()}
+        if combined_fields_data:
+            for cfdi in combined_fields_data:
+                item = combine_dict_fields(item, cfdi)
 
         for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
             if (model_obj_key.lower() in ['game_performance_id', 'data_type_id', 'id'] or
@@ -226,6 +247,7 @@ async def get_performance_data(db_session: AsyncSession,
                                game_stage: str,
                                comparison: Optional[str],
                                flat: Optional[bool], ):
+    combine_fields = []
     clauses = [PlayerGameData.game_id == match_id]
 
     item_fields = {'position': 2,
@@ -249,6 +271,13 @@ async def get_performance_data(db_session: AsyncSession,
     if comparison == 'player':
         select_models.append(ComparisonType.pos_cps_id)
         item_fields['opponents_pos'] = 3
+        #
+        # combine_fields.append(
+        #     create_combined_field_item('hero_opponent',
+        #                                '{opponents_hero} [{opponents_pos}]',
+        #                                ['opponents_hero', 'opponents_pos'])
+        # )
+
 
     # QUERY BUILDING
     select_query = (select(*select_models)
@@ -275,7 +304,8 @@ async def get_performance_data(db_session: AsyncSession,
 
     output = await db_session.exec(select_query)
 
-    data, limits, total = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields, )
+    data, limits, total = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields,
+                                                combined_fields_data=combine_fields)
 
     return data, limits, total
 

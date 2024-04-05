@@ -410,7 +410,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
         model = PerformanceTotalData
     else:
         model = PerformanceWindowData
-        clauses.append(model.data_type_id == data_type)
+        clauses.append(model.data_type_id == int(data_type))
 
     select_fields.append(getattr(model, data_field))
 

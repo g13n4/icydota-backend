@@ -2,6 +2,7 @@ import pandas as pd
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
 from celery import shared_task
+from typing import Dict, List
 
 from db import get_sync_db_session
 from models import PlayerGameData, Game, PositionApproximation
@@ -16,14 +17,15 @@ def approximate_positions(league_id: int) -> None:
 
     db_session: Session = get_sync_db_session()
 
-    # REMOVING OLD MODELS
+    logger.info('Removing old position data')
     old_positions_obj = (db_session.exec(select(PositionApproximation)
                                          .where(PositionApproximation.league_id == league_id)))
-    for old_pos_obj in old_positions_obj:
-        db_session.delete(old_pos_obj)
-    db_session.commit()
 
-    # GETTING POSITION DATA
+    old_positions_data: List[tuple[dict, PositionApproximation]] = [(obj.model_dump(), obj) for obj in old_positions_obj]
+    old_positions_data: Dict[tuple, PositionApproximation] = {(item['league_id'], item['player_id']): obj
+                                                              for item, obj in old_positions_data}
+
+    logger.info('Getting data from new games')
     players_raw_data = db_session.exec(select(PlayerGameData.player_id,
                                               PlayerGameData.team_id,
                                               PlayerGameData.position_id, )
@@ -41,6 +43,7 @@ def approximate_positions(league_id: int) -> None:
         })
         teams_set.add(team)
 
+    logger.info('Calculating average positions...')
     df = pd.DataFrame(players_data)
     agg = (df.groupby(['team', 'player'])
            .agg(mode=pd.NamedAgg(column="position", aggfunc=pd.Series.mode),
@@ -66,6 +69,7 @@ def approximate_positions(league_id: int) -> None:
     # CHECKING COMPARING MEDIAN TO MODE
     agg_not_eq = None
     if unfit_teams:
+        logger.info('Fitting in stand-ins...')
         agg = agg.loc[(unfit_teams), :].copy()
         median_eq_mode = agg['mode'] * 1.0 == agg['median']
 
@@ -78,6 +82,7 @@ def approximate_positions(league_id: int) -> None:
 
     # CALCULATING USING MEAN
     if agg_not_eq is not None and not agg_not_eq.empty:
+        logger.info('Last chance: calculating mean positions...')
         diff = (agg_not_eq['mean'] - agg_not_eq['median'])
         diff_div = ((-0.5 < diff) & (0.5 > diff))
         for idx, value in agg_not_eq.loc[diff_div, 'mean'].items():
@@ -85,11 +90,20 @@ def approximate_positions(league_id: int) -> None:
             output[pid] = round(value, 0)
 
     for k, v in output.items():
-        obj = PositionApproximation(
-            league_id=league_id,
-            player_id=k,
-            position_id=int(v),
-        )
+        player_id: int = k
+        position_id: int = int(v)
+
+        obj: PositionApproximation | None = old_positions_data.get((league_id, player_id), None)
+        if obj is None:
+            obj = PositionApproximation(
+                league_id=league_id,
+                player_id=player_id,
+                position_id=position_id,
+            )
+        else:
+            if not obj.position_id == position_id:
+                obj.position_id = position_id
+
         db_session.add(obj)
     db_session.commit()
 

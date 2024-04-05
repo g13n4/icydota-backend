@@ -40,7 +40,6 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
     for idx, game in enumerate(league_match_data):
         match_chain: chain = process_game_helper(match_id=game['match_id'], league_id=league_obj.id, get_chain=True)
         games.append(match_chain)
-        break
 
     (group(games) |
      approximate_positions.si(league_id=league_obj.id, ) |
@@ -49,6 +48,6 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
      create_cross_comparison_aggregation.si(league_id=league_obj.id)
      ).apply_async()
 
-    logger.INFO(f"PARSING FOR LEAGUE {league_obj.id} IS DONE")
+    logger.info(f"PARSING FOR LEAGUE {league_obj.id} IS DONE")
 
     return

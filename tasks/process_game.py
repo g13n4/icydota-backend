@@ -40,7 +40,10 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
 
     obj_teams = {
         'radiant': None,
+        'radiant_tag': None,
+
         'dire': None,
+        'dire_tag': None,
     }
 
     for key, data in teams.items():
@@ -55,6 +58,7 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
                                  ))
 
         obj_teams[key] = team_obj
+        obj_teams[f'{key}_tag'] = data['tag']
 
     db_session.commit()
     return obj_teams
@@ -147,7 +151,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
     PTD_objs_dict = dict()
     PGD_objs_dict = dict()
     for approximated_slot, player_info in enumerate(game_data['players']):
-        this_team = teams_dict['radiant'] if player_info['isRadiant'] else teams_dict['dire']
+        is_radiant = player_info['isRadiant']
+        this_team: Team = teams_dict['radiant'] if is_radiant else teams_dict['dire']
+
+        # replacing bad tags
+        this_team_tag = teams_dict['radiant_tag'] if is_radiant else teams_dict['dire_tag']
+        if this_team.tag == '-' and this_team_tag != '-':
+            this_team.tag = this_team_tag
+            db_session.add(this_team)
+
         this_hero: int = player_info['hero_id']
         this_slot: int = player_info['player_slot']
 

@@ -53,4 +53,16 @@ def fix_odota_data(odota_data: Dict[str, Any]) -> None:
                 if hero_id in normalised_positions:
                     player['lane_role'] = normalised_positions[hero_id]
 
+    for side_name in ['dire', 'radiant']:
+        side_team_name = f'{side_name}_team'
+        if side_team_name not in odota_data:
+            team_id = f"{side_team_name}_id"
+            team_name = f"{side_name}_name"
+
+            odota_data[side_team_name] = {
+                "team_id": team_id,
+                "name": team_name,
+                "tag": '-',
+            }
+
     return None

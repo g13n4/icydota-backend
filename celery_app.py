@@ -13,7 +13,7 @@ load_dotenv()
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
 tasks = ['tasks',
-         'tasks_agg',]
+         'tasks_agg', ]
 
 celery_app = Celery(
     main='icydota',
@@ -24,8 +24,8 @@ celery_app = Celery(
     result_backend=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
     celery_broker_url=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
     celery_result_backend=f'redis://default:{REDIS_PASSWORD}@127.0.0.1:6379/0',
-    result_expires=60*60,
-    celery_result_expires=60*60,
+    result_expires=60*60*24,
+    celery_result_expires=60*60*24,
     celery_cache_backend='redis',
     broker_transport='redis',
     broker_connection_retry_on_startup=True,

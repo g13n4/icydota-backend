@@ -95,7 +95,7 @@ def get_or_create(logger, *args, **kwargs):
                 output = get_or_create_base(*args, **kwargs)
             except IntegrityError:
                 logger.warning('It seems that the there is a problem with creating an object.' +
-                               "Let's give it another chance to ensure that it's not just inserting error...")
+                               "Let's give it another chance to ensure that it's not just an inserting error...")
         else:
             output = get_or_create_base(*args, **kwargs)
 

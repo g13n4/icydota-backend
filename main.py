@@ -1,8 +1,8 @@
 import os
-from typing import Optional
+from typing import Optional, List, Annotated, Union
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel import select
@@ -13,7 +13,7 @@ from crud import get_items, get_categories_menu, get_field_types, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League
-from tasks_agg.process_full_cycle import process_full_cycle
+from tasks_agg.bulk_process import process_full_cycle, mass_process
 from utils import (to_table_format, CaseInsensitiveEnum, )
 from utils.model_processor import to_table_format_cross_comparison
 
@@ -279,9 +279,21 @@ if not LIGHT_MODE:
         approximate_positions_helper(league_id=league_id)
 
 
-    @icydota_api.get(API_PREFIX + '/process/all/{league_id}/', status_code=202)
+    @icydota_api.get(API_PREFIX + '/process/full_cycle/{league_id}/', status_code=202)
     async def process_full_cycle_api(league_id: int):
         process_full_cycle(league_id=league_id)
+
+
+    class ProcessTypes(CaseInsensitiveEnum):
+        process_league = "process_league"
+        aggregate_league = "aggregate_league"
+        cross_compare_league = "cross_compare_league"
+
+
+    @icydota_api.get(API_PREFIX + '/process/all/{process_type}/', status_code=202)
+    async def mass_process_api(process_type: ProcessTypes,
+                               ids: Annotated[Union[list[int], None], Query()] = None):
+        mass_process(process_type=process_type.value, league_ids=ids)
 
 
 # if __name__ == "__main__":

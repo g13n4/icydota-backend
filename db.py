@@ -28,9 +28,9 @@ SYNC_DATABASE_URI = "postgresql://" + DB_URI
 sync_engine = create_engine(SYNC_DATABASE_URI, echo=False, future=True)
 
 # SYNC SESSION
-def get_sync_db_session() -> Session:
+def get_sync_db_session(expire: bool = False) -> Session:
     sync_session = sessionmaker(
-        sync_engine, class_=Session, expire_on_commit=False
+        sync_engine, class_=Session, expire_on_commit=expire
     )
     with sync_session() as session:
         return session

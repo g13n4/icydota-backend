@@ -257,12 +257,13 @@ class GamePerformance(SQLModel, table=True):
 
     is_comparison: bool = Field(default=False, index=True)
     comparison_id: Optional[int] = Field(default=None, foreign_key="comparison_types.id", index=True)
-    comparison: Optional["ComparisonType"] = Relationship(back_populates='performance', )
+    comparison: Optional["ComparisonType"] = Relationship(back_populates='performance',
+                                                          sa_relationship_kwargs={"cascade": "all,delete", })
 
     is_aggregation: bool = Field(default=False, index=True)
     aggregation_id: Optional[int] = Field(default=None, foreign_key="data_aggregation_types.id", index=True)
     aggregation: Optional["DataAggregationType"] = Relationship(back_populates='performance',
-                                                                sa_relationship_kwargs={"cascade": "delete", })
+                                                                sa_relationship_kwargs={"cascade": "all,delete", })
 
     window_data: List["PerformanceWindowData"] = Relationship(back_populates="game_performance",
                                                               sa_relationship_kwargs=sa_kwargs_setter(add_default=True))

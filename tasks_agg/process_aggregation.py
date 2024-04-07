@@ -1,3 +1,4 @@
+from sqlalchemy import delete
 from typing import Dict, List, Tuple, Any, Callable
 
 import numpy as np
@@ -185,28 +186,9 @@ def process_aggregation(league_id: int):
 
     db_session: Session = get_sync_db_session()
 
-    # TODO: Compare the time of the latest aggregation created_at to the created_at of the last processed game
-
     league_obj = db_session.get(League, league_id)
     if not league_obj:
         raise ValueError("No such league in the database")
-
-    aggregated_games_obj = db_session.exec(select(DataAggregationType)
-                                           .where(DataAggregationType.league_id == league_id)).all()
-
-    # deleting old aggregations
-    if aggregated_games_obj:
-        games_performance_objs = db_session.exec(select(GamePerformance)
-                                                 .where(col(GamePerformance.aggregation_id)
-                                                        .in_([x.id for x in aggregated_games_obj])))
-
-        for game_performance_obj in games_performance_objs:
-            db_session.delete(game_performance_obj)
-
-        db_session.commit()
-        del aggregated_games_obj
-
-
 
     logger.info('Getting processing windows data')
     window_data = get_league_data(db_session=db_session, league_id=league_id, total=False, comparison=False)
@@ -316,4 +298,7 @@ def process_aggregation(league_id: int):
                 )
                 db_session.add(GP_comp)
 
+    # deleting old aggregations
+
     db_session.commit()
+    db_session.close()

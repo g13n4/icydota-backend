@@ -11,6 +11,7 @@ from models import DataAggregationType, PerformanceWindowData, GamePerformance, 
     PlayerGameData
 from models import Game
 from utils import get_sqlmodel_fields, to_dec
+from sqlalchemy import delete
 
 
 logger = get_task_logger(__name__)
@@ -158,25 +159,6 @@ def create_cross_comparison_aggregation(league_id: int):
 
     db_session: Session = get_sync_db_session()
 
-    # DELETING OLD DATA
-    aggregated_games_obj = db_session.exec(select(DataAggregationType)
-                                           .join(GamePerformance)
-                                           .where(DataAggregationType.league_id == league_id,
-                                                  GamePerformance.cross_comparison == True)).all()
-
-    # deleting old aggregations
-    if aggregated_games_obj:
-        games_performance_objs = db_session.exec(select(GamePerformance)
-                                                 .where(col(GamePerformance.aggregation_id)
-                                                        .in_([x.id for x in aggregated_games_obj])))
-
-        for game_performance_obj in games_performance_objs:
-            db_session.delete(game_performance_obj)
-
-        db_session.commit()
-        del aggregated_games_obj
-
-
     # getting data
     for pos_name, positions in [('support', [4, 5]),
                                 ('core', [1, 3]),
@@ -292,3 +274,8 @@ def create_cross_comparison_aggregation(league_id: int):
                     db_session.add(GP)
 
             db_session.commit()
+
+
+
+    db_session.commit()
+    db_session.close()

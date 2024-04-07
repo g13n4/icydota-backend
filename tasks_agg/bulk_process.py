@@ -111,8 +111,8 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
         ).apply_async()
 
     else:
-        celery_task = (create_cross_comparison_aggregation if process_type == 'cross_compare_league'
-                       else process_aggregation)
+        celery_helper = (aggregate_league_helper if process_type == 'cross_compare_league'
+                         else aggregate_league_helper)
 
         sel_result = db_session.exec(select(League))
         league_objs: List[League] = sel_result.all()
@@ -120,6 +120,6 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
 
         for league_id in league_ids:
             if league_id in league_list:
-                celery_task.delay(league_id=league_id)
+                celery_helper(league_id=league_id)
             else:
                 logger.warning('League {} doesn\'t exist in the database')

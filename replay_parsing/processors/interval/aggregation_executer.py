@@ -29,6 +29,9 @@ def execute_window_aggregation(df: pd.DataFrame,
                                agg_type: str,
                                df_agg: pd.DataFrame):
     if column == 'movement':
+        if not len(df['x']) or not len(df['y']):
+            return 0
+
         ser = _find_distance(df['x'], df['y'])
     elif column == 'stacked':
         ser = df['camps_stacked'] + df['creeps_stacked']

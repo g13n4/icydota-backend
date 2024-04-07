@@ -60,8 +60,8 @@ def fix_odota_data(odota_data: Dict[str, Any]) -> None:
             team_name = f"{side_name}_name"
 
             odota_data[side_team_name] = {
-                "team_id": team_id,
-                "name": team_name,
+                "team_id": odota_data[team_id],
+                "name": odota_data[team_name],
                 "tag": '-',
             }
 

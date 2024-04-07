@@ -93,8 +93,9 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
 
             games = []
             for idx, game in enumerate(league_match_data):
-                match_chain: chain = process_game_helper(match_id=game[
-                    'match_id'], league_id=league_id, get_chain=True)
+                match_chain: chain = process_game_helper(match_id=game['match_id'],
+                                                         league_id=league_id,
+                                                         get_chain=True)
                 games.append(match_chain)
 
             all_leagues.extend(games)
@@ -117,12 +118,8 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
         league_objs: List[League] = sel_result.all()
         league_list = [x.id for x in league_objs]
 
-        filtered_tasks = []
         for league_id in league_ids:
             if league_id in league_list:
-                filtered_tasks.append(
-                    celery_task.si(league_id=league_id))
+                celery_task.delay(league_id=league_id)
             else:
                 logger.warning('League {} doesn\'t exist in the database')
-
-        group(celery_task).apply_async()

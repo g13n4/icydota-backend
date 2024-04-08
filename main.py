@@ -16,7 +16,6 @@ from models import PerformanceDataType, PerformanceDataCategory, League
 from utils import (to_table_format, CaseInsensitiveEnum, )
 from utils.model_processor import to_table_format_cross_comparison
 
-
 load_dotenv()
 
 API_PREFIX = os.getenv('API_PREFIX', default='')

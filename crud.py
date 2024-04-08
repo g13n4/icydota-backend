@@ -64,12 +64,14 @@ def _to_menu_item(key: str, label: str, children: List[dict] = None, disabled: b
         item['children'] = children
     return item
 
+
 def _is_comparable_obj(obj) -> bool:
     return (hasattr(obj, 'is_comparable') and getattr(obj, 'is_comparable'))
 
+
 def _process_menu_item(item, key_add: Optional[str] = None, children_key: Optional[str] = None, name_is_id: bool = False,
                        child_kwargs: Optional[dict] = None, id_is_key: bool = False, include_disabled: bool = True,
-                       sorted_func: Optional[Callable] = None) -> Dict[str, Any]:
+                       sorted_func: Optional[Callable] = None, depth: int = 0, turn_off_empty: bool = False) -> Dict[str, Any]:
     output = _to_menu_item(key=item.id if id_is_key else f"{key_add}{item.id}",
                            label=item.id if name_is_id else item.name)
 
@@ -85,9 +87,14 @@ def _process_menu_item(item, key_add: Optional[str] = None, children_key: Option
         if sorted_func is not None:
             children_objs = sorted(children_objs, key=sorted_func)
 
-        output['children'] = [_process_menu_item(item=x, include_disabled=include_disabled, **child_kwargs)
+        output['children'] = [_process_menu_item(item=x, include_disabled=include_disabled, depth=depth+1,
+                                                 **child_kwargs)
                               for x in children_objs
                               if _is_comparable_obj(x) or include_disabled]
+
+        if turn_off_empty and not depth and not len(output['children']):
+            output['disabled'] = True
+
         return output
 
 
@@ -113,7 +120,7 @@ async def get_categories_both(db: AsyncSession):
     totals = [{"key": 'total', 'label': 'Total data'}]
     total_dict = {'total': 'Total data'}
     return (totals + [pmi(x, include_disabled=True, ) for x in all_cats],
-            totals + [pmi(x, include_disabled=False,) for x in all_cats],
+            totals + [pmi(x, include_disabled=False, turn_off_empty=True) for x in all_cats],
             {**total_dict, **{str(sub_cat.id): sub_cat.name for cat in all_cats for sub_cat in cat.data_type}} )
 
 

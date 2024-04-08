@@ -331,7 +331,7 @@ class PerformanceWindowData(PerformanceWindowBase, table=True):
     data_type_id: Optional[int] = Field(default=None, foreign_key="performance_data_types.id", index=True)
     data_type: Optional["PerformanceDataType"] = Relationship(back_populates='pwd')
 
-    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id")
+    game_performance_id: Optional[int] = Field(default=None, foreign_key="games_performance.id", index=True)
     game_performance: Optional["GamePerformance"] = Relationship(back_populates='window_data',
                                                                  sa_relationship_kwargs=sa_kwargs_setter(add_default=True,
                                                                                                          join_depth=0))

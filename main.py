@@ -42,7 +42,7 @@ icydota_api = FastAPI()
 
 # CORS
 origins = [
-    "*"
+    CORS_ADDRESS
 ]
 
 icydota_api.add_middleware(

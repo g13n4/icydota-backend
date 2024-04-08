@@ -241,18 +241,41 @@ def _processing_db_output(output,
     return processed_output, [{**v, 'col': k} for k, v in data_values_info.items()], total
 
 
+def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: bool,):
+    clauses = []
+    fields = [GamePerformance.id, GamePerformance.player_game_data_id]
+
+    clauses.append(GamePerformance.is_comparison == comparison)
+    if comparison:
+        fields.append(GamePerformance.comparison_id)
+
+    clauses.append(GamePerformance.is_aggregation == aggregation)
+    if aggregation:
+        fields.append(GamePerformance.aggregation_id)
+
+    clauses.append(GamePerformance.cross_comparison == cross_comparison)
+    if cross_comparison:
+        fields.append(GamePerformance.comparison_id)
+        fields.append(GamePerformance.aggregation_id)
+
+    subq = (select(*fields).where(*clauses)).subquery('gp_subq')
+    return subq
+
+
 async def get_performance_data(db_session: AsyncSession,
                                match_id: int,
                                data_type: str,
                                game_stage: str,
                                comparison: Optional[str],
                                flat: Optional[bool], ):
-    combine_fields = []
-    clauses = [PlayerGameData.game_id == match_id]
+    is_comparison = comparison in ["player", "general"]
+    clauses = [(PlayerGameData.game_id == match_id, -2)]
+    gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False, aggregation=False)
 
     item_fields = {'position': 2,
                    'hero': 0,
                    'player': 1, }
+
 
     # TOTAL OR WINDOW DATA
     exclude = ['game_performance_id, id', 'data_type_id']
@@ -265,47 +288,38 @@ async def get_performance_data(db_session: AsyncSession,
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
-        clauses.append(PerformanceWindowData.data_type_id == int(data_type))
+        clauses.append((PerformanceWindowData.data_type_id == int(data_type), -1))
 
     select_models = [model, Hero.name, Player.nickname, Position.name]
     if comparison == 'player':
         select_models.append(ComparisonType.pos_cps_id)
         item_fields['opponents_pos'] = 3
-        #
-        # combine_fields.append(
-        #     create_combined_field_item('hero_opponent',
-        #                                '{opponents_hero} [{opponents_pos}]',
-        #                                ['opponents_hero', 'opponents_pos'])
-        # )
 
 
     # QUERY BUILDING
     select_query = (select(*select_models)
-                    .join(GamePerformance, onclause=GamePerformance.id == model.game_performance_id)
-                    .join(PlayerGameData, onclause=GamePerformance.player_game_data_id == PlayerGameData.id)
+                    .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
+                    .join(PlayerGameData, onclause=gp_subq.c.player_game_data_id == PlayerGameData.id)
                     .join(Position, onclause=PlayerGameData.position_id == Position.id)
                     .join(Hero, onclause=PlayerGameData.hero_id == Hero.id)
                     .join(Player, onclause=PlayerGameData.player_id == Player.account_id))
 
     # COMPARISON CHECK
-    if comparison in ["player", "general"]:
-        select_query = select_query.join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
+    if is_comparison:
+        select_query = select_query.join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id)
+
         clauses.extend([
-            GamePerformance.is_comparison == True,
-            GamePerformance.cross_comparison == False,
-            ComparisonType.basic == (True if comparison == "player" else False),
-            ComparisonType.flat == flat, ])
+            (ComparisonType.basic == (True if comparison == "player" else False), 1),
+            (ComparisonType.flat == flat, 2), ])
 
-    else:
-        clauses.append(GamePerformance.is_comparison == False)
-
+    # SORTING CLAUSES TO FILTER
+    clauses.sort(reverse=True, key=lambda x: x[1])
     # FINAL QUERY
-    select_query = select_query.where(*clauses)
+    select_query = select_query.where(*[clause for clause, priority in clauses])
 
     output = await db_session.exec(select_query)
 
-    data, limits, total = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields,
-                                                combined_fields_data=combine_fields)
+    data, limits, total = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields, )
 
     return data, limits, total
 

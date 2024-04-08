@@ -13,7 +13,6 @@ from crud import get_items, get_categories_menu, get_field_types, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League
-from tasks_agg.bulk_process import process_full_cycle, mass_process
 from utils import (to_table_format, CaseInsensitiveEnum, )
 from utils.model_processor import to_table_format_cross_comparison
 
@@ -247,7 +246,7 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
 if not LIGHT_MODE:
     from tasks import process_league, process_game_helper
     from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
-
+    from tasks_agg.bulk_process import process_full_cycle, mass_process
 
     @icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):

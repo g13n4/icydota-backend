@@ -1,12 +1,12 @@
 import copy
 from functools import partial, reduce
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
 
 from utils import get_both_slot_values
-from .columns_to_postprocess import LANE_COLUMNS, GAME_COLUMNS, SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA, \
+from .columns_to_postprocess import LANE_COLUMNS, GAME_COLUMNS, SUM_TOTAL_DATA, MAX_TOTAL_DATA, AVERAGE_TOTAL_DATA, \
     COMPARE_DATA_CORES, COMPARE_DATA_SUPPORT
 from ..modules import MatchPlayersData, MatchSplitter
 
@@ -26,9 +26,14 @@ def _clean_df_inplace(df_: pd.DataFrame) -> None:
     return None
 
 
-def _get_df_slice(df: pd.DataFrame, index: list, slot: int | str, empty: bool = False) -> pd.DataFrame:
+def _get_df_slice(df: pd.DataFrame,  slot: int | str,  empty: bool = False,
+                  index: Optional[list] = None, index_mult: Optional[pd.MultiIndex] = None) -> pd.DataFrame:
     slot_str, slot_int = get_both_slot_values(slot)
-    df_index = pd.MultiIndex.from_tuples([(x, slot_str) for x in index], names=['data', 'slot'])
+    if index_mult is not None:
+        df_index = index_mult
+    else:
+        df_index = pd.MultiIndex.from_tuples([(x, slot_str) for x in index], names=['data', 'slot'])
+
 
     if empty:
         return pd.DataFrame(np.nan, index=df_index, columns=df.columns).sort_index()
@@ -62,8 +67,7 @@ def compare_position_performance(data_df: pd.DataFrame, MPD: MatchPlayersData, )
     }
 
     for player in MPD.get_all():
-        compare_columns = COMPARE_DATA_SUPPORT if player['position'] > 3 else COMPARE_DATA_CORES
-        get_df_slice = partial(_get_df_slice, df=data_df, index=compare_columns)  # columns are turned into index
+        get_df_slice = partial(_get_df_slice, df=data_df, index_mult=data_df.index)  # columns are turned into index
 
         player_df = get_df_slice(slot=player['slot'])
 
@@ -135,6 +139,12 @@ def fill_total_values(data_df: pd.DataFrame) -> pd.DataFrame:
     data_df.loc[(SUM_TOTAL_DATA, 'ltotal')] = data_df.loc[(SUM_TOTAL_DATA, LANE_COLUMNS)].sum(axis=1)
 
     data_df.loc[(SUM_TOTAL_DATA, 'gtotal')] = data_df.loc[(SUM_TOTAL_DATA, GAME_COLUMNS)].sum(axis=1)
+
+
+    data_df.loc[(MAX_TOTAL_DATA, 'ltotal')] = data_df.loc[(MAX_TOTAL_DATA, LANE_COLUMNS)].max(axis=1)
+
+    data_df.loc[(MAX_TOTAL_DATA, 'gtotal')] = data_df.loc[(MAX_TOTAL_DATA, GAME_COLUMNS)].max(axis=1)
+
 
     data_df.loc[(AVERAGE_TOTAL_DATA, 'ltotal')] = data_df.loc[(AVERAGE_TOTAL_DATA, LANE_COLUMNS)].mean(axis=1)
 

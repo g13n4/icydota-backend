@@ -5,13 +5,15 @@ from decimal import Decimal
 
 from functools import partial
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, alias
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import aliased
 
-from models import ComparisonType, DataAggregationType, PerformanceDataCategory
+from models import ComparisonType, DataAggregationType, PerformanceDataCategory, GameData
 from models import Hero, Player, Position, League, Game
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData, PerformanceDataType
-from utils.translation_dictionary import PERFORMANCE_FIELD_DICT
+from utils.sorting_rating import gamedata_sort_rating
+from utils.translation_dictionary import PERFORMANCE_FIELD_DICT, GAMEDATA_FIELD_DICT
 from utils import is_na_decimal
 
 TOTAL_FIELDS = PerformanceTotalData.schema()['properties'].keys()
@@ -20,11 +22,11 @@ WINDOW_FIELDS = PerformanceWindowData.schema()['properties'].keys()
 TO_EXCLUDE_FOR_LANE = []
 TO_EXCLUDE_FOR_GAME = []
 
-for name in WINDOW_FIELDS:
-    if not name.startswith('l'):
-        TO_EXCLUDE_FOR_LANE.append(name)
-    if not name.startswith('g'):
-        TO_EXCLUDE_FOR_GAME.append(name)
+for _name in WINDOW_FIELDS:
+    if not _name.startswith('l'):
+        TO_EXCLUDE_FOR_LANE.append(_name)
+    if not _name.startswith('g'):
+        TO_EXCLUDE_FOR_GAME.append(_name)
 
 id_search = re.compile(r'.*_?id$')
 
@@ -32,9 +34,13 @@ TOTAL_FIELDS_FILTERED = [x for x in TOTAL_FIELDS if not id_search.match(x)]
 WINDOW_FIELDS_FILTERED = [x for x in WINDOW_FIELDS if not id_search.match(x)]
 
 
+def _capitalize_name(name: str) -> str:
+    return ' '.join([x.capitalize() for x in name.split('_')])
+
+
 def _to_item(label, value, key, capitalise: bool) -> Dict[str, Any]:
     if capitalise:
-        label = ' '.join([x.capitalize() for x in label.split('_')])
+        label = _capitalize_name(label)
 
     return {'label': label, 'value': value, 'key': key}
 
@@ -52,9 +58,9 @@ async def get_items(db: AsyncSession, model, ):
     return await db.exec(select(model))
 
 
-def _to_menu_item(key: str, label: str, children: List[dict] = None, disabled: bool = False, icon: str = None):
+def _to_menu_item(id_: str, label: str, children: List[dict] = None, disabled: bool = False, icon: str = None):
     item = {
-        'key': key,
+        'id': id_,
         'label': label,
         'disabled': disabled,
     }
@@ -72,7 +78,7 @@ def _is_comparable_obj(obj) -> bool:
 def _process_menu_item(item, key_add: Optional[str] = None, children_key: Optional[str] = None, name_is_id: bool = False,
                        child_kwargs: Optional[dict] = None, id_is_key: bool = False, include_disabled: bool = True,
                        sorted_func: Optional[Callable] = None, depth: int = 0, turn_off_empty: bool = False) -> Dict[str, Any]:
-    output = _to_menu_item(key=item.id if id_is_key else f"{key_add}{item.id}",
+    output = _to_menu_item(id_=item.id if id_is_key else f"{key_add}{item.id}",
                            label=item.id if name_is_id else item.name)
 
     if not children_key:
@@ -137,6 +143,81 @@ async def get_league_games(db_session: AsyncSession, league_id: int):
     return [{'value': str(league.id), 'label': league.name or str(league.id), } for league in league_objs.all()]
 
 
+def _get_game_duration(duration: int) -> str:
+    hours = duration // 60 * 60
+    minutes = duration // 60
+    seconds = duration % 60
+
+    str_duration = f'{minutes}:{seconds:2}'
+
+    if hours:
+        str_duration = f'{hours}:{str_duration}'
+
+    return str_duration
+
+
+# ADDITIONAL GAME DATA LIST
+def _process_bool(value: Any):
+    if type(value) == bool:
+        return 'Yes' if value else 'No'
+    return value
+
+
+def _get_bigger_side(sent_value: int | bool, dire_value2: int | bool) -> int:
+    if type(sent_value) == bool or sent_value == dire_value2:
+        return 0
+    else:
+        return 1 if sent_value > dire_value2 else 2
+
+
+def _get_game_data(value_sent: int | bool, value_dire: int | bool) -> dict:
+    sent = _process_bool(value_sent)
+    dire = _process_bool(value_dire)
+    bigger = _get_bigger_side(sent, dire)
+
+    return {
+        'bigger': bigger,
+        'sent': sent,
+        'dire': dire, }
+
+
+def flatten_league_game(game: Game, sent: GameData, dire: GameData, ):
+    sent_dict = sent.dict()
+    dire_dict = dire.dict()
+
+    sent_name, dire_name = game.name.split(' vs ')
+
+    game_data_list = [{
+        'id': f'{game.id}-{x}',
+        'name': GAMEDATA_FIELD_DICT[x],
+        **_get_game_data(sent_dict[x], dire_dict[x]),
+    } for x in sent_dict.keys() if x not in ['id', 'sentry_kills', 'obs_kills']]
+
+    game_data_list.sort(key=lambda x: gamedata_sort_rating(x['name'].lower()), reverse=True)
+
+    return {
+        'id': game.id,
+        'dire_won': game.dire_win,
+        'name_dire': dire_name,
+        'name_sent': sent_name,
+        'duration': f'{game.duration // 60}:{game.duration % 60:02}',
+        'data': game_data_list,
+    }
+
+
+async def get_league_games_info(db_session: AsyncSession, league_id: int):
+    dire = aliased(GameData)
+    sent = aliased(GameData)
+
+    game_objs = await (db_session.exec(select(Game, sent, dire, )
+                                       .join(sent, onclause=sent.id == Game.sent_game_data_id)
+                                       .join(dire, onclause=dire.id == Game.dire_game_data_id)
+                                       .where(Game.league_id == league_id)
+                                       .order_by(Game.id.desc())))
+
+    return [flatten_league_game(*game) for game in game_objs.all()]
+
+
 async def get_data_types_menu():
     return [
         {'label': 'Data', 'key': 'data'},
@@ -156,7 +237,7 @@ async def get_default_menu_data(db: AsyncSession, ) -> Dict[str, Any]:
     menu = await get_data_types_menu()
     sub_menu, sub_menu_comp, categories_dict = await get_categories_both(db)
 
-    games = await get_league_games(db, league_id=leagues[0]['key'])
+    games = await get_league_games(db, league_id=leagues[0]['id'])
     total_fields = await get_field_types('total')
     window_fields = await get_field_types('window')
 

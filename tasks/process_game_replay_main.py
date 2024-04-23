@@ -13,14 +13,6 @@ from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_window
 from utils import get_both_slot_values, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
     to_dec
 from parsing_utils.pd_helpers import iterate_df
-from replay_parsing.postprocessor import (SUM_TOTAL_DATA, AVERAGE_TOTAL_DATA,
-                                          COMPARE_DATA_CORES, COMPARE_DATA_SUPPORT)
-
-PDT_ADDITIONAL_DATA = {
-    'sum': [x.split('|')[1] for x in SUM_TOTAL_DATA],
-    'avg': [x.split('|')[1] for x in AVERAGE_TOTAL_DATA],
-    'comparison': [x.split('|')[1] for x in COMPARE_DATA_CORES + COMPARE_DATA_SUPPORT],
-}
 
 
 def _get_PDT_objects(db_session,
@@ -31,17 +23,6 @@ def _get_PDT_objects(db_session,
         PDT_obj: PerformanceDataType = get_obj_from_list(PDT_objs, name=category_obj_name)
         if not PDT_obj.system_name:
             PDT_obj.system_name = column_name
-
-        if PDT_obj.sum_to_agg is None:
-            if column_name in PDT_ADDITIONAL_DATA['sum']:
-                PDT_obj.sum_to_agg = True
-
-            if column_name in PDT_ADDITIONAL_DATA['avg']:
-                PDT_obj.sum_to_agg = False
-
-
-        if not PDT_obj.is_comparable and column_name in PDT_ADDITIONAL_DATA['comparison']:
-            PDT_obj.is_comparable = True
 
         db_session.add(PDT_obj)
         PDT_dict[column_name] = PDT_obj

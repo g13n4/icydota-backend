@@ -8,7 +8,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel import select
 
 from crud import get_items, get_categories_menu, get_field_types, \
-    get_league_header, get_league_games, \
+    get_league_header, get_league_games, get_league_games_info, \
     get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, get_data_types_menu, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
@@ -233,6 +233,11 @@ def get_performance_types(type_id: Optional[int],
 @icydota_api.get(API_PREFIX + '/games/{league_id}')
 async def get_league_games_api(league_id: int, db=Depends(get_async_db_session)):
     categories = await get_league_games(db, league_id)
+    return categories
+
+@icydota_api.get(API_PREFIX + '/games_info/{league_id}')
+async def get_league_games_info_api(league_id: int, db=Depends(get_async_db_session)):
+    categories = await get_league_games_info(db, league_id)
     return categories
 
 

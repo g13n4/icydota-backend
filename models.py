@@ -114,6 +114,28 @@ class League(SQLModel, table=True):
 
 
 # GAME DATA
+class GameData(SQLModel, table=True):
+    __tablename__ = 'games_data'
+
+    id: int = Field(default=None, primary_key=True, index=True)
+
+    gold: Optional[int]
+    xp: Optional[int]
+    hero_kills: Optional[int]
+    kpm: Optional[int]
+
+    roshan_kills: Optional[int]
+    runes_picked_up: Optional[int]
+
+    obs_placed: Optional[int]
+    obs_kills: Optional[int]
+
+    sentry_placed: Optional[int]
+    sentry_kills: Optional[int]
+
+    first_blood_claimed: bool
+
+
 class Game(SQLModel, table=True):
     id: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, primary_key=True, index=True), )  # match_id
 
@@ -141,9 +163,14 @@ class Game(SQLModel, table=True):
     dire_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
     sent_building_status_id: Optional[int] = Field(default=None, foreign_key="buildings_data.id")
 
+    sent_game_data_id: Optional[int] = _fk('games_data', cascade=True, **{'index': True})
+    dire_game_data_id: Optional[int] = _fk('games_data', cascade=True, **{'index': True})
+
     game_start_time: int = Field(sa_column=db.Column(db.BIGINT, nullable=False, unique=False), )  # unix timestamp
     duration: int
     replay_url: str
+
+    broken_replay: Optional[bool]
 
     __tablename__ = 'games'
 
@@ -294,9 +321,6 @@ class PerformanceDataType(SQLModel, table=True):
     name: str
 
     system_name: Optional[str]
-    is_comparable: Optional[bool] = Field(default=False, index=True)
-    sum_to_agg: Optional[bool]  # or average
-
 
     data_category_id: Optional[int] = Field(default=None, foreign_key="performance_data_categories.id", index=True)
     data_category: Optional["PerformanceDataCategory"] = Relationship(back_populates='data_type', )
@@ -342,7 +366,7 @@ class PerformanceTotalBase(SQLModel):
 
     total_gold: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     total_xp: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
-    kills_per_min: condecimal(max_digits=10, decimal_places=2) = Field(nullable=False)
+    kills_per_min: condecimal(max_digits=6, decimal_places=4) = Field(nullable=False)
     kda: condecimal(max_digits=5, decimal_places=2) = Field(nullable=False)
 
     neutral_kills: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)

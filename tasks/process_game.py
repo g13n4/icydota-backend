@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import sys
@@ -11,7 +12,7 @@ from celery.utils.log import get_task_logger
 from sqlmodel import Session
 
 from db import get_sync_db_session
-from models import Player, Team
+from models import Player, Team, GameData
 from models import PlayerGameData, Game, PerformanceTotalData, PositionApproximation
 from models import Position, Hero
 from tasks.create_league import get_or_create_league
@@ -30,6 +31,48 @@ logger = get_task_logger(__name__)
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
+
+
+def create_game_data_objs(total_data: Dict[int, PerformanceTotalData]) -> tuple[GameData, GameData]:
+    dict_sides = {
+        'sent': {'first_blood_claimed': False},
+        'dire': {'first_blood_claimed': False},
+    }
+
+    for slot, item in total_data.items():
+        item_dict = item.dict()
+        this_side_name = 'sent' if slot < 5 else 'dire'
+        this_side_dict = dict_sides[this_side_name]
+
+        for gdn, tn in [
+            ('gold', 'total_gold'),
+            ('xp', 'total_xp'),
+            ('hero_kills', 'hero_kills'),
+            ('kpm', 'kills_per_min'),
+
+            ('roshan_kills', 'roshan_kills'),
+            ('runes_picked_up', 'runes_picked_up'),
+
+            ('obs_placed', 'observer_uses'),
+            ('obs_kills', 'observer_kills'),
+
+            ('sentry_placed', 'sentry_uses'),
+            ('sentry_kills', 'sentry_kills'),
+
+            ('first_blood_claimed', 'first_blood_claimed')
+        ]:
+            this_value = item_dict[tn]
+
+            if gdn in ['first_blood_claimed'] and this_value:
+                this_side_dict[gdn] = True
+            else:
+                if gdn not in this_side_dict:
+                    this_side_dict[gdn] = 0
+
+                this_side_dict[gdn] += int(this_value)
+
+    return GameData(**dict_sides['sent']), GameData(**dict_sides['dire'])
+
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -200,6 +243,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
             total_gold=none_to_zero(player_info['total_gold']),
             total_xp=none_to_zero(player_info['total_xp']),
             kills_per_min=none_to_zero(player_info.get('kills_per_min', None)),
+
+            first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0)),
+
             kda=none_to_zero(player_info['kda']),
 
             neutral_kills=none_to_zero(player_info['neutral_kills']),
@@ -230,7 +276,13 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         PTD_objs_dict[this_slot] = PTD_obj
 
+    # CREATING GAMEDATA OBJECTS
+    game_data_sent_obj, game_data_dire_obj = create_game_data_objs(PTD_objs_dict)
+    db_session.add(game_data_sent_obj)
+    db_session.add(game_data_dire_obj)
+
     db_session.commit()
+
 
     # PARSING
     game_performance_objs, additional_data = process_game_replay(db_session=db_session,
@@ -257,7 +309,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         league=league_obj,
         league_id=league_obj.id,
-        name=f"{teams_dict['radiant'].name} vs {teams_dict['dire'].name} [{match_id}]",
+        name=f"{teams_dict['radiant'].name} vs {teams_dict['dire'].name}",
 
         patch=game_data['patch'],
 
@@ -276,6 +328,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
         dire_lost_first_tower=additional_data['dire_lost_first_tower'],
         dire_building_status_id=additional_data['dire_building_status_id'],
         sent_building_status_id=additional_data['sent_building_status_id'],
+
+        sent_game_data_id=game_data_sent_obj.id,
+        dire_game_data_id=game_data_dire_obj.id,
 
         game_start_time=game_data['start_time'],
         duration=game_data['duration'],

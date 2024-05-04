@@ -78,4 +78,10 @@ def get_or_create_league(league_id: int, db_session: Session, league_obj: League
             db_session.refresh(league_obj)
         else:
             league_obj: League = league_q
+
+    if not league_obj.has_dates:
+        if (update_league_obj_dates(league_obj)):
+            db_session.add(league_obj)
+            db_session.commit()
+            
     return league_obj

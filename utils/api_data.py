@@ -1,8 +1,9 @@
 import os
 
 import requests
+from dotenv import load_dotenv
 
-
+load_dotenv()
 STRATZ_API_TOKEN = os.getenv('STRATZ_API_TOKEN')
 
 

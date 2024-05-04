@@ -34,21 +34,11 @@ def _processing_db_output(output,
     if combined_fields_data is None:
         combined_fields_data = []
 
-    is_data_comparison = 'compared_to' in item_fields
-
     processed_output = []
     data_values_info = dict()
-    player_names = dict()
     for model_obj, *item_data in output.all():
 
         item = {k: item_data[v] for k, v in item_fields.items()}
-
-        if is_data_comparison:
-            player_names[item['hero']] = {
-                'position': item['position'],
-                'hero': item['hero'],
-                'player': item['player'],
-            }
 
         # if combined_fields_data:
         #     for cfdi in combined_fields_data:
@@ -78,9 +68,6 @@ def _processing_db_output(output,
 
         processed_output.append(item)
 
-    if is_data_comparison:
-        [item for item in processed_output]
-
     # LOOKING FOR DIFFERENCE VALUES
     has_total = False
     for value_info_key in data_values_info.keys():
@@ -92,7 +79,6 @@ def _processing_db_output(output,
             has_total = True
 
     return processed_output, [{**v, 'col': k} for k, v in data_values_info.items()], has_total
-
 
 
 def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: bool,):
@@ -167,9 +153,9 @@ async def get_performance_data(db_session: AsyncSession,
             (ComparisonType.flat == flat, 2), ])
 
     # SORTING CLAUSES TO FILTER
-    clauses.sort(reverse=True, key=lambda x: x[1])
+    clauses = [clause for clause, priority in sorted(clauses, reverse=True, key=lambda x: x[1])]
     # FINAL QUERY
-    select_query = select_query.where(*[clause for clause, priority in clauses])
+    select_query = select_query.where(*clauses)
 
     output = await db_session.exec(select_query)
 
@@ -183,7 +169,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
                                           aggregation_type: str,
                                           data_type: int,
                                           game_stage: str,
-                                          comparison: Optional[str],
+                                          is_comparison: bool,
                                           flat: Optional[bool], ):
     agg_type_dict = {
         "position": Position.name,
@@ -191,9 +177,9 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
         "player": Player.nickname,
     }
 
+    gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False, aggregation=True)
 
-    clauses = [DataAggregationType.league_id == league_id,
-               GamePerformance.is_aggregation == True, ]
+    clauses = [(DataAggregationType.league_id == league_id, -1), ]
 
     exclude = ['game_performance_id, id']
     # TOTAL OR WINDOW DATA
@@ -206,34 +192,32 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
             exclude.extend(TO_EXCLUDE_FOR_GAME)
 
         model = PerformanceWindowData
-        clauses.append(PerformanceWindowData.data_type_id == data_type)
+        clauses.append((PerformanceWindowData.data_type_id == data_type, -2))
 
 
     # QUERY BUILDING
     select_query = (select(*[model, agg_type_dict[aggregation_type]])
-                    .join(GamePerformance)
-                    .join(DataAggregationType))
+                    .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
+                    .join(DataAggregationType, onclause=gp_subq.c.aggregation_id == DataAggregationType.id))
 
     # COMPARISON
-    if comparison in ["general"]:
-        select_query = select_query.join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
-        clauses.extend([
-            GamePerformance.is_comparison == True,
-            GamePerformance.cross_comparison == False,
-            ComparisonType.flat == flat, ])
-    else:
-        clauses.append(GamePerformance.is_comparison == False)
+    if is_comparison:
+        select_query = select_query.join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id)
+        clauses.append((ComparisonType.flat == flat, 2))
 
     # AGGREGATION
     if aggregation_type == "position":
         select_query = select_query.join(Position, onclause=DataAggregationType.position_id == Position.id)
-        clauses.append(DataAggregationType.by_position == True)
+        clauses.append((DataAggregationType.by_position == True, 1))
     elif aggregation_type == "player":
         select_query = select_query.join(Player, onclause=DataAggregationType.player_id == Player.account_id)
-        clauses.append(DataAggregationType.by_player == True)
+        clauses.append((DataAggregationType.by_player == True, 1))
     else:
         select_query = select_query.join(Hero, onclause=DataAggregationType.hero_id == Hero.id)
-        clauses.append(DataAggregationType.by_hero == True)
+        clauses.append((DataAggregationType.by_hero == True, 1))
+
+    # SORTING CLAUSES TO FILTER
+    clauses = [clause for clause, priority in sorted(clauses, reverse=True, key=lambda x: x[1])]
 
     # FINAL QUERY
     select_query = select_query.where(*clauses)

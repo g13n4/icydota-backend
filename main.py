@@ -142,7 +142,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                               aggregation_type: AggregationTypes,
                                               game_stage: GameStage,
                                               data_type: int,
-                                              comparison: Optional[str] = None,
+                                              comparison: bool = False,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
@@ -153,7 +153,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                                                         aggregation_type=aggregation_type,
                                                                         data_type=data_type,
                                                                         game_stage=game_stage,
-                                                                        comparison=(comparison and comparison),
+                                                                        is_comparison=comparison,
                                                                         flat=flat)
 
     if not items:

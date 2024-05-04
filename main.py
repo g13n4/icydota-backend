@@ -1,5 +1,5 @@
 import os
-from typing import Optional, List, Annotated, Union
+from typing import Optional, Annotated, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Query
@@ -7,14 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel import select
 
+from api_helpers import get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, \
+    to_table_format_cross_comparison, to_table_format
 from crud import get_items, get_categories_menu, get_field_types, \
     get_league_header, get_league_games, get_league_games_info, \
-    get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, get_data_types_menu, \
     get_default_menu_data
 from db import get_sync_db_session, get_async_db_session
 from models import PerformanceDataType, PerformanceDataCategory, League
-from utils import (to_table_format, CaseInsensitiveEnum, )
-from utils.model_processor import to_table_format_cross_comparison
+from utils import CaseInsensitiveEnum
+
 
 load_dotenv()
 
@@ -72,12 +73,6 @@ async def get_menu_types_and_categories(comparison: bool | None = None, db=Depen
     return categories
 
 
-@icydota_api.get(API_PREFIX + '/menu_data_types/')
-async def get_menu_data_types():
-    data_types = await get_data_types_menu()
-    return data_types
-
-
 @icydota_api.get(API_PREFIX + '/league_header/')
 async def get_league_header_api(db=Depends(get_async_db_session)):
     items = await get_league_header(db)
@@ -107,22 +102,23 @@ class GameStage(CaseInsensitiveEnum):
     game = "game"
     both = "both"
 
+    @classmethod
+    def __missing__(cls, value):
+        return cls.both
+
 
 class FieldTypes(CaseInsensitiveEnum):
     window = "window"
     total = "total"
 
 
-@icydota_api.get(API_PREFIX + '/performance_data/{match_id}/')
+@icydota_api.get(API_PREFIX + '/performance_data/{match_id}/{data_type}')
 async def get_performance_data_api(match_id: int,
-                                   data_type: str,
+                                   data_type: int,
                                    game_stage: GameStage,
                                    comparison: Optional[str] = None,
                                    flat: bool = None,
                                    db=Depends(get_async_db_session)):
-    if not data_type:
-        raise HTTPException(status_code=400, detail="Provide data_type_id or total parameters")
-
     if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
@@ -141,11 +137,11 @@ async def get_performance_data_api(match_id: int,
     return output
 
 
-@icydota_api.get(API_PREFIX + '/performance_aggregated_data/{league_id}/{aggregation_type}/')
+@icydota_api.get(API_PREFIX + '/performance_aggregated_data/{league_id}/{data_type}/{aggregation_type}')
 async def get_performance_aggregated_data_api(league_id: int,
                                               aggregation_type: AggregationTypes,
                                               game_stage: GameStage,
-                                              data_type: Optional[str] = None,
+                                              data_type: int,
                                               comparison: Optional[str] = None,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
@@ -168,12 +164,12 @@ async def get_performance_aggregated_data_api(league_id: int,
     return output
 
 
-@icydota_api.get(API_PREFIX + '/performance_cross_comparison/{league_id}/{aggregation_type}/{position}/')
+@icydota_api.get(API_PREFIX + '/performance_cross_comparison/{league_id}/{data_type}/{aggregation_type}/{position}')
 async def get_performance_cross_comparison_data_api(league_id: int,
                                                     aggregation_type: CrossAggregationTypes,
                                                     position: CrossAggregationPositions,
                                                     data_field: str,
-                                                    data_type: Optional[str] = None,
+                                                    data_type: int,
                                                     flat: bool = True,
                                                     db=Depends(get_async_db_session)):
     # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&flat=false HTTP/1.1"

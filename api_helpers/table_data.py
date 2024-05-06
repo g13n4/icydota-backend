@@ -1,20 +1,20 @@
-import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE
 from models import ComparisonType, DataAggregationType
 from models import Hero, Player, Position
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData
-from utils import is_na_decimal
+from utils import is_na_decimal, TableMinMaxFinder
+from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE
 
 
 def combine_dict_fields(dict_: dict, cfi: dict) -> dict:
     dict_[cfi['field_name']] = cfi['pattern'].format(**dict_)
     dict_ = {k: v for k, v in dict_.items() if k not in cfi['fields_to_use']}
     return dict_
+
 
 def modify_compared_to_field(item: dict, data_to_use: dict):
     this_hero = data_to_use[item['hero']]
@@ -24,82 +24,84 @@ def modify_compared_to_field(item: dict, data_to_use: dict):
 
 
 def _processing_db_output(output,
-                          item_fields: dict,
+                          name_fields: Dict[str, int],
                           exclude: list = None,
-                          exists_total: bool = False,
                           combined_fields_data: Optional[list] = None) -> Tuple[list, list, bool]:
+    TMMF = TableMinMaxFinder()
+
     if exclude is None:
         exclude = []
+
+    exclude = exclude + ['game_performance_id', 'id', 'data_type_id']
 
     if combined_fields_data is None:
         combined_fields_data = []
 
     processed_output = []
-    data_values_info = dict()
     for model_obj, *item_data in output.all():
 
-        item = {k: item_data[v] for k, v in item_fields.items()}
+        item = {k: item_data[v] for k, v in name_fields.items()}
 
         # if combined_fields_data:
         #     for cfdi in combined_fields_data:
         #         item = combine_dict_fields(item, cfdi)
 
         for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
-            if (model_obj_key.lower() in ['game_performance_id', 'data_type_id', 'id'] or
-                    (not exists_total and re.match(r'[g|l]total', model_obj_key, re.IGNORECASE))):
-                continue
             if is_na_decimal(model_obj_value):
                 model_obj_value = None
 
             item[model_obj_key] = model_obj_value
 
             # LOOKING FOR MIN AND MAX VALUES
-            if model_obj_value is not None:
-                # CREATE THE BASE DICT OR START COMPARING
-                if model_obj_key not in data_values_info:
-                    data_values_info[model_obj_key] = {
-                        "max": model_obj_value,
-                        "min": model_obj_value,
-                        "diff": None, }
-                else:
-
-                    data_values_info[model_obj_key]["max"] = max(data_values_info[model_obj_key]["max"], model_obj_value)
-                    data_values_info[model_obj_key]["min"] = min(data_values_info[model_obj_key]["min"], model_obj_value)
-
+            TMMF.add(column=model_obj_key, value=model_obj_value)
         processed_output.append(item)
 
-    # LOOKING FOR DIFFERENCE VALUES
-    has_total = False
-    for value_info_key in data_values_info.keys():
-        mvi_max = data_values_info[value_info_key]["max"]
-        mvi_min = data_values_info[value_info_key]["min"]
+    value_mapping = TMMF.get_minmax_values()
 
-        data_values_info[value_info_key]["diff"] = mvi_max - mvi_min
-        if re.match(r'[g|l]total', value_info_key):
-            has_total = True
-
-    return processed_output, [{**v, 'col': k} for k, v in data_values_info.items()], has_total
+    return processed_output, value_mapping, TMMF.has_totals()
 
 
-def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: bool,):
+def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: bool, match_id_to_add: Optional[int] = None):
+    """
+    Building a subquery for GamePerformance to increase the speed of querying.
+    We can use game_id to ensure that there won't be a second join with PlayerGameData which ruins
+    :param comparison:
+    :param cross_comparison:
+    :param aggregation:
+    :param match_id_to_add: Match id we add to remove future join with PGD which prevent from querying all data
+           due to the lack of cross join
+    :return:
+    """
+
     clauses = []
     fields = [GamePerformance.id, GamePerformance.player_game_data_id]
+
 
     clauses.append(GamePerformance.is_comparison == comparison)
     if comparison:
         fields.append(GamePerformance.comparison_id)
 
+
     clauses.append(GamePerformance.is_aggregation == aggregation)
     if aggregation:
         fields.append(GamePerformance.aggregation_id)
+
 
     clauses.append(GamePerformance.cross_comparison == cross_comparison)
     if cross_comparison:
         fields.append(GamePerformance.comparison_id)
         fields.append(GamePerformance.aggregation_id)
 
-    subq = (select(*fields).where(*clauses)).subquery('gp_subq')
-    return subq
+
+    select_qr = select(*fields)
+
+    if match_id_to_add:
+        select_qr = (select_qr
+                     .join(PlayerGameData, onclause=GamePerformance.player_game_data_id == PlayerGameData.id))
+        clauses.append(PlayerGameData.game_id == match_id_to_add)
+
+
+    return select_qr.where(*clauses).subquery('gp_subq')
 
 
 async def get_performance_data(db_session: AsyncSession,
@@ -107,61 +109,76 @@ async def get_performance_data(db_session: AsyncSession,
                                data_type: int,
                                game_stage: str,
                                comparison: Optional[str],
-                               flat: Optional[bool], ):
+                               flat: Optional[bool]):
     is_comparison = comparison in ["player", "general"]
-    clauses = [(PlayerGameData.game_id == match_id, -2)]
-    gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False, aggregation=False)
+    clauses = []
 
-    item_fields = {'position': 2,
+    name_fields = {'position': 2,
                    'hero': 0,
                    'player': 1, }
 
-
+    exclude = []
     # TOTAL OR WINDOW DATA
-    exclude = ['game_performance_id, id', 'data_type_id']
     if data_type == 0:
         model = PerformanceTotalData
     else:
         if game_stage == 'lane':
-            exclude.extend(TO_EXCLUDE_FOR_LANE)
+            exclude = TO_EXCLUDE_FOR_LANE
         elif game_stage == 'game':
-            exclude.extend(TO_EXCLUDE_FOR_GAME)
+            exclude = TO_EXCLUDE_FOR_GAME
 
         model = PerformanceWindowData
         clauses.append((PerformanceWindowData.data_type_id == data_type, -1))
 
+
     select_models = [model, Hero.name, Player.nickname, Position.name]
+    # QUERY BUILDING [COMPARISON]
     if comparison == 'player':
         select_models.append(ComparisonType.pos_cps_id)
-        item_fields['compared_to'] = 3
+        name_fields['compared_to'] = 3
 
-
-    # QUERY BUILDING
-    select_query = (select(*select_models)
-                    .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
-                    .join(PlayerGameData, onclause=gp_subq.c.player_game_data_id == PlayerGameData.id)
-                    .join(Position, onclause=PlayerGameData.position_id == Position.id)
-                    .join(Hero, onclause=PlayerGameData.hero_id == Hero.id)
-                    .join(Player, onclause=PlayerGameData.player_id == Player.account_id))
-
-    # COMPARISON CHECK
     if is_comparison:
-        select_query = select_query.join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id)
+        gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False,
+                                    aggregation=False, match_id_to_add=match_id)
 
-        clauses.extend([
-            (ComparisonType.basic == (True if comparison == "player" else False), 1),
-            (ComparisonType.flat == flat, 2), ])
+        select_query = (select(*select_models)
+                        .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
+                        .join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id)
+                        .join(Position, onclause=ComparisonType.pos_cpd_id == Position.id)
+                        .join(Hero, onclause=ComparisonType.hero_cpd_id == Hero.id)
+                        .join(Player, onclause=ComparisonType.player_cpd_id == Player.account_id)
+                        .join(PlayerGameData, onclause=gp_subq.c.player_game_data_id == PlayerGameData.id))
+
+        clauses.append((ComparisonType.basic == (True if comparison == "player" else False), 1))
+        clauses.append((ComparisonType.flat == flat, 2))
+
+    else:
+        gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False, aggregation=False)
+
+        # QUERY BUILDING [NON COMPARISON]
+        select_query = (select(*select_models)
+                        .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
+                        .join(PlayerGameData, onclause=gp_subq.c.player_game_data_id == PlayerGameData.id)
+                        .join(Position, onclause=PlayerGameData.position_id == Position.id)
+                        .join(Hero, onclause=PlayerGameData.hero_id == Hero.id)
+                        .join(Player, onclause=PlayerGameData.player_id == Player.account_id))
+
+        clauses.append((PlayerGameData.game_id == match_id, -2))
+
 
     # SORTING CLAUSES TO FILTER
     clauses = [clause for clause, priority in sorted(clauses, reverse=True, key=lambda x: x[1])]
+
     # FINAL QUERY
     select_query = select_query.where(*clauses)
 
     output = await db_session.exec(select_query)
 
-    data, limits, has_total_field = _processing_db_output(output=output, exclude=exclude, item_fields=item_fields, )
+    data, value_mapping, has_total_field = _processing_db_output(output=output,
+                                                                 exclude=exclude,
+                                                                 name_fields=name_fields, )
 
-    return data, limits, has_total_field
+    return data, value_mapping, has_total_field
 
 
 async def get_aggregated_performance_data(db_session: AsyncSession,
@@ -181,19 +198,18 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     clauses = [(DataAggregationType.league_id == league_id, -1), ]
 
-    exclude = ['game_performance_id, id']
+    exclude = []
     # TOTAL OR WINDOW DATA
     if data_type == 0:
         model = PerformanceTotalData
     else:
         if game_stage == 'lane':
-            exclude.extend(TO_EXCLUDE_FOR_LANE)
+            exclude = TO_EXCLUDE_FOR_LANE
         elif game_stage == 'game':
-            exclude.extend(TO_EXCLUDE_FOR_GAME)
+            exclude = TO_EXCLUDE_FOR_GAME
 
         model = PerformanceWindowData
         clauses.append((PerformanceWindowData.data_type_id == data_type, -2))
-
 
     # QUERY BUILDING
     select_query = (select(*[model, agg_type_dict[aggregation_type]])
@@ -224,9 +240,11 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     output = await db_session.exec(select_query)
 
-    data, limits, has_total_field = _processing_db_output(output=output, item_fields={aggregation_type: 0, }, exclude=exclude, )
+    data, value_mapping, has_total_field = _processing_db_output(output=output,
+                                                                 name_fields={aggregation_type: 0, },
+                                                                 exclude=exclude, )
 
-    return data, limits, has_total_field
+    return data, value_mapping, has_total_field
 
 
 def _update_variable(dict_: dict, key_: int | str, new_var: int | str):

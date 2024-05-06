@@ -52,5 +52,3 @@ light = [
     "#c23728",
 ]
 
-print([hex_to_rgb(x) for x in dark])
-print([hex_to_rgb(x) for x in light])

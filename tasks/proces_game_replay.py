@@ -24,7 +24,7 @@ def process_game_replay(db_session,
     match_path = os.path.join(match_replay_folder_path, Path(f'./{match_id}.jsonl'))
 
     # MATCH PARSING
-    match = MatchAnalyser(pathlib.Path(match_path))
+    match = MatchAnalyser(pathlib.Path(match_path), match_id=match_id)
     match_data = match.get_match_data()
     match.get_players_object().set_player_data_from_dict(additional_player_data)
 

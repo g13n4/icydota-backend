@@ -69,22 +69,24 @@ def _fill_basic_PWDs(db_session,
 
 
 def _fill_comparison_pws(db_session,
-                         comparison_data: List[dict],
+                         comparison_data: Dict[int, list],
                          PerfTotalData_dict: Dict[int, PerformanceTotalData],
-                         players_data: MatchPlayersData,
+                         match: MatchAnalyser,
                          PDT_dict: Dict[str, PerformanceDataType],
                          model_fields: List[str], ) -> Dict[int, List[GamePerformance]]:
+
+    players_data = match.players
 
     TPA = TotalPerformanceAnalyser(PerfTotalData_dict)
     # WINDOW DATA
 
     game_performance_objs = {x: [] for x in range(10)}
     # we iterate over list that contains two types of dfs: flat and perc comparisons
-    for idx, item in enumerate(sorted(comparison_data, key=lambda x: not x['basic'])):  # We want to start with True's
-
+    for slot, slot_item in comparison_data.items():
+        for item in slot_item:
+            df = item['df']
+            is_flat = item['is_flat']
         # iterate over these dfs one by one
-        for df, flat_comparison in [(item['df_flat'], True), (item['df_percent'], False)]:
-
             window_objs = []
             # iterate over data in these dfs
             for index, line in iterate_df(df, use_offset=False):
@@ -110,7 +112,7 @@ def _fill_comparison_pws(db_session,
                 comparans_data = players_data[comparans_slot]
 
                 CT_obj = ComparisonType(
-                    flat=flat_comparison,
+                    flat=is_flat,
                     basic=True,
 
                     player_cpd_id=comparandum_data['player_id'],
@@ -124,12 +126,12 @@ def _fill_comparison_pws(db_session,
                 )
                 db_session.add(CT_obj)
 
-                ctp_data = TPA.compare_to_one(comparandum_slot, comparans_slot, flat=flat_comparison)
+                ctp_data = TPA.compare_to_one(comparandum_slot, comparans_slot, flat=is_flat)
             else:
                 # COMBINATION OF SEVERAL DATA
 
                 CT_obj = ComparisonType(
-                    flat=flat_comparison,
+                    flat=is_flat,
                     basic=False,
 
                     player_cpd_id=comparandum_data['player_id'],
@@ -139,7 +141,7 @@ def _fill_comparison_pws(db_session,
                 db_session.add(CT_obj)
 
                 opponents: List[int] = players_data[comparandum_slot]['opponents']
-                ctp_data = TPA.compare_to_many(comparandum_slot, comparans_list=opponents, flat=flat_comparison)
+                ctp_data = TPA.compare_to_many(comparandum_slot, comparans_list=opponents, flat=is_flat)
 
 
             # FILLING GAME PERFORMANCE
@@ -198,7 +200,7 @@ def process_main_replay_data(db_session,
 
     GP_comparison_dict = _fill_comparison_pws(db_session=db_session,
                                               comparison_data=comparison_data,
-                                              players_data=match.players,
+                                              match=match,
                                               PerfTotalData_dict=PerTotalData_dict,
                                               PDT_dict=PTD_dict,
                                               model_fields=fields)

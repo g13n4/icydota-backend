@@ -5,6 +5,7 @@ echo "0 - fastapi uvicorn app"
 echo "1 - celery app (4 threads)"
 echo "2 - celery app (solo)"
 echo "3 - celery app flower"
+echo "4 - celery purge queue"
 while :
 do
   read -r INT_INPUT
@@ -23,6 +24,10 @@ do
 		;;
 	3)
 		celery --app=celery_app flower --basic-auth=mx:ghbdtn
+		break
+		;;
+  4)
+    celery --app=celery_app purge
 		break
 		;;
 	*)

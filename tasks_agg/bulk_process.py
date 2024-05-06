@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from db import get_sync_db_session
 from models import League
 from tasks.create_league import get_or_create_league
-from tasks.process_game import process_game_helper
+from tasks.process_helpers import process_game_helper
 from .agg_helper import aggregate_league_helper, cross_compare_league_helper
 from .approximate_positions import approximate_positions
 from .process_aggregation import process_aggregation

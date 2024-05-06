@@ -122,17 +122,22 @@ async def get_performance_data_api(match_id: int,
     if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
-    items, data_info, sum_total = await get_performance_data(db_session=db,
-                                                             match_id=match_id,
-                                                             data_type=data_type,
-                                                             game_stage=game_stage.value,
-                                                             comparison=comparison,
-                                                             flat=flat)
+    items, value_mapping, sum_total = await get_performance_data(db_session=db,
+                                                                 match_id=match_id,
+                                                                 data_type=data_type,
+                                                                 game_stage=game_stage.value,
+                                                                 comparison=comparison,
+                                                                 flat=flat)
 
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, data_info, ['player'], sum_total=sum_total)
+    if comparison:
+
+        output = to_table_format(items, value_mapping, ['player'], sum_total=sum_total)
+
+    else:
+        output = to_table_format(items, value_mapping, ['player'], sum_total=sum_total)
 
     return output
 
@@ -148,7 +153,7 @@ async def get_performance_aggregated_data_api(league_id: int,
     if comparison and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
-    items, data_info, sum_total = await get_aggregated_performance_data(db_session=db,
+    items, value_mapping, sum_total = await get_aggregated_performance_data(db_session=db,
                                                                         league_id=league_id,
                                                                         aggregation_type=aggregation_type,
                                                                         data_type=data_type,
@@ -159,7 +164,7 @@ async def get_performance_aggregated_data_api(league_id: int,
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, data_info, [aggregation_type], sum_total=sum_total)
+    output = to_table_format(items, value_mapping, [aggregation_type], sum_total=sum_total)
 
     return output
 
@@ -244,7 +249,7 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
 
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
-    from tasks import process_league, process_game_helper
+    from tasks.process_helpers import process_league, process_game_helper
     from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
     from tasks_agg.bulk_process import process_full_cycle, mass_process
 

@@ -3,7 +3,7 @@ import json
 import math
 import pathlib
 import re
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 
 import pandas as pd
 from fuzzywuzzy import fuzz
@@ -206,8 +206,10 @@ late_game_windows = [(1, 'g15', 'game', -90, 60 * 15,),  # first 15 minutes
 class MatchAnalyser:
     def __init__(self,
                  path: str | pathlib.Path,
-                 windows: List[Tuple[int, int, str]] = None, ):
+                 windows: List[Tuple[int, int, str]] = None,
+                 match_id: Optional[int] = None, ):
         self.path = path
+        self.match_id = match_id
 
         self.players = MatchPlayersData()
         self._fill_cdata()

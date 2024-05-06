@@ -5,3 +5,4 @@ from .helpers import is_numeric_type, get_all_sqlmodel_objs, get_both_slot_value
 from .model_processor import to_table_format
 from .translation_dictionary import PERFORMANCE_FIELD_DICT
 from .sorting_rating import performance_data_sort_rating
+from .minmax_finder import TableMinMaxFinder

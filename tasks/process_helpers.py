@@ -1,18 +1,31 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
-from celery import shared_task
+from celery import shared_task, chain
 from celery.utils.log import get_task_logger
-from sqlmodel import select, Session
+from sqlmodel import Session, select
 
 from db import get_sync_db_session
-from models import Game
-from models import League
-from tasks.create_league import update_league_obj_dates, get_or_create_league
+from models import Game, League
+from tasks.create_league import get_or_create_league, update_league_obj_dates
+from tasks.process_game import process_game_data
+from tasks.download_replay import get_match_replay
 from tasks_agg.approximate_positions import approximate_positions
-from tasks.process_game import process_game_helper
+from utils import bool_pool
+
 
 logger = get_task_logger(__name__)
+
+
+def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
+    first_parser = next(bool_pool)
+
+    match_chain = (get_match_replay.si(match_id=match_id, first_parser=first_parser) |
+                   process_game_data.si(match_id=match_id, league_id=league_id))
+    if get_chain:
+        return match_chain
+
+    match_chain.apply_async()
 
 
 def process_league(league_obj: League | None = None,
@@ -38,7 +51,6 @@ def process_league(league_obj: League | None = None,
 
     approximate_positions.s(league_id=league_id)
     return new_games_found
-
 
 
 
@@ -83,3 +95,4 @@ def update_leagues_dates_cron() -> None:
     db_session.commit()
     db_session.close()
     logger.info(f'Updating leagues dates: complete')
+

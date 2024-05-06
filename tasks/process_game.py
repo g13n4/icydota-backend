@@ -1,25 +1,22 @@
-import copy
 import json
 import os
 import sys
 import warnings
-
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from celery import shared_task, chain
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session
 
 from db import get_sync_db_session
+from models import Hero
 from models import Player, Team, GameData
 from models import PlayerGameData, Game, PerformanceTotalData, PositionApproximation
-from models import Position, Hero
 from tasks.create_league import get_or_create_league
-from tasks.download_replay import get_match_replay
 from tasks.proces_game_replay import process_game_replay
 from tasks.process_game_helpers import fix_odota_data
-from utils import get_all_sqlmodel_objs, none_to_zero, get_or_create, bool_pool, get_positions_approximations
+from utils import get_all_sqlmodel_objs, none_to_zero, get_or_create, get_positions_approximations
 
 
 CURRENT_DIR = Path.cwd().absolute()
@@ -137,17 +134,6 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
     db_session.commit()
 
     return players_dict
-
-
-def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
-    first_parser = next(bool_pool)
-
-    match_chain = (get_match_replay.si(match_id=match_id, first_parser=first_parser) |
-                   process_game_data.si(match_id=match_id, league_id=league_id))
-    if get_chain:
-        return match_chain
-
-    match_chain.apply_async()
 
 
 @shared_task(name='process_game_data', ignore_result=True)

@@ -8,7 +8,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel import select
 
 from api_helpers import get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, \
-    to_table_format_cross_comparison, to_table_format
+    to_table_format_cross_comparison, to_table_format, get_performance_data_comparison
 from crud import get_items, get_categories_menu, get_field_types, \
     get_league_header, get_league_games, get_league_games_info, \
     get_default_menu_data
@@ -122,22 +122,28 @@ async def get_performance_data_api(match_id: int,
     if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
-    items, value_mapping, sum_total = await get_performance_data(db_session=db,
-                                                                 match_id=match_id,
-                                                                 data_type=data_type,
-                                                                 game_stage=game_stage.value,
-                                                                 comparison=comparison,
-                                                                 flat=flat)
+    is_comparison = comparison in ["player", "general"]
+
+
+    if not is_comparison:
+        items, value_mapping, sum_total = await get_performance_data(db_session=db,
+                                                                     match_id=match_id,
+                                                                     data_type=data_type,
+                                                                     game_stage=game_stage.value)
+
+    else:
+        items, value_mapping, sum_total = await get_performance_data_comparison(db_session=db,
+                                                                                match_id=match_id,
+                                                                                data_type=data_type,
+                                                                                game_stage=game_stage.value,
+                                                                                p_comparison=comparison == "player",
+                                                                                flat=flat)
 
     if not items:
         raise HTTPException(status_code=404)
 
-    if comparison:
-
-        output = to_table_format(items, value_mapping, ['player'], sum_total=sum_total)
-
-    else:
-        output = to_table_format(items, value_mapping, ['player'], sum_total=sum_total)
+    output = to_table_format(items, value_mapping, ['player'],
+                             player_comparison="player" == comparison, sum_total=sum_total)
 
     return output
 

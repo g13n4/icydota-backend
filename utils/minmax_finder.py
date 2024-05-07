@@ -18,7 +18,7 @@ class TableMinMaxFinder:
     def __init__(self, index_steps: int = 10):
         self.data = dict()
         self.index_steps = index_steps
-
+        self.alias = dict()
 
     def add(self, column: str, value: int | float | None) -> None:
         if not value:
@@ -34,6 +34,8 @@ class TableMinMaxFinder:
         self.data[column]["max"] = max(self.data[column]["max"], value)
         self.data[column]["min"] = min(self.data[column]["min"], value)
 
+    def add_alias(self, key_: Any, value: Any):
+        self.alias[key_] = value
 
     def _calculate_index(self, column: str, value: int | float | None) -> int:
         max_value = self.data[column]["max"]
@@ -97,5 +99,6 @@ class TableMinMaxFinder:
              for item in data for field in fields_to_process]
 
 
-    def get_minmax_values(self) -> List[dict]:
-        return [{'col': col, **col_data} for col, col_data in self.data.items()]
+    def get_minmax_values(self, use_alias: bool = False) -> List[dict]:
+        return [{'col': (self.alias.get(col, col) if use_alias else col), **col_data}
+                for col, col_data in self.data.items()]

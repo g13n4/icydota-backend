@@ -142,7 +142,7 @@ async def get_performance_data_api(match_id: int,
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, ['player'],
+    output = to_table_format(items, value_mapping, ['position', 'player'],
                              player_comparison="player" == comparison, sum_total=sum_total)
 
     return output
@@ -160,12 +160,12 @@ async def get_performance_aggregated_data_api(league_id: int,
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(db_session=db,
-                                                                        league_id=league_id,
-                                                                        aggregation_type=aggregation_type,
-                                                                        data_type=data_type,
-                                                                        game_stage=game_stage,
-                                                                        is_comparison=comparison,
-                                                                        flat=flat)
+                                                                            league_id=league_id,
+                                                                            aggregation_type=aggregation_type,
+                                                                            data_type=data_type,
+                                                                            game_stage=game_stage,
+                                                                            is_comparison=comparison,
+                                                                            flat=flat)
 
     if not items:
         raise HTTPException(status_code=404)

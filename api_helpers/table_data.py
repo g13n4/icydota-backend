@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, List
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -38,23 +38,19 @@ def _processing_db_output(output,
         combined_fields_data = []
 
     processed_output = []
-    for model_obj, *item_data in output.all():
+    for performance_data_obj, *names_data in output.all():
 
-        item = {k: item_data[v] for k, v in name_fields.items()}
+        names_dict = {k: names_data[v] for k, v in name_fields.items()}
 
-        # if combined_fields_data:
-        #     for cfdi in combined_fields_data:
-        #         item = combine_dict_fields(item, cfdi)
-
-        for model_obj_key, model_obj_value in model_obj.model_dump(exclude=set(exclude)).items():
+        for model_obj_key, model_obj_value in performance_data_obj.model_dump(exclude=set(exclude)).items():
             if is_na_decimal(model_obj_value):
                 model_obj_value = None
 
-            item[model_obj_key] = model_obj_value
+            names_dict[model_obj_key] = model_obj_value
 
             # LOOKING FOR MIN AND MAX VALUES
             TMMF.add(column=model_obj_key, value=model_obj_value)
-        processed_output.append(item)
+        processed_output.append(names_dict)
 
     value_mapping = TMMF.get_minmax_values()
 
@@ -122,6 +118,20 @@ def get_model_data(data_type: int, game_stage: Optional[str] = None,
     return model
 
 
+def set_compare_field(data: List[dict], player_id: str, enemy_id: str, remove: bool):
+    names = {}
+    for item in data:
+        this_player = item[player_id]
+        names[this_player] = f"{item['hero']}/{item['player']}"
+
+    for item in data:
+        enemy_hero = item[enemy_id]
+        item[enemy_id] = names[enemy_hero]
+
+        if remove:
+            del item[player_id]
+
+
 async def get_performance_data_comparison(db_session: AsyncSession,
                                           match_id: int,
                                           data_type: int,
@@ -130,17 +140,18 @@ async def get_performance_data_comparison(db_session: AsyncSession,
                                           flat: Optional[bool]):
     name_fields = {'position': 2,
                    'hero': 0,
-                   'player': 1, }
+                   'player': 1,
+                   'hero_id': 3, }
 
     clauses = []
     exclude = []
 
     model = get_model_data(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude,)
 
-    select_models = [model, Hero.name, Player.nickname, Position.name]
+    select_models = [model, Hero.name, Player.nickname, Position.name, Hero.id]
     if p_comparison:
-        select_models.append(ComparisonType.pos_cps_id)
-        name_fields['compared_to'] = 3
+        select_models.append(ComparisonType.hero_cps_id)
+        name_fields['compared_to'] = 4
 
 
     gp_subq = build_gp_subquery(comparison=True, cross_comparison=False,
@@ -168,6 +179,7 @@ async def get_performance_data_comparison(db_session: AsyncSession,
                                                                  exclude=exclude,
                                                                  name_fields=name_fields, )
 
+    set_compare_field(data, 'hero_id', 'compared_to', remove=True)
 
     return data, value_mapping, has_total_field
 
@@ -212,6 +224,8 @@ async def get_performance_data(db_session: AsyncSession,
     data, value_mapping, has_total_field = _processing_db_output(output=output,
                                                                  exclude=exclude,
                                                                  name_fields=name_fields, )
+
+
 
     return data, value_mapping, has_total_field
 

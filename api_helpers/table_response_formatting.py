@@ -32,13 +32,11 @@ def to_table_format(data: List[dict], value_mapping: list, rows: list,
     item = data[0]
     columns = []
 
+    if player_comparison:
+        rows.append('compared_to')
 
     values = sorted([key_name for key_name in item.keys() if key_name not in rows],
                     key=performance_data_sort_rating)
-
-
-    if player_comparison:
-        rows = ['position', 'player']
 
     fields = {'rows': rows,
               'columns': columns,

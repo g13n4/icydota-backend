@@ -123,7 +123,7 @@ async def get_performance_data_api(match_id: int,
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
     is_comparison = comparison in ["player", "general"]
-
+    rows = ['side', 'position', 'hero', 'player']
 
     if not is_comparison:
         items, value_mapping, sum_total = await get_performance_data(db_session=db,
@@ -138,12 +138,13 @@ async def get_performance_data_api(match_id: int,
                                                                                 game_stage=game_stage.value,
                                                                                 p_comparison=comparison == "player",
                                                                                 flat=flat)
+        rows.append('compared_to')
 
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, ['position', 'player'],
-                             player_comparison="player" == comparison, sum_total=sum_total)
+
+    output = to_table_format(items, value_mapping, rows,  sum_total=sum_total)
 
     return output
 

@@ -24,16 +24,12 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
     return to_proper_name(value)
 
 
-def to_table_format(data: List[dict], value_mapping: list, rows: list,
-                    player_comparison: bool = False, sum_total: Optional[bool] = None) -> dict:
+def to_table_format(data: List[dict], value_mapping: list, rows: list, sum_total: Optional[bool] = None) -> dict:
     if not data:
         return {}
 
     item = data[0]
     columns = []
-
-    if player_comparison:
-        rows.append('compared_to')
 
     values = sorted([key_name for key_name in item.keys() if key_name not in rows],
                     key=performance_data_sort_rating)

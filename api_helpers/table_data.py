@@ -23,6 +23,17 @@ def modify_compared_to_field(item: dict, data_to_use: dict):
     item['compared_to'] = f''
 
 
+def _process_name_fields(name_fields: dict, values: list) -> dict:
+    output = {}
+    for name, idx in name_fields.items():
+        if name == 'side':
+            output[name] = 'Dire' if values[idx] else 'Sentinel'
+        else:
+            output[name] = values[idx]
+
+    return output
+
+
 def _processing_db_output(output,
                           name_fields: Dict[str, int],
                           exclude: list = None,
@@ -40,7 +51,7 @@ def _processing_db_output(output,
     processed_output = []
     for performance_data_obj, *names_data in output.all():
 
-        names_dict = {k: names_data[v] for k, v in name_fields.items()}
+        names_dict = _process_name_fields(name_fields=name_fields, values=names_data)
 
         for model_obj_key, model_obj_value in performance_data_obj.model_dump(exclude=set(exclude)).items():
             if is_na_decimal(model_obj_value):
@@ -141,17 +152,19 @@ async def get_performance_data_comparison(db_session: AsyncSession,
     name_fields = {'position': 2,
                    'hero': 0,
                    'player': 1,
-                   'hero_id': 3, }
+                   'hero_id': 3,
+                   'side': 4,
+                   }
 
     clauses = []
     exclude = []
 
     model = get_model_data(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude,)
 
-    select_models = [model, Hero.name, Player.nickname, Position.name, Hero.id]
+    select_models = [model, Hero.name, Player.nickname, Position.name, Hero.id, PlayerGameData.dire]
     if p_comparison:
         select_models.append(ComparisonType.hero_cps_id)
-        name_fields['compared_to'] = 4
+        name_fields['compared_to'] = 5
 
 
     gp_subq = build_gp_subquery(comparison=True, cross_comparison=False,
@@ -162,7 +175,8 @@ async def get_performance_data_comparison(db_session: AsyncSession,
                     .join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id)
                     .join(Position, onclause=ComparisonType.pos_cpd_id == Position.id)
                     .join(Hero, onclause=ComparisonType.hero_cpd_id == Hero.id)
-                    .join(Player, onclause=ComparisonType.player_cpd_id == Player.account_id))
+                    .join(Player, onclause=ComparisonType.player_cpd_id == Player.account_id)
+                    .join(PlayerGameData, onclause=gp_subq.c.player_game_data_id == PlayerGameData.id))
 
     clauses.append((ComparisonType.basic == p_comparison, 1))
     clauses.append((ComparisonType.flat == flat, 2))
@@ -190,7 +204,9 @@ async def get_performance_data(db_session: AsyncSession,
                                game_stage: str,):
     name_fields = {'position': 2,
                    'hero': 0,
-                   'player': 1, }
+                   'player': 1,
+                   'side': 3,
+                   }
 
     clauses = []
     exclude = []
@@ -198,7 +214,7 @@ async def get_performance_data(db_session: AsyncSession,
     model = get_model_data(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude,)
 
 
-    select_models = [model, Hero.name, Player.nickname, Position.name]
+    select_models = [model, Hero.name, Player.nickname, Position.name, PlayerGameData.dire]
 
     gp_subq = build_gp_subquery(comparison=False, cross_comparison=False, aggregation=False)
 

@@ -184,6 +184,9 @@ class PlayerGameData(SQLModel, table=True):
     hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
     slot: int
 
+    name: Optional[str]
+    name_short: Optional[str]
+
     lane: int
     is_roaming: bool
 
@@ -216,6 +219,14 @@ class ComparisonType(SQLModel, table=True):
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
     basic: Optional[bool] = Field(default=True, index=True)
+
+    # position/hero
+    cpd_name_short: Optional[str]
+    cps_name_short: Optional[str]
+
+    # position/hero/player
+    cpd_name: Optional[str]
+    cps_name: Optional[str]
 
 
     player_cpd_id: Optional[int] = _fk('players', 'account_id')

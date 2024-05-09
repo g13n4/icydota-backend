@@ -118,33 +118,38 @@ async def get_performance_data_api(match_id: int,
                                    game_stage: GameStage,
                                    comparison: Optional[str] = None,
                                    flat: bool = None,
+                                   vertical: bool = True,
                                    db=Depends(get_async_db_session)):
     if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
 
     is_comparison = comparison in ["player", "general"]
-    rows = ['side', 'position', 'hero', 'player']
+    rows = []
+    columns = []
 
     if not is_comparison:
-        items, value_mapping, sum_total = await get_performance_data(db_session=db,
-                                                                     match_id=match_id,
-                                                                     data_type=data_type,
-                                                                     game_stage=game_stage.value)
-
+        items, value_mapping, sum_total, rows = await get_performance_data(db_session=db,
+                                                                           match_id=match_id,
+                                                                           data_type=data_type,
+                                                                           game_stage=game_stage.value,
+                                                                           is_vertical=vertical)
     else:
-        items, value_mapping, sum_total = await get_performance_data_comparison(db_session=db,
-                                                                                match_id=match_id,
-                                                                                data_type=data_type,
-                                                                                game_stage=game_stage.value,
-                                                                                p_comparison=comparison == "player",
-                                                                                flat=flat)
-        rows.append('compared_to')
+        items, value_mapping, sum_total, rows = await get_performance_data_comparison(db_session=db,
+                                                                                      match_id=match_id,
+                                                                                      data_type=data_type,
+                                                                                      game_stage=game_stage.value,
+                                                                                      p_comparison=comparison == "player",
+                                                                                      flat=flat, is_vertical=vertical)
 
-    if not items:
+    if vertical:
+        columns = rows
+        rows = ['type']
+
+    output = to_table_format(items, value_mapping, rows, columns=columns, sum_total=sum_total, is_vertical=vertical)
+
+    if not output:
         raise HTTPException(status_code=404)
 
-
-    output = to_table_format(items, value_mapping, rows,  sum_total=sum_total)
 
     return output
 
@@ -156,6 +161,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                               data_type: int,
                                               comparison: bool = False,
                                               flat: bool = True,
+                                              vertical: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
@@ -166,7 +172,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                                                             data_type=data_type,
                                                                             game_stage=game_stage,
                                                                             is_comparison=comparison,
-                                                                            flat=flat)
+                                                                            flat=flat, is_vertical=vertical)
 
     if not items:
         raise HTTPException(status_code=404)
@@ -307,6 +313,6 @@ if not LIGHT_MODE:
         mass_process(process_type=process_type.value, league_ids=ids)
 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, )
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, use_colors=True )

@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from utils import PERFORMANCE_FIELD_DICT, performance_data_sort_rating
 
 
@@ -10,7 +10,7 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
     if value.endswith('total'):
         field_name = PERFORMANCE_FIELD_DICT[value]
         if sum_total is None:
-            field_name += ' (not calculated)'
+            field_name += ''
         elif sum_total:
             field_name += ' (SUM)'
         else:
@@ -24,20 +24,40 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
     return to_proper_name(value)
 
 
-def to_table_format(data: List[dict], value_mapping: list, rows: list, sum_total: Optional[bool] = None) -> dict:
+def update_row_fields(data: List[dict], rows: list[str]) -> None:
+    for item in data:
+        for row in rows:
+            item[row] = get_field_name(item[row])
+
+
+def to_table_format(data: List[dict], value_mapping: list, rows: list, columns: Optional[list] = None,
+                    sum_total: Optional[bool] = None, is_vertical: bool = False) -> dict:
+    # TODO: FIX SUM_TOTAL RIGHT NOW CALCULATING IT'S PRETTY MUCH IMPOSSIBLE. ADD AGG_TYPE TO DB MODELS
+
     if not data:
         return {}
 
+
     item = data[0]
-    columns = []
+    if columns is None:
+        columns = []
 
     values = sorted([key_name for key_name in item.keys() if key_name not in rows],
                     key=performance_data_sort_rating)
 
-    fields = {'rows': rows,
-              'columns': columns,
-              'values': values,
-              'valueInCols': True, }
+    if is_vertical:
+        fields = {'rows': rows,
+                  'columns': columns,
+                  'values': ['value'],
+                  'valueInCols': True, }
+
+        update_row_fields(data, rows)
+
+    else:
+        fields = {'rows': rows,
+                  'columns': columns,
+                  'values': values,
+                  'valueInCols': True, }
 
     meta = [{
         'field': x,
@@ -48,10 +68,6 @@ def to_table_format(data: List[dict], value_mapping: list, rows: list, sum_total
             'fields': fields,
             'meta': meta,
             'data': data,
-        },
-        "table_options": {
-            "style": {
-                "layoutWidthType": 'colAdaptive', },
         },
         "value_mapping": value_mapping,
         "loading": False,

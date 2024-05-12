@@ -26,6 +26,7 @@ class MatchPlayersData:
                 'hero_name_cdota': None,
                 'hero_id': None,
 
+
                 'position': None,
                 'position_id': None,
                 'position_name': None,

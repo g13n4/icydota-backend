@@ -318,6 +318,8 @@ class GamePerformance(SQLModel, table=True):
 class PerformanceDataCategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # damage / interval
+    label: Optional[str]
+    description: Optional[str]
 
     data_type: List["PerformanceDataType"] = Relationship(back_populates='data_category',
                                                           sa_relationship_kwargs={'lazy': "selectin"}, )

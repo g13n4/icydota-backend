@@ -161,7 +161,6 @@ async def get_performance_aggregated_data_api(league_id: int,
                                               data_type: int,
                                               comparison: bool = False,
                                               flat: bool = True,
-                                              vertical: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
@@ -172,7 +171,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                                                             data_type=data_type,
                                                                             game_stage=game_stage,
                                                                             is_comparison=comparison,
-                                                                            flat=flat, is_vertical=vertical)
+                                                                            flat=flat)
 
     if not items:
         raise HTTPException(status_code=404)

@@ -195,7 +195,6 @@ def process_game_data(match_id: int, league_id: int | None = None):
         position_id: int = player_info['lane_role']
         this_position: int = approx_pos.get(players_dict[this_slot].account_id, position_id)
 
-
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
             player_id=players_dict[this_slot].account_id,

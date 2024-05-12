@@ -92,7 +92,6 @@ def _processing_db_output_vertical(output,
     for performance_data_obj, *names_data in output.all():
         names_dict, data_dict = _process_name_fields(name_fields=name_fields, values=names_data,
                                                      data_fields=data_fields)
-        print(data_dict)
         PD_dict = performance_data_obj.model_dump(exclude=set(exclude))
         PD_dict = {**data_dict, **PD_dict}
 

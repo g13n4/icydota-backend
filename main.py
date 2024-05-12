@@ -263,7 +263,7 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
     from tasks.process_helpers import process_league, process_game_helper
-    from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper
+    from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper, set_comparison_names_helper
     from tasks_agg.bulk_process import process_full_cycle, mass_process
 
     @icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
@@ -311,6 +311,11 @@ if not LIGHT_MODE:
     async def mass_process_api(process_type: ProcessTypes,
                                ids: Annotated[Union[list[int], None], Query()] = None):
         mass_process(process_type=process_type.value, league_ids=ids)
+
+
+    @icydota_api.get(API_PREFIX + '/set_comparison_names/', status_code=202)
+    async def set_comparison_names_api():
+        set_comparison_names_helper()
 
 
 if __name__ == "__main__":

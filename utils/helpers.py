@@ -3,6 +3,8 @@ import enum
 from decimal import Decimal
 from itertools import cycle
 from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
+from datetime import datetime
+
 
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
@@ -140,3 +142,7 @@ def is_na_decimal(value: Any) -> bool:
     if (isinstance(value, Decimal)) and value.is_nan():
         return True
     return False
+
+
+def to_str_time(unix_timestamp: int) -> str:
+    return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y/%m/%d')

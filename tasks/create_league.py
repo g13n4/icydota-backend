@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 import requests
 from sqlmodel import select, Session
@@ -9,6 +10,11 @@ from utils import get_stratz_league_data
 
 def _is_a_value(dict_: dict, key_: str, ) -> bool:
     if key_ in dict_ and dict_[key_]:
+        return True
+    return False
+
+def _same_dates(date_start: Optional[int], date_end: Optional[int], ) -> bool:
+    if date_start is not None and (date_start == date_end):
         return True
     return False
 
@@ -24,6 +30,8 @@ def _update_league_dates(league_obj: League,
     league_obj.has_started = bool(start_date < unix_timestamp_now)
     league_obj.has_ended = bool(end_date < unix_timestamp_now)
 
+    league_obj.has_dates = True
+
     return None
 
 
@@ -33,10 +41,14 @@ def update_league_obj_dates(league_obj: League, league_data: dict | None = None)
 
     updated_dates = False
 
-    start_date = int(league_data['startDateTime']) if _is_a_value(league_data, 'startDateTime') else None
-    end_date = int(league_data['endDateTime']) if _is_a_value(league_data, 'endDateTime') else None
+    start_date = league_data.get('startDateTime', None) and int(league_data['startDateTime'])
+    end_date = league_data.get('endDateTime', None) and int(league_data['endDateTime'])
 
-    if league_obj.start_date != start_date or league_obj.end_date != end_date:
+    if (league_obj.start_date != start_date
+            or league_obj.end_date != end_date
+            or (_same_dates(league_obj.start_date, league_obj.end_date)
+                and start_date
+                and not _same_dates(date_start=start_date, date_end=end_date))):
         _update_league_dates(league_obj=league_obj, start_date=start_date, end_date=end_date)
         updated_dates = True
 
@@ -79,9 +91,12 @@ def get_or_create_league(league_id: int, db_session: Session, league_obj: League
         else:
             league_obj: League = league_q
 
-    if not league_obj.has_dates:
-        if (update_league_obj_dates(league_obj)):
-            db_session.add(league_obj)
-            db_session.commit()
-            
+    if not league_obj.has_dates or _same_dates(league_obj.start_date, league_obj.end_date):
+        try:
+            if (update_league_obj_dates(league_obj)):
+                db_session.add(league_obj)
+                db_session.commit()
+        except ConnectionError:
+            pass
+
     return league_obj

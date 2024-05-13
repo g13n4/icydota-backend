@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, Any, Optional, List, Callable, Tuple
 
 from sqlalchemy.orm import aliased
@@ -9,7 +10,7 @@ from models import League, Game
 from models import PerformanceDataCategory, GameData
 from utils.sorting_rating import gamedata_sort_rating
 from utils.translation_dictionary import PERFORMANCE_FIELD_DICT, GAMEDATA_FIELD_DICT
-
+from utils.helpers import to_str_time
 
 def _capitalize_name(name: str) -> str:
     return ' '.join([x.capitalize() for x in name.split('_')])
@@ -103,20 +104,21 @@ async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -
 async def _process_performance_data_category(db: AsyncSession):
     cats = await db.exec(select(PerformanceDataCategory))
 
-    categories_dict = { 0:'Overview' }
+    categories_dict = {0: 'Overview'}
     child_to_parent = dict()
     all_categories = [{
-            'id': 0,
-            'key': 'c-0',
-            'label': 'Overview',
-            'children': [],
-        }]
+        'id': 0,
+        'key': 'c-0',
+        'label': 'Overview',
+        'children': [],
+    }]
     for cat in cats:
         cat_key = f'c-{cat.id}'
         cat_item = {
             'id': cat.id,
             'key': cat_key,
-            'label': cat.name,
+            'label': cat.label,
+            'description': cat.description,  # TODO: ADD THIS TO FRONT
             'children': [],
         }
         for sub_cat in cat.data_type:
@@ -129,7 +131,7 @@ async def _process_performance_data_category(db: AsyncSession):
 
             categories_dict[sub_cat.id] = sub_cat.name
             child_to_parent[sub_cat.id] = cat_key
-            cat_item['children'].append(sub_cat_item)
+            cat_item['children'].append(copy.deepcopy(sub_cat_item))
 
         all_categories.append(cat_item)
 
@@ -143,8 +145,9 @@ async def get_league_header(db: AsyncSession, ) -> list:
              'key': f'{league.id}',
              'label': league.name,
              'has_dates': league.has_dates,
-             'start': league.start_date,
-             'end': league.end_date, } for league in leagues.all()]
+             'start_date': league.start_date and to_str_time(league.start_date),
+             'end_date': league.end_date and to_str_time(league.start_date),
+             } for league in leagues.all()]
 
 
 async def get_league_games(db_session: AsyncSession, league_id: int):

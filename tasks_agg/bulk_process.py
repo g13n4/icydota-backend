@@ -111,7 +111,7 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
         ).apply_async()
 
     else:
-        celery_helper = (aggregate_league_helper if process_type == 'cross_compare_league'
+        celery_helper = (cross_compare_league_helper if process_type == 'cross_compare_league'
                          else aggregate_league_helper)
 
         sel_result = db_session.exec(select(League))

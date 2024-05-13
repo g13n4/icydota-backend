@@ -13,7 +13,9 @@ load_dotenv()
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
 tasks = ['tasks',
-         'tasks_agg', ]
+         'tasks_agg',
+         'tasks_agg.bulk_process',
+         ]
 
 celery_app = Celery(
     main='icydota',

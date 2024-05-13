@@ -317,6 +317,8 @@ if not LIGHT_MODE:
         set_comparison_names_helper()
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, use_colors=True )
+# if __name__ == "__main__":
+#     import uvicorn
+#
+#
+#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, use_colors=True)

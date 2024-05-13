@@ -17,7 +17,7 @@ def aggregate_league_helper(league_id: int) -> None:
 
 
 def cross_compare_league_helper(league_id: int) -> None:
-    (remove_aggregation_data.si(league_id=league_id, cross_comparison=False) |
+    (remove_aggregation_data.si(league_id=league_id, cross_comparison=True) |
      create_cross_comparison_aggregation.si(league_id=league_id)).apply_async()
 
 

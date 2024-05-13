@@ -180,7 +180,7 @@ def _create_obj(item: dict, data_type, total: bool = False):
     return data_type(**new_obj)
 
 
-# @shared_task(name="aggregate_league", ignore_result=True)
+@shared_task(name="aggregate_league", ignore_result=True)
 def process_aggregation(league_id: int):
     logger.info(f'Aggregating data for {league_id}')
 
@@ -268,7 +268,6 @@ def process_aggregation(league_id: int):
                 aggregation=DAT,
                 window_data=wd_items,
                 total_data=td_items,
-
             )
             db_session.add(GP)
 
@@ -301,4 +300,4 @@ def process_aggregation(league_id: int):
     # deleting old aggregations
 
     db_session.commit()
-    db_session.close()
+

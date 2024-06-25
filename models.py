@@ -6,9 +6,14 @@ from pydantic import condecimal
 from sqlalchemy.sql import text
 from sqlmodel import Field, SQLModel, Relationship, ForeignKey
 
+column_type = {
+    'bigint': db.BIGINT,
+    'smallint': db.SMALLINT,
+    'basic': db.Integer,
+}
 
-def _fk(column: str, key_name: str = 'id', bigint: int = False, cascade: bool = False, **column_kwargs) -> Field:
-    return Field(sa_column=db.Column(db.BIGINT if bigint else db.Integer,
+def _fk(column: str, key_name: str = 'id', col_type: str = 'basic', cascade: bool = False, **column_kwargs) -> Field:
+    return Field(sa_column=db.Column(column_type[col_type],
                                      ForeignKey(f'{column}.{key_name}',
                                                 ondelete='CASCADE' if cascade else 'SET NULL', ),
                                      nullable=True,
@@ -54,6 +59,18 @@ class Hero(SQLModel, table=True):
     npc_name_alias: Optional[str]
 
 
+class Facet(SQLModel, table=True):
+    __tablename__ = 'facets'
+    id: int = Field(default=None, primary_key=True)  # open_dota id
+
+    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id", index=True)
+    cdota_name: str = Field(unique=True, index=True)
+    icon: str
+    gradient_id: int
+    name: str
+    description: str
+
+
 class Position(SQLModel, table=True):
     __tablename__ = 'positions'
 
@@ -76,6 +93,7 @@ class Team(SQLModel, table=True):
     __tablename__ = 'teams'
 
     id: int = Field(default=None, primary_key=True)  # open_dota id
+    logo_url: Optional[str]
     name: str
     tag: str
 
@@ -182,6 +200,8 @@ class PlayerGameData(SQLModel, table=True):
 
     position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
     hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
+    facet_id: Optional[int] = Field(default=None, foreign_key="facets.id")
+
     slot: int
 
     name: Optional[str]
@@ -197,7 +217,7 @@ class PlayerGameData(SQLModel, table=True):
     apm: int
     pings: int
 
-    game_id: Optional[int] = _fk('games', bigint=True, index=True)
+    game_id: Optional[int] = _fk('games', col_type='bigint', index=True)
     game: Optional["Game"] = Relationship(back_populates="players_data")
 
     performance: List["GamePerformance"] = Relationship(back_populates="player_game_data",
@@ -344,6 +364,7 @@ class PerformanceDataType(SQLModel, table=True):
 
 # PERFORMANCE DATA INFO
 # PERFORMANCE WINDOW
+# more data about empty_status in dedicated class EmptyData
 class PerformanceWindowBase(SQLModel):
     l2: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     l4: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -351,6 +372,7 @@ class PerformanceWindowBase(SQLModel):
     l8: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     l10: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     ltotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    l_empty_mask: int = Field(sa_column=db.Column(db.SMALLINT, nullable=True, primary_key=False, ))
 
     g15: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     g30: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
@@ -358,6 +380,7 @@ class PerformanceWindowBase(SQLModel):
     g60: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     g60plus: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
     gtotal: condecimal(max_digits=10, decimal_places=2) = Field(default=None, nullable=True)
+    g_empty_mask: int = Field(sa_column=db.Column(db.SMALLINT, nullable=True, primary_key=False, ))
 
 
 class PerformanceWindowData(PerformanceWindowBase, table=True):
@@ -435,7 +458,7 @@ class RoshanDeath(SQLModel, table=True):
 
     kill_dire: Optional[bool]
 
-    game_id: Optional[int] = _fk('games', bigint=True)
+    game_id: Optional[int] = _fk('games', col_type='bigint')
     game: Optional["Game"] = Relationship(back_populates='roshan_death')
 
     __tablename__ = 'roshan_deaths'
@@ -455,7 +478,7 @@ class HeroDeath(SQLModel, table=True):
     victim_hero_id: Optional[int] = _fk('heroes')
     victim_player_id: Optional[int] = _fk('players', 'account_id')
 
-    game_id: Optional[int] = _fk('games', bigint=True)
+    game_id: Optional[int] = _fk('games', col_type='bigint')
     game: Optional["Game"] = Relationship(back_populates='hero_death')
 
     __tablename__ = 'hero_deaths'

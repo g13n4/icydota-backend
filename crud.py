@@ -206,7 +206,7 @@ def flatten_league_game(game: Game, sent: GameData, dire: GameData, ):
         'id': f'{game.id}-{x}',
         'name': GAMEDATA_FIELD_DICT[x],
         **_get_game_data(sent_dict[x], dire_dict[x]),
-    } for x in sent_dict.keys() if x not in ['id', 'sentry_kills', 'obs_kills']]
+    } for x in sent_dict.keys() if x.lower() not in ['id', 'sentry_kills', 'obs_kills', 'kpm']]
 
     game_data_list.sort(key=lambda x: gamedata_sort_rating(x['name'].lower()), reverse=True)
 

@@ -1,4 +1,3 @@
-from sqlalchemy import delete
 from typing import Dict, List, Tuple, Any, Callable
 
 import numpy as np
@@ -12,9 +11,12 @@ from models import DataAggregationType, PerformanceWindowData, GamePerformance, 
     PlayerGameData
 from models import League, Game
 from utils import get_sqlmodel_fields, to_dec
+from replay_parsing import PerformanceMaskHandler
 
 
 logger = get_task_logger(__name__)
+PMH = PerformanceMaskHandler()
+
 
 # AGGREGATION FIELDS
 AGG_REQUIRED_FIELDS = [
@@ -176,10 +178,11 @@ def _create_obj(item: dict, data_type, total: bool = False):
 
     if not total:
         new_obj['data_type_id'] = item['data_type_id']
+        PMH.set_empty_status(new_obj)
 
     return data_type(**new_obj)
 
-
+# TODO: First aggregate by player and hero, then sum the hero part to create current basic aggregation
 @shared_task(name="aggregate_league", ignore_result=True)
 def process_aggregation(league_id: int):
     logger.info(f'Aggregating data for {league_id}')

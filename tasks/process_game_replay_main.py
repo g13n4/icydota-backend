@@ -1,6 +1,4 @@
 import re
-from decimal import Decimal
-from functools import partial, reduce
 from typing import Dict, List
 
 import pandas as pd
@@ -13,6 +11,10 @@ from replay_parsing import MatchAnalyser, MatchSplitter, process_interval_window
 from utils import get_both_slot_values, combine_slot_dicts, get_obj_from_list, get_all_sqlmodel_objs, \
     to_dec
 from parsing_utils.pd_helpers import iterate_df
+from replay_parsing import PerformanceMaskHandler
+
+
+PMH = PerformanceMaskHandler()
 
 
 def _get_PDT_objects(db_session,
@@ -48,6 +50,7 @@ def _fill_basic_PWDs(db_session,
 
         pwd_dict['data_type'] = PDT_dict[wi_name]
 
+        PMH.set_empty_status(pwd_dict)
         pwd_obj = PerformanceWindowData(**pwd_dict)
         db_session.add(pwd_obj)
 
@@ -97,6 +100,7 @@ def _fill_comparison_pws(db_session,
 
                 pwd_dict['data_type'] = data_type_obj
 
+                PMH.set_empty_status(pwd_dict)
                 ppws_obj = PerformanceWindowData(**pwd_dict)
 
                 db_session.add(ppws_obj)

@@ -11,10 +11,11 @@ from models import DataAggregationType, PerformanceWindowData, GamePerformance, 
     PlayerGameData
 from models import Game
 from utils import get_sqlmodel_fields, to_dec
-from sqlalchemy import delete
+from replay_parsing import PerformanceMaskHandler
 
 
 logger = get_task_logger(__name__)
+PMH = PerformanceMaskHandler()
 
 
 # AGGREGATION FIELDS
@@ -149,6 +150,7 @@ def _create_obj(item: dict, data_type, total: bool = False):
 
     if not total:
         new_obj['data_type_id'] = item['data_type_id']
+        PMH.set_empty_status(new_obj)
 
     return data_type(**new_obj)
 

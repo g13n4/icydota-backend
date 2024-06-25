@@ -19,7 +19,6 @@ def get_stratz_league_data(league_id: int) -> dict | None:
         raise ConnectionError(f"Can't access STRATZ. Request code {r.status_code} {r.content}")
 
 
-# FIX: DOES IT EVEN WORK? ERROR 500
 def get_stratz_player_data() -> dict | None:
     r = requests.get('https://api.stratz.com/api/v1/Player/proSteamAccount',
                      headers={

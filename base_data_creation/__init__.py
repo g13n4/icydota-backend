@@ -5,3 +5,4 @@ from .create_positions import create_positions, delete_positions
 from .heroes import create_heroes, delete_heroes
 from .performance_data_tags import create_performance_data_tags, delete_performance_data_tags
 from base_data_creation.update_category_data import update_category_data
+from .update_facets import update_facets

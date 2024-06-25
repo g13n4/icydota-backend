@@ -9,6 +9,9 @@ from models import Hero, Player, Position
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData
 from utils import is_na_decimal, TableMinMaxFinder
 from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE
+from replay_parsing import PerformanceMaskHandler
+
+PMH = PerformanceMaskHandler()
 
 
 def combine_dict_fields(dict_: dict, cfi: dict) -> dict:
@@ -48,7 +51,9 @@ def _process_name_fields(name_fields: List[str], values: list,
 
 def _processing_db_output(output,
                           name_fields: List[str],
-                          exclude: list = None) -> Tuple[list, list, bool]:
+                          is_window_data,
+                          exclude: list = None,
+                          ) -> Tuple[list, list, bool]:
     TMMF = TableMinMaxFinder()
 
     if exclude is None:
@@ -60,8 +65,11 @@ def _processing_db_output(output,
     for performance_data_obj, *names_data in output.all():
 
         names_dict, data_dict = _process_name_fields(name_fields=name_fields, values=names_data)
+        if is_window_data:
+            PD_dict = PMH.unpack_w_empty_status(performance_data_obj, exclude)
+        else:
+            PD_dict = performance_data_obj.model_dump(exclude=set(exclude))
 
-        PD_dict = performance_data_obj.model_dump(exclude=set(exclude))
         PD_dict.update(data_dict)
 
         for model_obj_key, model_obj_value in PD_dict.items():
@@ -154,20 +162,20 @@ def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: boo
 
 
 def get_data_model(data_type: int, game_stage: Optional[str] = None,
-                   clauses: list = None, exclude: list = None) -> [PerformanceTotalData | PerformanceWindowData]:
+                   clauses: list = None, exclude: list = None) -> [bool, PerformanceTotalData | PerformanceWindowData]:
     # TOTAL OR WINDOW DATA
     if data_type == 0:
-        model = PerformanceTotalData
-    else:
-        if game_stage == 'lane':
-            exclude.extend(TO_EXCLUDE_FOR_LANE)
-        elif game_stage == 'game':
-            exclude.extend(TO_EXCLUDE_FOR_GAME)
+        return False, PerformanceTotalData
 
-        model = PerformanceWindowData
-        clauses.append((PerformanceWindowData.data_type_id == data_type, -2))
+    if game_stage == 'lane':
+        exclude.extend(TO_EXCLUDE_FOR_LANE)
+    elif game_stage == 'game':
+        exclude.extend(TO_EXCLUDE_FOR_GAME)
 
-    return model
+    model = PerformanceWindowData
+    clauses.append((PerformanceWindowData.data_type_id == data_type, -2))
+
+    return True, model
 
 
 def set_compare_field(data: List[dict], key_id: str, enemy_id: str, remove: bool):
@@ -195,7 +203,7 @@ async def get_performance_data(db_session: AsyncSession,
     clauses = []
     exclude = []
 
-    model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
+    is_wd, model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
 
     select_models = [model, PlayerGameData.dire, Hero.name, Player.nickname, Position.name]
     select_name_fields = ['side', 'hero', 'player', 'position', ]
@@ -236,6 +244,7 @@ async def get_performance_data(db_session: AsyncSession,
     else:
         data, value_mapping, has_total_field = _processing_db_output(output=output,
                                                                      exclude=exclude,
+                                                                     is_window_data=is_wd,
                                                                      name_fields=select_name_fields, )
 
     return data, value_mapping, has_total_field, select_name_fields
@@ -253,7 +262,7 @@ async def get_performance_data_comparison(db_session: AsyncSession,
     clauses = []
     exclude = []
 
-    model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
+    is_wd, model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
 
     select_models = [model, PlayerGameData.dire, Position.name, Hero.name, Player.nickname, ]
     select_name_fields = ['side', 'position', 'hero', 'player', ]
@@ -299,6 +308,7 @@ async def get_performance_data_comparison(db_session: AsyncSession,
     else:
         data, value_mapping, has_total_field = _processing_db_output(output=output,
                                                                      exclude=exclude,
+                                                                     is_window_data=is_wd,
                                                                      name_fields=select_name_fields, )
 
     return data, value_mapping, has_total_field, select_name_fields
@@ -322,7 +332,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
     clauses = [(DataAggregationType.league_id == league_id, -1), ]
     exclude = []
 
-    model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
+    is_wd, model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
 
     # QUERY BUILDING
     select_query = (select(*[model, agg_type_dict[aggregation_type]])
@@ -355,7 +365,8 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     data, value_mapping, has_total_field = _processing_db_output(output=output,
                                                                  name_fields=[aggregation_type],
-                                                                 exclude=exclude, )
+                                                                 exclude=exclude,
+                                                                 is_window_data=is_wd, )
 
     return data, value_mapping, has_total_field
 
@@ -388,7 +399,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
 
     select_fields = fields_dict[aggregation_type]
 
-    model = get_data_model(data_type=data_type, clauses=clauses)
+    is_wd, model = get_data_model(data_type=data_type, clauses=clauses)
 
     # TOTAL OR WINDOW DATA
     select_fields.append(getattr(model, data_field))

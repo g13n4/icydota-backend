@@ -265,7 +265,7 @@ if not LIGHT_MODE:
     from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper, set_comparison_names_helper
     from tasks_agg.bulk_process import process_full_cycle, mass_process
 
-    @icydota_api.get(API_PREFIX + '/process/league/{league_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
         new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
         if new_games_number:
@@ -274,28 +274,28 @@ if not LIGHT_MODE:
         return {'status': 'processed'}
 
 
-    @icydota_api.get(API_PREFIX + '/process/match/{match_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
     async def process_match_api(match_id: int):
         process_game_helper(match_id=match_id, )
         return {'status': 'processing'}
 
 
-    @icydota_api.get(API_PREFIX + '/aggregate/league/{league_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/aggregate/league/{league_id}', status_code=202)
     async def aggregate_league_api(league_id: int):
         aggregate_league_helper(league_id=league_id, )
 
 
-    @icydota_api.get(API_PREFIX + '/aggregate/cross_comparison/{league_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/aggregate/cross_comparison/{league_id}', status_code=202)
     async def create_cross_comparison_api(league_id: int):
         cross_compare_league_helper(league_id=league_id, )
 
 
-    @icydota_api.get(API_PREFIX + '/approximate_positions/{league_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)
     async def approximate_positions_api(league_id: int):
         approximate_positions_helper(league_id=league_id)
 
 
-    @icydota_api.get(API_PREFIX + '/process/full_cycle/{league_id}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/process/full_cycle/{league_id}', status_code=202)
     async def process_full_cycle_api(league_id: int):
         process_full_cycle(league_id=league_id)
 
@@ -306,13 +306,13 @@ if not LIGHT_MODE:
         cross_compare_league = "cross_compare_league"
 
 
-    @icydota_api.get(API_PREFIX + '/process/all/{process_type}/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/process/all/{process_type}', status_code=202)
     async def mass_process_api(process_type: ProcessTypes,
                                ids: Annotated[Union[list[int], None], Query()] = None):
         mass_process(process_type=process_type.value, league_ids=ids)
 
 
-    @icydota_api.get(API_PREFIX + '/set_comparison_names/', status_code=202)
+    @icydota_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api():
         set_comparison_names_helper()
 

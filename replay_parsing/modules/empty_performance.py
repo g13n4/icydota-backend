@@ -1,7 +1,6 @@
 from decimal import Decimal
 from typing import List, Any, Optional
 from models import PerformanceWindowData
-from api_helpers.model_field_info import LANE_FIELDS, GAME_FIELDS
 from typing import TypeVar
 
 T = TypeVar('T', dict, PerformanceWindowData)
@@ -12,15 +11,15 @@ class PerformanceMaskHandler:
     0 represents 0 and 1 represents None. We replace zeroes with None to save space due to zero being a double
     precision value in the DB and None takes only 1 byte
     """
-    def __init__(self):
-        self.lane_fields = LANE_FIELDS
-        self.game_fields = GAME_FIELDS
+    def __init__(self, lane_fields: List[str], game_fields: List[str]):
+        self.lane_fields = lane_fields
+        self.game_fields = game_fields
 
-        self.lane_length = len(LANE_FIELDS)
-        self.game_length = len(GAME_FIELDS)
+        self.lane_length = len(self.lane_fields)
+        self.game_length = len(self.game_fields)
 
-        self.field_index = {field: idx for idx, field in enumerate(LANE_FIELDS)}
-        self.field_index.update({field: idx for idx, field in enumerate(GAME_FIELDS)})
+        self.field_index = {field: idx for idx, field in enumerate(self.lane_fields)}
+        self.field_index.update({field: idx for idx, field in enumerate(self.game_fields)})
 
         self.EMPTY_TOKEN = ''
         self.NONE_TOKEN = ''

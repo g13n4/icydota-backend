@@ -8,10 +8,10 @@ from models import ComparisonType, DataAggregationType
 from models import Hero, Player, Position
 from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData
 from utils import is_na_decimal, TableMinMaxFinder
-from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE
-from replay_parsing import PerformanceMaskHandler
+from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE, LANE_FIELDS, GAME_FIELDS
+from replay_parsing.modules.empty_performance import PerformanceMaskHandler
 
-PMH = PerformanceMaskHandler()
+PMH = PerformanceMaskHandler(LANE_FIELDS, GAME_FIELDS)
 
 
 def combine_dict_fields(dict_: dict, cfi: dict) -> dict:

@@ -12,10 +12,11 @@ from models import DataAggregationType, PerformanceWindowData, GamePerformance, 
 from models import League, Game
 from utils import get_sqlmodel_fields, to_dec
 from replay_parsing import PerformanceMaskHandler
+from api_helpers.model_field_info import LANE_FIELDS, GAME_FIELDS
 
 
 logger = get_task_logger(__name__)
-PMH = PerformanceMaskHandler()
+PMH = PerformanceMaskHandler(LANE_FIELDS, GAME_FIELDS)
 
 
 # AGGREGATION FIELDS

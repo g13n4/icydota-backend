@@ -12,10 +12,10 @@ from utils import get_both_slot_values, combine_slot_dicts, get_obj_from_list, g
     to_dec
 from parsing_utils.pd_helpers import iterate_df
 from replay_parsing import PerformanceMaskHandler
+from api_helpers.model_field_info import LANE_FIELDS, GAME_FIELDS
 
 
-PMH = PerformanceMaskHandler()
-
+PMH = PerformanceMaskHandler(LANE_FIELDS, GAME_FIELDS)
 
 def _get_PDT_objects(db_session,
                      column_to_category_obj: Dict[str, str], ) -> Dict[str, PerformanceDataType]:

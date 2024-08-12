@@ -60,8 +60,8 @@ def upgrade() -> None:
         print('Setting empty mask value')
         sqlmodel_session.execute(
             text("""UPDATE performance_windows_data 
-            SET l_empty_mask = to_mask(l2, l4, l6, l8, l10, ltotal)
-            SET g_empty_mask = to_mask(g15, g30, g45, g60, g60plus, gtotal)
+            SET l_empty_mask = to_mask(l2, l4, l6, l8, l10, ltotal),
+            g_empty_mask = to_mask(g15, g30, g45, g60, g60plus, gtotal)
             """),
         )
         # setting null to 0 columns

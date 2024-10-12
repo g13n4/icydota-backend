@@ -16,6 +16,9 @@ from base_data_creation import create_heroes, delete_heroes
 from base_data_creation import create_performance_data_tags, delete_performance_data_tags
 from base_data_creation import create_players_and_teams, delete_all_players_and_teams
 from base_data_creation import create_positions, delete_positions
+from sqlalchemy.sql import table, column
+from sqlalchemy import String, Integer, Date, Boolean
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -23,6 +26,32 @@ revision: str = '048f5472067b'
 down_revision: Union[str, None] = 'e082f48fedaf'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+pdc_table = table('performance_data_categories',
+                  column('id', Integer),
+                  column('name', String),
+                  )
+
+pdt_table = table('performance_data_types',
+                  column('id', Integer),
+                  column('name', String),
+                  column('is_comparable', Boolean),
+                  column('system_name', String),
+                  column('sum_to_agg', Boolean),
+                  column('data_category_id', Integer),
+                  )
+
+
+# op.bulk_insert(accounts_table,
+#     [
+#         {'id':1, 'name':'John Smith',
+#                 'create_date':date(2010, 10, 5)},
+#         {'id':2, 'name':'Ed Williams',
+#                 'create_date':date(2007, 5, 27)},
+#         {'id':3, 'name':'Wendy Jones',
+#                 'create_date':date(2008, 8, 15)},
+#     ]
+# )
 
 
 def upgrade() -> None:

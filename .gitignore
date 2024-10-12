@@ -161,3 +161,12 @@ cython_debug/
 .idea/
 replays/*
 temp_data/
+
+
+# VSCODE
+*.code-workspace
+.vscode
+
+
+# CONDA
+.conda

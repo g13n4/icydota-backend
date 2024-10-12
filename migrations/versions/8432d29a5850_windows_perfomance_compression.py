@@ -64,33 +64,6 @@ def upgrade() -> None:
             g_empty_mask = to_mask(g15, g30, g45, g60, g60plus, gtotal)
             """),
         )
-        # setting null to 0 columns
-        print('Setting null to l* values')
-        sqlmodel_session.execute(
-            text("""UPDATE performance_windows_data 
-                    SET 
-                    l2 = NULL
-                    l4 = NULL
-                    l6 = NULL
-                    l8 = NULL
-                    l10 = NULL
-                    ltotal = NULL
-                    WHERE l_empty_mask IS NOT NULL
-                    """),
-        )
-
-        print('Setting null to g* values')
-        sqlmodel_session.execute(
-            text("""UPDATE performance_windows_data
-                    g15 = NULL
-                    g30 = NULL
-                    g45 = NULL
-                    g60 = NULL
-                    g60plus = NULL
-                    gtotal = NULL
-                    WHERE g_empty_mask IS NOT NULL
-                    """),
-        )
 
 
 def downgrade() -> None:

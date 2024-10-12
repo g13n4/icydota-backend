@@ -1,16 +1,20 @@
 from decimal import Decimal
-from typing import List, Any, Optional
+from typing import Any, List, Optional, TypeVar
+
+from empty_mask_converter import EmptyMaskConverter
+
 from models import PerformanceWindowData
-from typing import TypeVar
 
-T = TypeVar('T', dict, PerformanceWindowData)
+T = TypeVar("T", dict, PerformanceWindowData)
 
-class PerformanceMaskHandler:
+
+class PerformanceMaskHandler(EmptyMaskConverter):
     """
     Helper class that is used to code and decode an "*_mask_empty" field in PerformanceWindow objects.
     0 represents 0 and 1 represents None. We replace zeroes with None to save space due to zero being a double
     precision value in the DB and None takes only 1 byte
     """
+
     def __init__(self, lane_fields: List[str], game_fields: List[str]):
         self.lane_fields = lane_fields
         self.game_fields = game_fields
@@ -19,11 +23,12 @@ class PerformanceMaskHandler:
         self.game_length = len(self.game_fields)
 
         self.field_index = {field: idx for idx, field in enumerate(self.lane_fields)}
-        self.field_index.update({field: idx for idx, field in enumerate(self.game_fields)})
+        self.field_index.update(
+            {field: idx for idx, field in enumerate(self.game_fields)}
+        )
 
-        self.EMPTY_TOKEN = ''
-        self.NONE_TOKEN = ''
-
+        self.EMPTY_TOKEN = ""
+        self.NONE_TOKEN = ""
 
     @staticmethod
     def _set_value(obj: T, field_name: str, value: Any, is_model: bool):
@@ -32,7 +37,6 @@ class PerformanceMaskHandler:
         else:
             obj[field_name] = value
 
-
     @staticmethod
     def _get_value(obj: T, field_name: str, is_model: bool) -> None | Decimal:
         if is_model:
@@ -40,29 +44,13 @@ class PerformanceMaskHandler:
         else:
             return obj[field_name]
 
-
-    @staticmethod
-    def convert_to_mask(empty_fields: List[int]) -> int:
-        """Turn a list of integers into a mask"""
-        return int(''.join(map(str, empty_fields)), 2)
-
-
-    @staticmethod
-    def convert_from_mask(numeric_mask: int, length: int) -> list[int]:
-        """Turn a small integer into a list of integers:
-        first: turn it into a binary number and then into a list
-        second: remove 'b' - binary and '0' - signed/unsigned bit
-        third: turn it into integers and get a slice from the beginning to the number of fields (length)
-        """
-        coded_values = list(map(int, list(bin(numeric_mask))[2:]))[:length]
-        return ([0] * (length - len(coded_values))) + coded_values
-
-
     def set_empty_status(self, data: T) -> None:
         is_model = not isinstance(data, dict)
 
-        for fields, f_len, empty_field in [(self.lane_fields, self.lane_length, 'l_empty_mask'),
-                                           (self.game_fields, self.game_length, 'g_empty_mask')]:
+        for fields, f_len, empty_field in [
+            (self.lane_fields, self.lane_length, "l_empty_mask"),
+            (self.game_fields, self.game_length, "g_empty_mask"),
+        ]:
             empty_code = [0] * f_len
             only_nones = True
             can_be_compressed = True
@@ -85,9 +73,10 @@ class PerformanceMaskHandler:
                 self._set_value(data, field, None, is_model)
 
             empty_mask = self.convert_to_mask(empty_code)
-            self._set_value(data, field_name=empty_field, value=empty_mask, is_model=is_model)
+            self._set_value(
+                data, field_name=empty_field, value=empty_mask, is_model=is_model
+            )
         return None
-
 
     def unpack_w_empty_status(self, data: T, exclude: List[str] = None) -> dict:
         if exclude is None:
@@ -97,10 +86,10 @@ class PerformanceMaskHandler:
         if is_model:
             data = data.dict()
 
-
-        for fields, f_len, empty_field in [(self.lane_fields, self.lane_length, 'l_empty_mask'),
-                                           (self.game_fields, self.game_length, 'g_empty_mask')]:
-
+        for fields, f_len, empty_field in [
+            (self.lane_fields, self.lane_length, "l_empty_mask"),
+            (self.game_fields, self.game_length, "g_empty_mask"),
+        ]:
             if not (empty_field_mask := data[empty_field]):
                 break
 
@@ -114,11 +103,11 @@ class PerformanceMaskHandler:
 
         return {k: v for k, v in data.items() if k not in exclude}
 
-
-    def check_if_empty(self, field_value: Optional[Decimal], field_name: str, empty_mask: Optional[int]):
+    def check_if_empty(
+        self, field_value: Optional[Decimal], field_name: str, empty_mask: Optional[int]
+    ):
         if empty_mask is None:
             return field_value
-
 
         field_number = self.field_index[field_name]
         return

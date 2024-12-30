@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 import sqlalchemy as db
-from helpers import _fk, sa_kwargs_setter
+from .helpers import _fk, sa_kwargs_setter
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 

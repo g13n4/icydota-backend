@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from helpers import _fk
+from .helpers import _fk
 from sqlmodel import Field, Relationship, SQLModel
 
 

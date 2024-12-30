@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 import sqlalchemy as db
-from helpers import sa_kwargs_setter
+from .helpers import sa_kwargs_setter
 from sqlmodel import Field, Relationship, SQLModel
 
 

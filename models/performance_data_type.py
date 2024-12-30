@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from helpers import _fk
+from .helpers import _fk
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 

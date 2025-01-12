@@ -1,5 +1,13 @@
+from typing import Any
+
+
 class EmptyMaskConverter:
-    NONE_VALUE = 0
+    NONE_VALUE = 1
+    ZERO_VALUE = 0
+
+    @staticmethod
+    def can_be_converted(fields: list[Any]) -> bool:
+        return not any(fields)
 
     @staticmethod
     def mask_value_converter(value: int) -> int | None:

@@ -29,6 +29,7 @@ AGG_REQUIRED_FIELDS = [
     'hero_id',
     'is_comparison',
 ]
+
 WINDOW_DATA_FIELDS = get_sqlmodel_fields(PerformanceWindowData)  # w/o data_type_id bc it's a fk
 TOTAL_DATA_FIELDS = get_sqlmodel_fields(PerformanceTotalData)
 

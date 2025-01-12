@@ -8,7 +8,8 @@ from typing import Dict, List, Any, Tuple, Optional
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-from replay_parsing.ingame_data import POSITION_NAMES, POSITION_OPPONENTS
+from constants.position import PositionConstant
+from constants.performance.window import GameWindows
 from utils import get_both_slot_values
 
 
@@ -117,7 +118,7 @@ class MatchPlayersData:
             slot_text, slot = get_both_slot_values(k)
             player = getattr(self, slot_text)
             player['position'] = v
-            player['position_name'] = POSITION_NAMES[v]
+            player['position_name'] = PositionConstant.POS_TO_NAME[v]
         self._set_opponents()
 
 
@@ -138,7 +139,7 @@ class MatchPlayersData:
     def _set_position_names(self):
         players = self.get_all()
         for player in players:
-            player['position_name'] = POSITION_NAMES[player['position']]
+            player['position_name'] = PositionConstant.POS_TO_NAME[player['position']]
         return
 
 
@@ -146,7 +147,7 @@ class MatchPlayersData:
         players = self.get_all()
         for player, pos in zip(players, opponents):
             player['position'] = pos
-            player['position_name'] = POSITION_NAMES[pos]
+            player['position_name'] = PositionConstant.POS_TO_NAME[pos]
         self._set_opponents()
 
 
@@ -154,7 +155,7 @@ class MatchPlayersData:
         players = self.get_all()
         for player in players:
             player_position = player['position']
-            player_opponents_positions = POSITION_OPPONENTS[player_position]
+            player_opponents_positions = PositionConstant.OPPONENTS[player_position]
 
             for opponent in players:
                 if player['side'] == opponent['side'] or opponent['position'] not in player_opponents_positions:
@@ -191,24 +192,12 @@ def _compare_name_complex(cdota_name, npc_name) -> int:
     return fuzz.ratio(cdota_name_processed, npc_name_processed)
 
 
-early_game_windows = [(1, 'l2', 'lane', -90, 60 * 2,),  # first 2 minutes
-                      (2, 'l4', 'lane', 60 * 2, 60 * 4,),  # 2-4
-                      (3, 'l6', 'lane', 60 * 4, 60 * 6,),  # 4-6
-                      (4, 'l8', 'lane', 60 * 6, 60 * 8,),  # 6-8
-                      (5, 'l10', 'lane', 60 * 8, 60 * 10,), ]  # 8-10
-
-late_game_windows = [(1, 'g15', 'game', -90, 60 * 15,),  # first 15 minutes
-                     (2, 'g30', 'game', 60 * 15, 60 * 30,),  # 15 - 30
-                     (3, 'g45', 'game', 60 * 30, 60 * 45,),  # 30 - 45
-                     (4, 'g60', 'game', 60 * 45, 60 * 60,),  # 45 - 60
-                     (5, 'g60plus', 'game', 60 * 60, 60 * 60 * 60,), ]  # 60 - inf
-
-
 class MatchAnalyser:
     def __init__(self,
                  path: str | pathlib.Path,
                  windows: List[Tuple[int, int, str]] = None,
-                 match_id: Optional[int] = None, ):
+                 match_id: Optional[int] = None,
+                 ):
         self.path = path
         self.match_id = match_id
 
@@ -220,18 +209,18 @@ class MatchAnalyser:
         self._is_match_windows_set = False
 
         if not windows:
-            windows = early_game_windows + late_game_windows
+            windows = GameWindows.ALL_WINDOWS_REAL
 
-        self._match_windows = [{'name': window[1],
-                                'window_type': window[2],
-                                'index': window[0],
+        self._match_windows = [{'name': window.name,
+                                'window_type': window.window_type,
+                                'index': window.order,
 
                                 'start_time': None,
                                 'end_time': None,
 
-                                'window_start': window[3],
-                                'window_end': window[4],
-                                'window_length': window[4] - window[3],
+                                'window_start': window.start_time,
+                                'window_end': window.end_time,
+                                'window_length': window.length,
 
                                 'length': 0,
                                 'minutes': 0,
@@ -363,8 +352,8 @@ class MatchAnalyser:
                 if not window['window_type'] == window_type:
                     pass
 
-                if window['length'] > 0 and \
-                        not (window['window_length'] + 2 > window['length'] > window['window_length'] - 2):
+                is_complete_window = (window['window_length'] + 2 > window['length'] > window['window_length'] - 2)
+                if window['length'] > 0 and not is_complete_window:
                     window['incomplete'] = True
                     break
 

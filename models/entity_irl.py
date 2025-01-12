@@ -1,7 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
-from .helpers import sa_kwargs_setter
+
+from constants.position import PositionConstant
+from models.helpers import sa_kwargs_setter
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -13,6 +15,8 @@ class Position(SQLModel, table=True):
         primary_key=True,
     )  # position number
     name: str
+
+    const: ClassVar[object] = PositionConstant
 
 
 class Player(SQLModel, table=True):

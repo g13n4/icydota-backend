@@ -1,11 +1,11 @@
 from decimal import Decimal
 from typing import Any, List, Optional, TypeVar
 
-from empty_mask_converter import EmptyMaskConverter
+from models import PerformanceWindowTable
+from modules.empty_mask_converter import EmptyMaskConverter
 
-from models import PerformanceWindowData
 
-T = TypeVar("T", dict, PerformanceWindowData)
+T = TypeVar("T", dict, PerformanceWindowTable)
 
 
 class PerformanceMaskHandler(EmptyMaskConverter):
@@ -14,21 +14,6 @@ class PerformanceMaskHandler(EmptyMaskConverter):
     0 represents 0 and 1 represents None. We replace zeroes with None to save space due to zero being a double
     precision value in the DB and None takes only 1 byte
     """
-
-    def __init__(self, lane_fields: List[str], game_fields: List[str]):
-        self.lane_fields = lane_fields
-        self.game_fields = game_fields
-
-        self.lane_length = len(self.lane_fields)
-        self.game_length = len(self.game_fields)
-
-        self.field_index = {field: idx for idx, field in enumerate(self.lane_fields)}
-        self.field_index.update(
-            {field: idx for idx, field in enumerate(self.game_fields)}
-        )
-
-        self.EMPTY_TOKEN = ""
-        self.NONE_TOKEN = ""
 
     @staticmethod
     def _set_value(obj: T, field_name: str, value: Any, is_model: bool):
@@ -84,7 +69,7 @@ class PerformanceMaskHandler(EmptyMaskConverter):
 
         is_model = not isinstance(data, dict)
         if is_model:
-            data = data.dict()
+            data = data.model_dump()
 
         for fields, f_len, empty_field in [
             (self.lane_fields, self.lane_length, "l_empty_mask"),

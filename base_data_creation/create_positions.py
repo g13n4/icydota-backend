@@ -2,7 +2,7 @@ from sqlmodel import Session
 from sqlmodel import select
 
 from models import Position
-from replay_parsing.ingame_data import POSITION_NAMES
+from constants.parsing import POSITION_NAMES
 
 
 def create_positions(db_session, ) -> None:

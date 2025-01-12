@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
+from constants.building import BuildingConstant
 from .helpers import _fk
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -14,10 +15,13 @@ class Building(SQLModel, table=True):
 
     is_tower: bool  # or rax
     tier: Optional[int]
-    tower4: Optional[bool]  # False - first, True - second one
+
+    first_tower_4: Optional[bool]  # False - first, True - second one
 
     is_rax: Optional[bool]
     melee: Optional[bool]
+
+    const: ClassVar[BuildingConstant] = BuildingConstant
 
     __tablename__ = "in_game_buildings"
 

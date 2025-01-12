@@ -77,6 +77,8 @@ class Game(SQLModel, table=True):
     replay_url: str
 
     broken_replay: Optional[bool]
+    assumed_positions: Optional[bool]
+    final_processing: Optional[bool]
 
     __tablename__ = "games"
 

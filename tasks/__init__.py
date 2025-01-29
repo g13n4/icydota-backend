@@ -1,3 +1,3 @@
-from .check_for_leagues_in_lp import check_for_leagues_in_lp
-from .proces_game_replay import process_game_replay
-from .process_helpers import process_league, process_leagues_cron, update_leagues_dates_cron
+from tasks.league.check_for_leagues_in_lp import check_for_leagues_in_lp
+from tasks.game.proces_game_replay import process_game_replay
+from tasks.league.cron_tasks import process_league, process_leagues_cron, update_leagues_dates_cron

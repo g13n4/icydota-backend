@@ -53,12 +53,14 @@ def to_nested_constant(klass: Constant) -> Constant:
     return klass
 
 
-def update_values(klass: Constant) -> Constant:
+def update_description(klass: Constant) -> Constant:
     for name, type_ in klass.__annotations__.items():
         try:
             if issubclass(Item, type_):
                 item = getattr(klass, name)
-                item.name = name
+                if not item.name:
+                    item.name = name
+
                 if not item.description:
                     description = to_description(name)
                     item.description = description
@@ -76,3 +78,5 @@ def get_only_names(items: list[BaseModel]) -> list[str]:
 class GetItemHelper:
     def __class_getitem__(cls, key: str) -> Item:
         return getattr(cls, key)
+
+

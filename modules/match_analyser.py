@@ -3,41 +3,68 @@ import json
 import math
 import pathlib
 import re
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Any, Tuple, Optional
+from typing import TypedDict
 
 import pandas as pd
 from fuzzywuzzy import fuzz
 
+from constants.performance.window import GameWindows, WindowType
 from constants.position import PositionConstant
-from constants.performance.window import GameWindows
+from models import PlayerGameData, PerformanceTotalData
 from utils import get_both_slot_values
+
+
+class MatchPlayer(TypedDict, total=False):
+    slot: int
+    slot_text: str
+    side: str
+
+    hero_npc_name: str | None
+    hero_npc_name_alias: str | None
+    hero_name_cdota: str | None
+    hero_id: int | None
+
+    position: int | None
+    position_id: int | None
+    position_name: str | None
+
+    player: str | None
+    player_id: int | None
+
+    opponents: list[int]
+
+    player_game_data: PlayerGameData | None
+    performance_total_data: PerformanceTotalData | None
 
 
 # MATCH PLAYER DATA
 class MatchPlayersData:
     def __init__(self):
         for x in range(10):
-            setattr(self, f'_{x}', {
-                'slot': x,
-                'slot_text': f'_{x}',
-                'side': 'sentinel' if x < 5 else 'dire',
+            setattr(self, f'_{x}', MatchPlayer(
+                slot=x,
+                slot_text=f'_{x}',
+                side='sentinel' if x < 5 else 'dire',
 
-                'hero_npc_name': None,
-                'hero_npc_name_alias': None,
-                'hero_name_cdota': None,
-                'hero_id': None,
+                hero_npc_name=None,
+                hero_npc_name_alias=None,
+                hero_name_cdota=None,
+                hero_id=None,
 
+                position=None,
+                position_id=None,
+                position_name=None,
 
-                'position': None,
-                'position_id': None,
-                'position_name': None,
+                player=None,
+                player_id=None,
 
-                'player': None,
-                'player_id': None,
+                opponents=[],
 
-                'opponents': [],
-
-            })
+                player_game_data=None,
+                performance_total_data=None,
+            )
+                    )
 
 
     def update_slot_info(self, slot: int, **kwargs) -> None:
@@ -57,7 +84,7 @@ class MatchPlayersData:
         setattr(self, f'_{slot}', info)
 
 
-    def get_pos_to_slot_by_side(self) -> Dict[str, Dict[int, int]]:
+    def get_pos_to_slot_by_side(self) -> dict[str, dict[int, int]]:
         all_players = self.get_all()
         data = {
             'sentinel': dict(),
@@ -69,33 +96,33 @@ class MatchPlayersData:
         return data
 
 
-    def get_name_slot_dict(self) -> Dict[str, int]:
+    def get_name_slot_dict(self) -> dict[str, int]:
         items = self.get_all()
         names = {x['hero_npc_name']: x['slot'] for x in items}
         alias = {x['hero_npc_name_alias']: x['slot'] for x in items if x['hero_npc_name_alias']}
         return {**names, **alias}
 
 
-    def get_all(self) -> List[Dict[str, Any]]:
+    def get_all(self) -> list[MatchPlayer]:
         return [getattr(self, f'_{x}') for x in range(10)]
 
 
-    def get_dire(self) -> list:
+    def get_dire(self) -> list[MatchPlayer]:
         return [getattr(self, f'_{x}') for x in range(10) if x >= 5]
 
 
-    def _get_by_name(self, key_name: str, value_name: str) -> dict:
+    def _get_by_name(self, key_name: str, value_name: str) -> MatchPlayer:
         for item in self.get_all():
             if item[key_name] == value_name:
                 return item
         raise KeyError
 
 
-    def get_by_cdata_name(self, name: str) -> dict:
+    def get_by_cdata_name(self, name: str) -> MatchPlayer:
         return self._get_by_name('name_cdata', name)
 
 
-    def get_by_ingame_name(self, name: str) -> dict:
+    def get_by_ingame_name(self, name: str) -> MatchPlayer:
         return self._get_by_name('name_ingame', name)
 
 
@@ -103,14 +130,14 @@ class MatchPlayersData:
         return '\n'.join([str(x) for x in self.get_all()])
 
 
-    def __getitem__(self, slot: int) -> Dict[str, Any]:
+    def __getitem__(self, slot: int) -> dict[str, Any]:
         if 0 <= slot < 10:
             return getattr(self, f'_{slot}')
         else:
             raise KeyError(f"No slot {slot}! Only ten players are in the game")
 
 
-    def set_position_from_dict(self, positions: Dict[str | int, int]):
+    def set_position_from_dict(self, positions: dict[str | int, int]):
         """
         :param positions: dictionary where key is the slot of the player and key is his position
         """
@@ -129,7 +156,7 @@ class MatchPlayersData:
             self._set_opponents()
 
 
-    def set_player_data_from_dict(self, players_info: Dict[int, Dict[str, Any]]):
+    def set_player_data_from_dict(self, players_info: dict[int, dict[str, Any]]):
         players = self.get_all()
         for player in players:
             player.update(players_info[player['slot']])
@@ -143,7 +170,7 @@ class MatchPlayersData:
         return
 
 
-    def set_position_from_list(self, opponents: List[int]):
+    def set_position_from_list(self, opponents: list[int]):
         players = self.get_all()
         for player, pos in zip(players, opponents):
             player['position'] = pos
@@ -192,10 +219,31 @@ def _compare_name_complex(cdota_name, npc_name) -> int:
     return fuzz.ratio(cdota_name_processed, npc_name_processed)
 
 
+class MatchWindow(TypedDict):
+    name: str
+    window_type: str
+    index: int
+    order: int
+
+    start_time: int | None
+    end_time: int | None
+
+    window_start: int | None
+    window_end: int | None
+    window_length: int | None
+
+    length: int
+    minutes: int
+
+    exists: bool
+    empty: bool | None
+    incomplete: bool
+    df: Any | None
+
+
 class MatchAnalyser:
     def __init__(self,
                  path: str | pathlib.Path,
-                 windows: List[Tuple[int, int, str]] = None,
                  match_id: Optional[int] = None,
                  ):
         self.path = path
@@ -208,32 +256,34 @@ class MatchAnalyser:
 
         self._is_match_windows_set = False
 
-        if not windows:
-            windows = GameWindows.ALL_WINDOWS_REAL
+        windows = GameWindows.VALUES_REAL
 
-        self._match_windows = [{'name': window.name,
-                                'window_type': window.window_type,
-                                'index': window.order,
+        self._match_windows = [MatchWindow(
+            name=window.name,
+            window_type=window.window_type,
+            index=window.index,
+            order=window.order,
 
-                                'start_time': None,
-                                'end_time': None,
+            start_time=None,
+            end_time=None,
 
-                                'window_start': window.start_time,
-                                'window_end': window.end_time,
-                                'window_length': window.length,
+            window_start=window.start_time,
+            window_end=window.end_time,
+            window_length=window.length,
 
-                                'length': 0,
-                                'minutes': 0,
+            length=0,
+            minutes=0,
 
-                                'exists': False,
-                                'empty': None,
-                                'incomplete': False,
-                                'df': None, } for window in windows]
+            exists=False,
+            empty=None,
+            incomplete=False,
+            df=None,
+        ) for window in windows]
 
-        self._windows_types = list(set([window['window_type'] for window in self._match_windows]))
+        self._windows_types = WindowType.VALUES
 
 
-    def get_players(self) -> List[dict]:
+    def get_players(self) -> list[dict]:
         return self.players.get_all()
 
 
@@ -340,7 +390,7 @@ class MatchAnalyser:
 
 
     @property
-    def match_windows(self) -> List[Dict[str, Any]]:
+    def match_windows(self) -> list[dict[str, Any]]:
         if self._is_match_windows_set:
             return copy.deepcopy(self._match_windows)
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
@@ -358,7 +408,7 @@ class MatchAnalyser:
                     break
 
 
-    def get_match_data(self) -> Dict[str, pd.DataFrame]:
+    def get_match_data(self) -> dict[str, pd.DataFrame]:
         current_window_index = None
 
         interval = []  # interval

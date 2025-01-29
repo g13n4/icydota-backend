@@ -3,46 +3,48 @@ from typing import Dict
 
 import pandas as pd
 
-from replay_parsing.modules import MatchSplitter
-from ..processing_utils import process_output, add_data_type_name
-from ...windows import GOLD_WINDOWS
+from constants.calculation.calculation_type.gold import GoldCalculations as Calculations
+from modules import MatchSplitter
+from modules.performance_data_processor import PerformanceDataProcessor
+from replay_parsing.processors import process_output
 
 
-gold_reasons = {
+GOLD_REASON = {
     # 0: 'starting gold',
-    1: 'death penalty',
-    6: 'gold for assist',
-    11: 'gold for killing buildings',
-    12: 'gold for killing heroes',
-    13: 'gold for killing creeps',
-    14: 'gold for killing neutrals',
-    15: 'gold for killing roshan',
-    16: 'gold for assisting killing couriers',
-    17: 'gold runes',
-    19: 'gold for flag bearer (and doom\'s devour)',
-    20: 'gold for wards',
-    21: 'gold for killing couriers',
+    1: (Calculations.death_penalty, Calculations.death_penalty_pm),
+    6: (Calculations.gold_for_assist, Calculations.gold_for_assist_pm),
+    11: (Calculations.gold_for_killing_buildings, Calculations.gold_for_killing_buildings_pm),
+    12: (Calculations.gold_for_killing_heroes, Calculations.gold_for_killing_heroes_pm),
+    13: (Calculations.gold_for_killing_creeps, Calculations.gold_for_killing_creeps_pm),
+    14: (Calculations.gold_for_killing_neutrals, Calculations.gold_for_killing_neutrals_pm),
+    15: (Calculations.gold_for_killing_roshan, Calculations.gold_for_killing_roshan_pm),
+    16: (Calculations.gold_for_assisting_killing_couriers, Calculations.gold_for_assisting_killing_couriers_pm),
+    17: (Calculations.gold_runes, Calculations.gold_runes_pm),
+    19: (Calculations.gold_for_flag_bearer_and_dooms_devour, Calculations.gold_for_flag_bearer_and_dooms_devour_pm),
+    20: (Calculations.gold_for_wards, Calculations.gold_for_wards_pm),
+    21: (Calculations.gold_for_killing_couriers, Calculations.gold_for_killing_couriers_pm),
 }
 
-
-PROCESSED_DATA_NAME = 'gold'
-AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
 PO = partial(process_output, allow_none=False)
 
-def process_gold_windows(df: pd.DataFrame, MS: MatchSplitter, players_to_slot: Dict[str, int]) -> dict:
+
+def process_gold_windows(
+        df: pd.DataFrame,
+        MS: MatchSplitter,
+        PDP: PerformanceDataProcessor,
+        players_to_slot: Dict[str, int]) -> None:
     df.replace(players_to_slot, inplace=True)
     wards_windows = MS.split_into_windows(df, use_index=False)
-
-    data = MS.create_windows(WINDOWS=GOLD_WINDOWS, AN=AN)
 
     for window in wards_windows:
         if window['exists']:
             agged_df = window['df'].groupby(['targetname', 'gold_reason'])['value'].sum()
-            for k, v in agged_df.to_dict().items():
+            for k, value in agged_df.to_dict().items():
                 slot, gold_reason = k
                 if gold_reason == 0:
                     continue
-                data[f'_{slot}'][AN(gold_reasons[gold_reason])][window['name']] = PO(v)
-                data[f'_{slot}'][AN(gold_reasons[gold_reason] + ' pm')][window['name']] = PO(v) / window['minutes']
 
-    return data
+                calc, calc_pm = GOLD_REASON[gold_reason]
+
+                PDP.set_value(slot=slot, calculation=calc, window_index=window['index'], value=value)
+                PDP.set_value(slot=slot, calculation=calc_pm, window_index=window['index'], value=value)

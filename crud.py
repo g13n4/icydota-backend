@@ -216,7 +216,7 @@ def flatten_league_game(game: Game, sent: GameData, dire: GameData, ):
         'name_dire': dire_name,
         'name_sent': sent_name,
         'duration': f'{game.duration // 60}:{game.duration % 60:02}',
-        'data': game_data_list,
+        'windows_data': game_data_list,
     }
 
 

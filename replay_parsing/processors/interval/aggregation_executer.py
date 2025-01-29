@@ -1,6 +1,9 @@
-import pandas as pd
 import numpy as np
-from ..processing_utils import normalise_output_type_wrapper
+import pandas as pd
+
+from constants.calculation.calculation_type.interval import IntervalCalculationAggregationMethod as AGG_METHOD
+from constants.calculation.calculation_type.interval import IntervalCalculationColumn as COLUMN
+from replay_parsing.processors import normalise_output_type_wrapper
 
 
 def _clean_division(x, y) -> int | float:
@@ -25,59 +28,62 @@ def _find_distance(axis_x: pd.Series, axis_y: pd.Series) -> pd.Series:
 
 @normalise_output_type_wrapper(allow_none=True)
 def execute_window_aggregation(df: pd.DataFrame,
-                               column: str,
-                               agg_type: str,
+                               column: COLUMN,
+                               agg_method: AGG_METHOD,
                                df_agg: pd.DataFrame):
-    if column == 'movement':
-        if not len(df['x']) or not len(df['y']):
-            return 0
+    match column:
+        case COLUMN.MOVEMENT:
+            if not len(df['x']) or not len(df['y']):
+                return 0
 
-        ser = _find_distance(df['x'], df['y'])
-    elif column == 'stacked':
-        ser = df['camps_stacked'] + df['creeps_stacked']
-    elif column == 'kda':
-        ser = df['kills'] + (df['assists'] * 0.5)
-    else:
-        ser = df[column]
+            ser = _find_distance(df['x'], df['y'])
+        case COLUMN.STACKED:
+            ser = df['camps_stacked'] + df['creeps_stacked']
+        case COLUMN.KDA:
+            ser = df['kills'] + (df['assists'] * 0.5)
+        case _:
+            ser = df[column.value]
 
     if not len(ser):
         return 0
 
     if column in df_agg:
-        ser_agg = df_agg[column]
+        ser_agg = df_agg[column.value]
     else:
         ser_agg = None
 
     # CASES
-    if agg_type == 'max':
-        return np.max(ser)
+    match (agg_method, agg_method):
+        case (AGG_METHOD.MAX, _):
+            return np.max(ser)
 
-    elif agg_type == 'gained_pm_median':
-        ser_pm = _get_by_minute_slice(ser)
-        shifted_ser_pm = _shift_series(ser_pm)
-        return np.median(ser_pm.iloc[1:] - shifted_ser_pm.iloc[1:])
+        case (AGG_METHOD.GAINED_PM_MEDIAN, _):
+            ser_pm = _get_by_minute_slice(ser)
+            shifted_ser_pm = _shift_series(ser_pm)
+            return np.median(ser_pm.iloc[1:] - shifted_ser_pm.iloc[1:])
 
-    elif agg_type == 'avg_(by_length)_pm':
-        if column == 'movement':
+        case (AGG_METHOD.AVG_BY_LENGTH_PM, COLUMN.MOVEMENT):
             return np.sum(ser) / (len(ser) / 60)
-        else:
+
+        case (AGG_METHOD.AVG_BY_LENGTH_PM, _):
             return (np.max(ser) - np.min(ser)) / (len(ser) / 60)
 
-    elif agg_type == 'gained_pw':
-        return (np.max(ser) - np.min(ser))
+        case (AGG_METHOD.GAINED_PW, _):
+            return (np.max(ser) - np.min(ser))
 
-    elif agg_type == 'max_global_perc':
-        ser_value = ser.max()
-        ser_agg_value = ser_agg.max()
-        return _clean_division(ser_value, ser_agg_value)
+        case (AGG_METHOD.MAX_GLOBAL_PERC, _):
+            ser_value = ser.max()
+            ser_agg_value = ser_agg.max()
+            return _clean_division(ser_value, ser_agg_value)
 
-    elif agg_type == 'sum':
-        return ser.sum()
+        case (AGG_METHOD.SUM, _):
+            return ser.sum()
 
-    elif agg_type == 'min':
-        return ser.min()
+        case (AGG_METHOD.MIN, _):
+            return ser.min()
 
-    elif agg_type == 'avg':
-        return ser.mean()
+        case (AGG_METHOD.AVG, _):
+            return ser.mean()
 
-    raise NameError(f"Aggregation type {agg_type} does not exist")
+        case (_, _):
+            raise NameError(f"Aggregation type {agg_method} does not exist")

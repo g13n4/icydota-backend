@@ -1,14 +1,8 @@
-from functools import partial
-
 import pandas as pd
 
-from replay_parsing.modules import MatchSplitter
-from ..processing_utils import add_data_type_name
-from ...windows import PINGS_WINDOWS
-
-
-PROCESSED_DATA_NAME = 'pings'
-AN = partial(add_data_type_name, text_to_add=PROCESSED_DATA_NAME)
+from constants.calculation.calculation_type.pings import PingsCalculations as Calculations
+from modules import MatchSplitter
+from modules.performance_data_processor import PerformanceDataProcessor
 
 
 def _aggregate_pings(df: pd.DataFrame | None) -> pd.DataFrame | None:
@@ -17,8 +11,7 @@ def _aggregate_pings(df: pd.DataFrame | None) -> pd.DataFrame | None:
     return df.groupby('slot')['type'].count()
 
 
-def process_pings_windows(df: pd.DataFrame, MS: MatchSplitter, ) -> dict:
-    players_windows = MS.create_windows(WINDOWS=PINGS_WINDOWS, AN=AN)
+def process_pings_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: PerformanceDataProcessor, ) -> None:
 
     pings_windows = MS.split_into_windows(df)
 
@@ -27,8 +20,14 @@ def process_pings_windows(df: pd.DataFrame, MS: MatchSplitter, ) -> dict:
             agged_df = _aggregate_pings(df_window['df'])
 
             values = agged_df.to_dict()
-            for k, v in values.items():
-                players_windows[f'_{k}'][AN('pings')][df_window['name']] = v
-                players_windows[f'_{k}'][AN('pings_per_minute')][df_window['name']] = v / df_window['minutes']
+            for slot, value in values.items():
+                per_min_value = value / df_window['minutes']
 
-    return players_windows
+                PDP.set_value(slot=slot, calculation=Calculations.pings, window_index=df_window['index'], value=value)
+                PDP.set_value(
+                    slot=slot,
+                    calculation=Calculations.pings_per_minute,
+                    window_index=df_window['index'],
+                    value=per_min_value,
+                )
+

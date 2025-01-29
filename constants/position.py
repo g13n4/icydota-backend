@@ -1,7 +1,7 @@
-from constants.helpers import Item, update_values
+from constants.helpers import Item, update_description
 
 
-@update_values
+@update_description
 class PositionConstant:
     CARRY: Item = Item(value=1, )
     MIDDLE: Item = Item(value=2, )

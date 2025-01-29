@@ -47,7 +47,7 @@ def to_table_format(data: List[dict], data_info: List[dict],  rows: list, sum_to
         "table_data": {
             'fields': fields,
             'meta': meta,
-            'data': data,
+            'windows_data': data,
         },
         "table_options": {
             "style": {
@@ -74,7 +74,7 @@ def to_table_format_cross_comparison(data: Dict[int, list],
     return {
         "table_data": {
             'fields': fields,
-            'data': [x for x in data.values()],
+            'windows_data': [x for x in data.values()],
         },
         "table_values": values_info,
         "loading": False,

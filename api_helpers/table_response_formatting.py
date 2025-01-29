@@ -67,7 +67,7 @@ def to_table_format(data: List[dict], value_mapping: list, rows: list, columns: 
         "table_data": {
             'fields': fields,
             'meta': meta,
-            'data': data,
+            'windows_data': data,
         },
         "value_mapping": value_mapping,
         "loading": False,
@@ -90,7 +90,7 @@ def to_table_format_cross_comparison(data: Dict[int, list],
     return {
         "table_data": {
             'fields': fields,
-            'data': [x for x in data.values()],
+            'windows_data': [x for x in data.values()],
         },
         "value_mapping": values_info,
         "loading": False,

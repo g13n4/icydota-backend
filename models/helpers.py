@@ -1,7 +1,11 @@
+from typing import ClassVar
 from typing import Dict
 
 import sqlalchemy as db
-from sqlmodel import Field, ForeignKey
+from pydantic import condecimal
+from sqlmodel import Field, SQLModel
+from sqlmodel import ForeignKey
+from constants.performance.window import Ga
 
 column_type = {
     "bigint": db.BIGINT,
@@ -11,11 +15,11 @@ column_type = {
 
 
 def _fk(
-    column: str,
-    key_name: str = "id",
-    col_type: str = "basic",
-    cascade: bool = False,
-    **column_kwargs,
+        column: str,
+        key_name: str = "id",
+        col_type: str = "basic",
+        cascade: bool = False,
+        **column_kwargs,
 ) -> Field:
     return Field(
         sa_column=db.Column(
@@ -35,7 +39,7 @@ DEFAULT_SA_KWARGS = {"cascade": "all,delete", "join_depth": 3, "lazy": "selectin
 
 
 def sa_kwargs_setter(
-    add_default: bool = False, *args, **kwargs
+        add_default: bool = False, *args, **kwargs
 ) -> Dict[str, str | int]:
     if add_default:
         kwargs = {
@@ -71,3 +75,4 @@ SMALLINT_FIELD_NOT_NULLABLE = Field(
         primary_key=False,
     )
 )
+

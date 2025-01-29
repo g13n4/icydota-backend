@@ -10,10 +10,7 @@ from sqlmodel import Field, Relationship, SQLModel
 class Position(SQLModel, table=True):
     __tablename__ = "positions"
 
-    id: int = Field(
-        default=None,
-        primary_key=True,
-    )  # position number
+    id: int = Field(default=None, primary_key=True, )  # position number
     name: str
 
     const: ClassVar[object] = PositionConstant

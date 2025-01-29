@@ -1,19 +1,18 @@
 from typing import List, Optional, ClassVar
 
-from pydantic import condecimal
 from sqlmodel import Field, Relationship, SQLModel
 
 from constants.game_performance import GamePerformanceConstant
-from constants.performance.total import TotalMeta
-from constants.performance.window import WindowMeta
-from modules.empty_mask_converter import EmptyMaskConverter
+from models.metaclasses import WindowMeta, TotalMeta
 
 from .helpers import (
     SMALLINT_FIELD_NULLABLE,
     _fk,
     sa_kwargs_setter,
 )
-from .performance_fields_type import PerformanceWindowField
+
+
+OFFSET = 1
 
 
 class GamePerformanceType(SQLModel, table=True):
@@ -25,7 +24,7 @@ class GamePerformanceType(SQLModel, table=True):
     description: Optional[str]
     is_active: bool = Field(default=True)
 
-    const: ClassVar[object] = GamePerformanceConstant
+    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
 
 
 class GamePerformance(SQLModel, table=True):
@@ -40,7 +39,6 @@ class GamePerformance(SQLModel, table=True):
         back_populates="gp"
     )
 
-
     cross_comparison_id: Optional[int] = _fk(
         "cross_comparison_types", col_type="smallint", index=True
     )
@@ -50,7 +48,6 @@ class GamePerformance(SQLModel, table=True):
             "cascade": "all,delete",
         },
     )
-
 
     comparison_id: Optional[int] = Field(
         default=None, foreign_key="comparison_types.id", index=True
@@ -104,20 +101,20 @@ class PerformanceDataCategory(SQLModel, table=True):
 
 
 class PerformanceDataCalculation(SQLModel, table=True):
-    __tablename__ = "performance_data_types"
+    __tablename__ = "performance_data_calculations"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
     is_active: bool = Field(default=True)
 
-    system_name: Optional[str]
+    description: Optional[str]
 
     data_category_id: Optional[int] = Field(
         default=None, foreign_key="performance_data_categories.id", index=True
     )
     data_category: Optional["PerformanceDataCategory"] = Relationship(
-        back_populates="data_type",
+        back_populates="data_calculation",
     )
 
 
@@ -126,10 +123,10 @@ class PerformanceWindowData(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    data_type_id: Optional[int] = Field(
-        default=None, foreign_key="performance_data_types.id", index=True
+    data_calculation_id: Optional[int] = Field(
+        default=None, foreign_key="performance_data_calculations.id", index=True
     )
-    data_type: Optional["PerformanceDataCalculation"] = Relationship(back_populates="pwd")
+    data_calculation: Optional["PerformanceDataCalculation"] = Relationship(back_populates="pwd")
 
     game_performance_id: Optional[int] = Field(
         default=None, foreign_key="games_performance.id", index=True
@@ -139,9 +136,8 @@ class PerformanceWindowData(SQLModel, table=True):
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
     # Fields to work with empty space
-    is_empty: bool = Field(default=False)
-    l_empty_mask: int = SMALLINT_FIELD_NULLABLE
-    g_empty_mask: int = SMALLINT_FIELD_NULLABLE
+    l_empty_mask: Optional[int] = SMALLINT_FIELD_NULLABLE
+    g_empty_mask: Optional[int] = SMALLINT_FIELD_NULLABLE
 
     performance_table_id: Optional[int] = Field(
         default=None, foreign_key="performance_windows_table.id", index=True
@@ -150,27 +146,6 @@ class PerformanceWindowData(SQLModel, table=True):
         back_populates="window_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
-
-    # @property
-    # def get_window_data(self) -> "PerformanceWindowTable":
-    #     if self.is_empty:
-    #         empty_fields = {field: None for field in PerformanceWindowField.ALL}
-    #         if self.l_empty_mask:
-    #             empty_fields.update(
-    #                 EmptyMaskConverter.convert_from_mask_to_dict(
-    #                     self.l_empty_mask, PerformanceWindowField.LANE
-    #                 )
-    #             )
-    #
-    #         elif self.g_empty_mask:
-    #             empty_fields.update(
-    #                 EmptyMaskConverter.convert_from_mask_to_dict(
-    #                     self.g_empty_mask, PerformanceWindowField.LANE
-    #                 )
-    #             )
-    #         return PerformanceWindowTable(**empty_fields)
-    #     else:
-    #         return self.perfomance_table
 
 
 class PerformanceWindowTable(SQLModel, table=True, metaclass=WindowMeta):

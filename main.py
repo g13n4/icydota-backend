@@ -121,7 +121,7 @@ async def get_performance_data_api(match_id: int,
                                    vertical: bool = True,
                                    db=Depends(get_async_db_session)):
     if (comparison and comparison) and flat is None:
-        raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
+        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be flat or percents")
 
     is_comparison = comparison in ["player", "general"]
     rows = []
@@ -163,7 +163,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
-        raise HTTPException(status_code=400, detail="Choose whether the data for comparison should be flat or percents")
+        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be flat or percents")
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(db_session=db,
                                                                             league_id=league_id,
@@ -261,9 +261,9 @@ async def get_default_menu_data_api(db=Depends(get_async_db_session)):
 
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
-    from tasks.process_helpers import process_league, process_game_helper
+    from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks_agg import approximate_positions_helper, aggregate_league_helper, cross_compare_league_helper, set_comparison_names_helper
-    from tasks_agg.bulk_process import process_full_cycle, mass_process
+    from tasks.bulk_aggregation_process import process_full_cycle, mass_process
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):

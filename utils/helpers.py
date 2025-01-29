@@ -5,7 +5,7 @@ from itertools import cycle
 from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
 from datetime import datetime
 
-
+import numpy as np
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
 
@@ -35,7 +35,6 @@ def get_both_slot_values(key: str | int) -> Tuple[str, int]:
         return f'_{key}', key
 
 
-
 def combine_slot_dicts(*args) -> dict:
     data = {f'_{x}': {} for x in range(10)}
     for x in range(10):
@@ -43,6 +42,15 @@ def combine_slot_dicts(*args) -> dict:
             key = f'_{x}'
             data[key].update(item[key])
     return data
+
+
+def is_invalid_value(value: Any) -> bool:
+    return value in [-np.inf, np.inf, np.nan, None]
+
+
+def to_bin_list(value: int) -> list[int]:
+    binary_string = bin(value)[1:]
+    return list(map(int, list(binary_string[::-1])))
 
 
 def get_obj_from_list(objs_list: list, **kwargs):

@@ -1,0 +1,19 @@
+from db import get_db
+from scripts.populate import create_buildings, create_game_performance_types, create_heroes, populate_performance_data, \
+    create_players_and_teams, create_positions
+
+
+def populate_all():
+    db_session = get_db()
+
+    print("Adding...")
+    create_buildings(db_session)
+    create_game_performance_types(db_session)
+    create_heroes(db_session)
+    populate_performance_data(db_session)
+    create_players_and_teams(db_session)
+    create_positions(db_session)
+
+    db_session.commit()
+
+    print("Done!")

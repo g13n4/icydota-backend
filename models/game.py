@@ -45,7 +45,7 @@ class Game(SQLModel, table=True):
     dire_team_id: int = _fk("teams")
     dire_win: bool
 
-    players_data: List["PlayerGameData"] = Relationship(
+    players_game_data: List["PlayerGameData"] = Relationship(
         back_populates="game", sa_relationship_kwargs=sa_kwargs_setter()
     )
 

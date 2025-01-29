@@ -125,7 +125,7 @@ def build_gp_subquery(comparison: bool, cross_comparison: bool, aggregation: boo
     :param comparison:
     :param cross_comparison:
     :param aggregation:
-    :param filter_by_match_id: Match id we add to remove future join with PGD which prevent from querying all data
+    :param filter_by_match_id: Match id we add to remove future join with PGD which prevent from querying all windows_data
            due to the lack of cross join
     :return:
     """

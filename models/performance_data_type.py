@@ -12,6 +12,7 @@ class ComparisonType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
+    # if flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     flat: bool = Field(index=True)  # percent or flat
 
     # if basic == True = pos 1 is compared to pos 1 and 3

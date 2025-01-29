@@ -9,7 +9,7 @@ class IncorrectDataCombination(Exception):
 
 class TableMinMaxFinder:
     """
-    Collecting data of maximum and minimum values of the columns and set an index number to it:
+    Collecting windows_data of maximum and minimum values of the columns and set an index number to it:
     Index values go from 0 to N where N is the index number of a list value where the colour is located
     i.e. colours = [white, blue, red, black] - table colours, index 0 means that the colour front-end needs to pick is white
     because white is colours[0]

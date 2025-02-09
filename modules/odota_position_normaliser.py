@@ -5,7 +5,8 @@ from typing import Dict, List, Any
 default_player_data_dict = {
     'hero_id': None,
     'neutral_kills': None,
-    'lane_role': None, }
+    'lane_role': None,
+    }
 
 
 def _move_two_to_the_end(item: int) -> int:

@@ -167,10 +167,6 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     players_dict = process_players(db_session, game_data['players'])
 
-    # DATA POOLS
-    heroes_all = get_all_sqlmodel_objs(db_session, Hero)
-    heroes_dict: Dict[int, Hero] = {x.id: x for x in heroes_all}  # "hero_id": 78,
-
     # APPROXIMATION POSITIONS
     approx_pos: dict = get_positions_approximations(db_session=db_session,
                                                     model=PositionApproximation,
@@ -190,6 +186,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         this_hero: int = player_info['hero_id']
         this_slot: int = player_info['player_slot']
+        this_facet: int = player_info.get('hero_variant', None)
 
         position_id: int = player_info['lane_role']
         this_position: int = approx_pos.get(players_dict[this_slot].account_id, position_id)
@@ -199,7 +196,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
             player_id=players_dict[this_slot].account_id,
 
             position_id=this_position,
-            hero_id=heroes_dict[this_hero].id,
+            hero_id=this_hero,
             lane=player_info['lane'],
             is_roaming=player_info['is_roaming'],
 
@@ -251,7 +248,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
         player_data_dict[this_slot] = {
             'position': this_position,
             'position_id': this_position,
-            'hero_id': heroes_dict[this_hero].id,
+            'hero_id': this_hero,
+            'facet_id': this_hero * 100 + this_facet,
             'player_id': players_dict[this_slot].account_id,
             'player_game_data': PGD_obj,
             'performance_total_data': PTD_obj,
@@ -275,7 +273,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
         logger=logger,
     )
 
-    logger.info(f"Creating Game object...")
+    logger.info("Creating Game object...")
 
     game = Game(
         id=match_id,

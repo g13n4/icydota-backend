@@ -4,27 +4,11 @@ from typing import Optional, Tuple, Dict, List
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models import ComparisonType, DataAggregationType
+from models import ComparisonType, AggregationType
 from models import Hero, Player, Position
-from models import PerformanceWindowData, GamePerformance, PlayerGameData, PerformanceTotalData
+from models import PlayerGameData
+from models.performance import GamePerformance, PerformanceTotalData, PerformanceWindowData
 from utils import is_na_decimal, TableMinMaxFinder
-from .model_field_info import TO_EXCLUDE_FOR_GAME, TO_EXCLUDE_FOR_LANE, LANE_FIELDS, GAME_FIELDS
-from replay_parsing.modules.empty_performance import PerformanceMaskHandler
-
-PMH = PerformanceMaskHandler(LANE_FIELDS, GAME_FIELDS)
-
-
-def combine_dict_fields(dict_: dict, cfi: dict) -> dict:
-    dict_[cfi['field_name']] = cfi['pattern'].format(**dict_)
-    dict_ = {k: v for k, v in dict_.items() if k not in cfi['fields_to_use']}
-    return dict_
-
-
-def modify_compared_to_field(item: dict, data_to_use: dict):
-    this_hero = data_to_use[item['hero']]
-    hero_name = this_hero['player']
-    hero_pos = this_hero['hero']
-    item['compared_to'] = f''
 
 
 def _process_name_fields(name_fields: List[str], values: list,
@@ -329,7 +313,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     gp_subq = build_gp_subquery(comparison=is_comparison, cross_comparison=False, aggregation=True)
 
-    clauses = [(DataAggregationType.league_id == league_id, -1), ]
+    clauses = [(AggregationType.league_id == league_id, -1), ]
     exclude = []
 
     is_wd, model = get_data_model(data_type=data_type, game_stage=game_stage, clauses=clauses, exclude=exclude)
@@ -337,7 +321,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
     # QUERY BUILDING
     select_query = (select(*[model, agg_type_dict[aggregation_type]])
                     .join(gp_subq, onclause=gp_subq.c.id == model.game_performance_id)
-                    .join(DataAggregationType, onclause=gp_subq.c.aggregation_id == DataAggregationType.id))
+                    .join(AggregationType, onclause=gp_subq.c.aggregation_id == AggregationType.id))
 
     # COMPARISON
     if is_comparison:
@@ -346,14 +330,14 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
     # AGGREGATION
     if aggregation_type == "position":
-        select_query = select_query.join(Position, onclause=DataAggregationType.position_id == Position.id)
-        clauses.append((DataAggregationType.by_position == True, 1))
+        select_query = select_query.join(Position, onclause=AggregationType.position_id == Position.id)
+        clauses.append((AggregationType.by_position == True, 1))
     elif aggregation_type == "player":
-        select_query = select_query.join(Player, onclause=DataAggregationType.player_id == Player.account_id)
-        clauses.append((DataAggregationType.by_player == True, 1))
+        select_query = select_query.join(Player, onclause=AggregationType.player_id == Player.account_id)
+        clauses.append((AggregationType.by_player == True, 1))
     else:
-        select_query = select_query.join(Hero, onclause=DataAggregationType.hero_id == Hero.id)
-        clauses.append((DataAggregationType.by_hero == True, 1))
+        select_query = select_query.join(Hero, onclause=AggregationType.hero_id == Hero.id)
+        clauses.append((AggregationType.by_hero == True, 1))
 
     # SORTING CLAUSES TO FILTER
     clauses = [clause for clause, priority in sorted(clauses, reverse=True, key=lambda x: x[1])]
@@ -388,13 +372,13 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 data_type: int,
                                                 flat: bool, ):
     fields_dict = {
-        "hero": [Hero.name, Hero.id,  DataAggregationType.hero_cross_cps_id],
-        "player": [Player.nickname, Player.account_id,  DataAggregationType.player_cross_cps_id],
+        "hero": [Hero.name, Hero.id, AggregationType.hero_cross_cps_id],
+        "player": [Player.nickname, Player.account_id, AggregationType.player_cross_cps_id],
     }
 
     gp_subq = build_gp_subquery(comparison=True, cross_comparison=True, aggregation=True)
 
-    clauses = [(DataAggregationType.league_id == league_id, -1),
+    clauses = [(AggregationType.league_id == league_id, -1),
                (ComparisonType.flat == flat, 2), ]
 
     select_fields = fields_dict[aggregation_type]
@@ -407,23 +391,23 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
     # QUERY BUILDING
     select_query = (select(*select_fields)
                     .join(gp_subq, gp_subq.c.id == model.game_performance_id)
-                    .join(DataAggregationType, DataAggregationType.id == gp_subq.c.aggregation_id)
+                    .join(AggregationType, AggregationType.id == gp_subq.c.aggregation_id)
                     .join(ComparisonType, ComparisonType.id == gp_subq.c.comparison_id))
 
     # AGGREGATION
     if aggregation_type == "player":
-        select_query = select_query.join(Player, onclause=DataAggregationType.player_id == Player.account_id)
-        clauses.append((DataAggregationType.pos_player_cross == True, 1))
+        select_query = select_query.join(Player, onclause=AggregationType.player_id == Player.account_id)
+        clauses.append((AggregationType.pos_player_cross == True, 1))
     else:
-        select_query = select_query.join(Hero, onclause=DataAggregationType.hero_id == Hero.id)
-        clauses.append((DataAggregationType.pos_hero_cross == True, 1))
+        select_query = select_query.join(Hero, onclause=AggregationType.hero_id == Hero.id)
+        clauses.append((AggregationType.pos_hero_cross == True, 1))
 
     if position == 'support':
-        clauses.append((DataAggregationType.sup_cross == True, 1))
+        clauses.append((AggregationType.sup_cross == True, 1))
     elif position == 'core':
-        clauses.append((DataAggregationType.carry_cross == True, 1))
+        clauses.append((AggregationType.carry_cross == True, 1))
     else:
-        clauses.append((DataAggregationType.mid_cross == True, 1))
+        clauses.append((AggregationType.mid_cross == True, 1))
 
     clauses = [clause for clause, priority in sorted(clauses, reverse=True, key=lambda x: x[1])]
 

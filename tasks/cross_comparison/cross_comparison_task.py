@@ -7,7 +7,7 @@ from celery.utils.log import get_task_logger
 from sqlmodel import Session, select, col
 
 from db import get_sync_db_session
-from models import DataAggregationType, PerformanceWindowData, GamePerformance, PerformanceTotalData, ComparisonType, \
+from models import AggregationType, PerformanceWindowData, GamePerformance, PerformanceTotalData, ComparisonType, \
     PlayerGameData
 from models import Game
 from utils import get_sqlmodel_fields, to_dec
@@ -251,7 +251,7 @@ def create_cross_comparison_aggregation(league_id: int):
                     wd_items = [_create_obj(x, PerformanceWindowData, total=False) for x in this_wd_data[key]]
                     td_items = [_create_obj(x, PerformanceTotalData, total=True) for x in this_td_data[key]]
 
-                    DAT = DataAggregationType(
+                    DAT = AggregationType(
                         league_id=league_id,
                         less3=False,
                         **agg_obj_data,

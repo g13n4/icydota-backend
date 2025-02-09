@@ -15,29 +15,12 @@ from .helpers import (
 OFFSET = 1
 
 
-class GamePerformanceType(SQLModel, table=True):
-    __tablename__ = "game_performance_types"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-
-    name: str
-    description: Optional[str]
-    is_active: bool = Field(default=True)
-
-    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
-
-
 class GamePerformance(SQLModel, table=True):
     __tablename__ = "games_performance"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    performance_type_id: Optional[int] = _fk(
-        "game_performance_types", col_type="smallint", index=True
-    )
-    performance_type: Optional["GamePerformanceType"] = Relationship(
-        back_populates="gp"
-    )
+    type: int
 
     cross_comparison_id: Optional[int] = _fk(
         "cross_comparison_types", col_type="smallint", index=True
@@ -62,7 +45,7 @@ class GamePerformance(SQLModel, table=True):
     aggregation_id: Optional[int] = Field(
         default=None, foreign_key="data_aggregation_types.id", index=True
     )
-    aggregation_type: Optional["DataAggregationType"] = Relationship(
+    aggregation_type: Optional["AggregationType"] = Relationship(
         back_populates="performance",
         sa_relationship_kwargs={
             "cascade": "all,delete",
@@ -84,6 +67,7 @@ class GamePerformance(SQLModel, table=True):
         back_populates="performance"
     )
 
+    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
 
 # PERFORMANCE DATA
 class PerformanceDataCategory(SQLModel, table=True):

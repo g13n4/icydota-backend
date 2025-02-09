@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import condecimal, BaseModel
 
 
@@ -5,7 +7,7 @@ MINUTE = 60
 
 
 class GameTotal(BaseModel):
-    value_type: type | condecimal
+    value_type: Any
 
     index: int
     name: str = ''

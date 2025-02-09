@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
+from typing_extensions import ClassVar
+
+from constants.aggregation import AggregationConstant
 from .helpers import _fk
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
@@ -33,6 +36,9 @@ class ComparisonType(SQLModel, table=True):
     hero_cpd_id: Optional[int] = _fk("heroes")
     hero_cps_id: Optional[int] = _fk("heroes")
 
+    facet_cpd_id: Optional[int] = _fk("facets")
+    facet_cps_id: Optional[int] = _fk("facets")
+
     pos_cpd_id: Optional[int] = _fk("positions")
     pos_cps_id: Optional[int] = _fk("positions")
 
@@ -40,7 +46,7 @@ class ComparisonType(SQLModel, table=True):
 
 
 # AGGREGATION
-class DataAggregationType(SQLModel, table=True):
+class AggregationType(SQLModel, table=True):
     __tablename__ = "data_aggregation_types"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -52,19 +58,19 @@ class DataAggregationType(SQLModel, table=True):
         }
     )
 
+    type: int
     # We can combine IDs to show that a hero can be flexed
-    by_player: bool = Field(default=False, index=True)
     player_id: Optional[int] = _fk("players", "account_id")
 
-    by_hero: bool = Field(default=False, index=True)
     hero_id: Optional[int] = _fk("heroes")
+    facet_id: Optional[int] = _fk("facets")
 
-    by_position: bool = Field(default=False, index=True)
     position_id: Optional[int] = _fk("positions")
 
     performance: Optional["GamePerformance"] = Relationship(
         back_populates="aggregation"
     )
+    const: ClassVar[AggregationConstant] = AggregationConstant
 
 
 # CROSS COMPARISON
@@ -92,6 +98,9 @@ class CrossComparisonType(SQLModel, table=True):
 
     hero_id: Optional[int] = _fk("heroes")
     hero_cross_cps_id: Optional[int] = _fk("heroes")
+
+    facet_id: Optional[int] = _fk("facets")
+    facet_cps_id: Optional[int] = _fk("facets")
 
     position_id: Optional[int] = _fk("positions")
     position_cross_cps_id: Optional[int] = _fk("positions")

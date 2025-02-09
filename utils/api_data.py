@@ -30,3 +30,5 @@ def get_stratz_player_data() -> dict | None:
         return r.json()
     else:
         raise ConnectionError(f"Can't access STRATZ. Request code {r.status_code} {r.content}")
+
+

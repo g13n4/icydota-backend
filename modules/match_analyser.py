@@ -24,6 +24,7 @@ class MatchPlayer(TypedDict, total=False):
     hero_npc_name_alias: str | None
     hero_name_cdota: str | None
     hero_id: int | None
+    facet_id: int | None
 
     position: int | None
     position_id: int | None
@@ -51,6 +52,7 @@ class MatchPlayersData:
                 hero_npc_name_alias=None,
                 hero_name_cdota=None,
                 hero_id=None,
+                facet_id=None,
 
                 position=None,
                 position_id=None,

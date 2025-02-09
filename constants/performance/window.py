@@ -34,11 +34,11 @@ class GameWindow(BaseModel):
 
 
 def set_window_name(klass: object):
-    for name, type_ in klass.__annotations__:
+    for name, type_ in klass.__annotations__.items():
         if type_ is GameWindow:
             value = getattr(klass, name)
             value.name = name
-    return object
+    return klass
 
 
 class WindowType:
@@ -66,7 +66,7 @@ class LaneStageWindows:
     l_empty_mask: str = 'l_empty_mask'
 
     VALUES: list[GameWindow] = [l2, l4, l6, l8, l10, ltotal]
-    VALUES_NAME: list[GameWindow] = get_only_names(VALUES)
+    VALUES_NAMES: list[GameWindow] = get_only_names(VALUES)
 
     VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10]
     VALUES_REAL_NAME: list[GameWindow] = get_only_names(VALUES_REAL)

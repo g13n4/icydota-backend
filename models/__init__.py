@@ -3,20 +3,10 @@ from .building import Building, BuildingData, BuildingDestroyed, BuildingNotDest
 from .entity_ingame import Facet, Hero
 from .entity_irl import League, Player, Position, Team
 from .game import Game, GameData, PlayerGameData
-from .performance import (
-    GamePerformance,
-    GamePerformanceType,
-    PerformanceDataCategory,
-    PerformanceDataCalculation,
-    PerformanceTotalData,
-    PerformanceWindowData,
-    PerformanceWindowField,
-    PerformanceWindowTable,
-)
 from .performance_data_type import (
     ComparisonType,
     CrossComparisonType,
-    DataAggregationType,
+    AggregationType,
 )
 from .position_appoximation import PositionApproximation
 from .ranking import (

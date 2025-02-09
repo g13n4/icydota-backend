@@ -8,7 +8,8 @@ from constants.calculation.calculation_type.aggregation import TotalAggregationM
 from constants.calculation.calculation_type.helpers import CalculationItem
 from constants.calculation.calculation_types import WindowCalculations
 from constants.performance.window import GameWindows
-from models import GamePerformance, GamePerformanceType, ComparisonType, PlayerGameData
+from models import ComparisonType, PlayerGameData
+from models.performance import GamePerformanceType, GamePerformance
 from modules.match_analyser import MatchPlayer
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
@@ -106,6 +107,9 @@ class PerformanceDataProcessor:
 
                     hero_cpd_id=comparandum_data['hero_id'],
                     hero_cps_id=comparans_data['hero_id'],
+
+                    facet_cpd_id=comparandum_data['facet_id'],
+                    facet_cps_id=comparans_data['facet_id'],
 
                     pos_cpd_id=comparandum_data['position_id'],
                     pos_cps_id=comparans_data['position_id'],

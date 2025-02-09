@@ -10,6 +10,13 @@ class Item(BaseModel):
     description: str = ''
 
 
+    def __eq__(self, other):
+        is_eq_value = isinstance(other, int) and self.value == other
+        is_eq_name = isinstance(other, str) and self.name == other
+
+        return (super().__eq__(other) or is_eq_value or is_eq_name)
+
+
 def include_CV_types(types: list[Any]) -> list[Any]:
     """
     Adds ClassVar to types provided in a list

@@ -4,7 +4,7 @@ from sqlmodel import Session, select, col, text
 from typing import Any
 
 from db import get_sync_db_session
-from models import DataAggregationType, GamePerformance
+from models import AggregationType, GamePerformance
 
 
 logger = get_task_logger(__name__)
@@ -45,16 +45,16 @@ def remove_aggregation_data(league_id: int, cross_comparison: bool) -> None:
 
     db_session: Session = get_sync_db_session(expire=False)
     gp_ids = db_session.exec(select(GamePerformance.id)
-                             .join(DataAggregationType,
-                                   onclause=GamePerformance.aggregation_id == DataAggregationType.id)
-                             .where(DataAggregationType.league_id == league_id,
+                             .join(AggregationType,
+                                   onclause=GamePerformance.aggregation_id == AggregationType.id)
+                             .where(AggregationType.league_id == league_id,
                                     GamePerformance.is_aggregation == True,
                                     GamePerformance.cross_comparison == cross_comparison)).all()
 
     if gp_ids:
         gp_ids_sql = str(tuple(gp_ids))
         # set fk to null in gp
-        logger.info(f'Nullifying fk in Game Performance...')
+        logger.info('Nullifying fk in Game Performance...')
         _set_null_values_gp_sql(db_session, gp_ids_sql)
         # set fk to null in performance
         logger.info(f'Deleting Performance Data...')

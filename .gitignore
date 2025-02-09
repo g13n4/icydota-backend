@@ -170,3 +170,8 @@ temp_data/
 
 # CONDA
 .conda
+
+
+# GIT MODULES
+dotaconstants/
+

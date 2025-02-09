@@ -1,11 +1,9 @@
-from typing import ClassVar
 from typing import Dict
 
 import sqlalchemy as db
-from pydantic import condecimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlmodel import ForeignKey
-from constants.performance.window import Ga
+
 
 column_type = {
     "bigint": db.BIGINT,

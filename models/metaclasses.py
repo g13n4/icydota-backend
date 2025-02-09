@@ -2,6 +2,7 @@ from typing import Optional, ClassVar
 
 from pydantic import condecimal
 from sqlmodel import Field, SQLModel
+
 from constants.performance.total import GameTotals
 from constants.performance.window import GameWindows
 
@@ -15,7 +16,7 @@ class WindowMeta(type(SQLModel)):
 
         for name, annotation_type in GameWindows.__annotations__.items():
             game_window_value = getattr(GameWindows, name)
-            if isinstance(annotation_type, GameWindows):
+            if type(annotation_type) is GameWindows:
                 # create it for pydantic
                 setattr(cls, name, Field(default=None, nullable=True))
                 cls.__annotations__[name] = condecimal(max_digits=10, decimal_places=2)

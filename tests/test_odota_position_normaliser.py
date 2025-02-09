@@ -1,7 +1,6 @@
 import unittest
 
-from replay_parsing import ODOTAPositionNormaliser
-
+from modules import ODOTAPositionNormaliser
 
 MOCK_DATA_ONE = ([{'hero_id': 58, 'neutral_kills': 9, 'lane_role': 1},
                   {'hero_id': 65, 'neutral_kills': 43, 'lane_role': 2},

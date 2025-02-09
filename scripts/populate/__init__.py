@@ -4,3 +4,4 @@ from scripts.populate.populate_heroes import create_heroes
 from scripts.populate.populate_performance_data import populate_performance_data
 from scripts.populate.populate_players_and_teams import create_players_and_teams
 from scripts.populate.populate_positions import create_positions
+from scripts.populate.populate_facets import create_facets

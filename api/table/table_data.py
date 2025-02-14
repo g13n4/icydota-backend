@@ -2,7 +2,7 @@ from typing import Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.helpers import process_db_output, extract_window_data_for_field
+from api.table.helpers import process_db_output, extract_window_data_for_field
 from modules.performance_query_creator import PerformanceQueryCreator
 from utils import is_na_decimal, TableMinMaxFinder
 

@@ -12,7 +12,7 @@ from models import AggregationType, PerformanceWindowData, GamePerformance, Perf
 from models import Game
 from utils import get_sqlmodel_fields, to_dec
 from replay_parsing import PerformanceMaskHandler
-from api.model_field_info import LANE_FIELDS, GAME_FIELDS
+from api import LANE_FIELDS, GAME_FIELDS
 
 
 logger = get_task_logger(__name__)

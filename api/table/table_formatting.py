@@ -1,4 +1,6 @@
 from typing import List, Optional, Dict
+
+from helpers import to_proper_name
 from utils import PERFORMANCE_FIELD_DICT, performance_data_sort_rating
 
 
@@ -6,7 +8,7 @@ def get_field_name(value: str, sum_total: Optional[bool] = None):
     if value.endswith('total'):
         field_name = PERFORMANCE_FIELD_DICT[value]
         if sum_total is None:
-            field_name += ''
+            field_name += ' (not calculated)'
         elif sum_total:
             field_name += ' (SUM)'
         else:
@@ -33,7 +35,6 @@ def to_table_format(
         columns: Optional[list] = None,
         sum_total: Optional[bool] = None,
 ) -> dict:
-    # TODO: FIX SUM_TOTAL RIGHT NOW CALCULATING IT'S PRETTY MUCH IMPOSSIBLE. ADD AGG_TYPE TO DB MODELS
 
     if not data:
         return {}
@@ -65,6 +66,10 @@ def to_table_format(
             'fields': fields,
             'meta': meta,
             'windows_data': data,
+        },
+        "table_options": {
+            "style": {
+                "layoutWidthType": 'colAdaptive', },
         },
         "value_mapping": value_mapping,
         "loading": False,

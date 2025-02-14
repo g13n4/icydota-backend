@@ -5,17 +5,16 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from sqlmodel import select
 
-from api_helpers import get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, \
+from api import get_performance_data, get_aggregated_performance_data, get_cross_comparison_performance_data, \
     to_table_format_cross_comparison, to_table_format, get_performance_data_comparison
 from crud import get_items, get_categories_menu, get_field_types, \
     get_league_header, get_league_games, get_league_games_info, \
     get_default_menu_data
-from db import get_sync_db_session, get_async_db_session
-from models import PerformanceDataType, PerformanceDataCategory, League
+from db import get_async_db_session
+from models import League
+from models.performance import PerformanceDataCalculation, PerformanceDataCalculationCategory
 from utils import CaseInsensitiveEnum
-
 
 load_dotenv()
 
@@ -80,12 +79,6 @@ async def get_league_header_api(db=Depends(get_async_db_session)):
 
 
 # DATA
-class AggregationTypes(CaseInsensitiveEnum):
-    position = "position"
-    hero = "hero"
-    player = "player"
-
-
 class CrossAggregationTypes(CaseInsensitiveEnum):
     hero = "hero"
     player = "player"
@@ -112,6 +105,12 @@ class FieldTypes(CaseInsensitiveEnum):
     total = "total"
 
 
+COMPARISON_DICT = {
+    "player": False,
+    "general": True,
+}
+
+
 @icydota_api.get(API_PREFIX + '/performance_data/{match_id}/{data_type}')
 async def get_performance_data_api(match_id: int,
                                    data_type: int,
@@ -123,29 +122,24 @@ async def get_performance_data_api(match_id: int,
     if (comparison and comparison) and flat is None:
         raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be flat or percents")
 
-    is_comparison = comparison in ["player", "general"]
-    rows = []
-    columns = []
+    is_comparison = COMPARISON_DICT.get(comparison, None)
 
-    if not is_comparison:
-        items, value_mapping, sum_total, rows = await get_performance_data(db_session=db,
+    if is_comparison is None:
+        items, value_mapping, sum_total = await get_performance_data(db_session=db,
                                                                            match_id=match_id,
                                                                            data_type=data_type,
                                                                            game_stage=game_stage.value,
-                                                                           is_vertical=vertical)
+                                                                           )
     else:
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(db_session=db,
                                                                                       match_id=match_id,
                                                                                       data_type=data_type,
                                                                                       game_stage=game_stage.value,
-                                                                                      p_comparison=comparison == "player",
-                                                                                      flat=flat, is_vertical=vertical)
+                                                                                      basic=comparison == "player",
+                                                                                      flat=flat,
+                                                                                      )
 
-    if vertical:
-        columns = rows
-        rows = ['type']
-
-    output = to_table_format(items, value_mapping, rows, columns=columns, sum_total=sum_total, is_vertical=vertical)
+    output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
 
     if not output:
         raise HTTPException(status_code=404)
@@ -156,7 +150,7 @@ async def get_performance_data_api(match_id: int,
 
 @icydota_api.get(API_PREFIX + '/performance_aggregated_data/{league_id}/{data_type}/{aggregation_type}')
 async def get_performance_aggregated_data_api(league_id: int,
-                                              aggregation_type: AggregationTypes,
+                                              aggregation_type: int,
                                               game_stage: GameStage,
                                               data_type: int,
                                               comparison: bool = False,
@@ -216,9 +210,9 @@ async def get_field_types_api(field_type: FieldTypes):
     return field_types
 
 
-@icydota_api.get(API_PREFIX + '/types/')
+@icydota_api.get(API_PREFIX + '/calcs/')
 async def get_performance_types(db=Depends(get_async_db_session)):
-    categories = await get_items(db, PerformanceDataType)
+    categories = await get_items(db, PerformanceDataCalculation)
     return categories.all()
 
 
@@ -230,17 +224,8 @@ async def get_leagues(db=Depends(get_async_db_session)):
 
 @icydota_api.get(API_PREFIX + '/categories/')
 async def get_performance_categories(db=Depends(get_async_db_session)):
-    categories = await get_items(db, PerformanceDataCategory)
+    categories = await get_items(db, PerformanceDataCalculationCategory)
     return categories.all()
-
-
-@icydota_api.get(API_PREFIX + '/types/{type_id}')
-def get_performance_types(type_id: Optional[int],
-                          db=Depends(get_sync_db_session)):
-    types = db.exec(select(PerformanceDataType)
-                    .where(PerformanceDataType.data_category_id == type_id)).all()
-
-    return types
 
 
 @icydota_api.get(API_PREFIX + '/games/{league_id}')

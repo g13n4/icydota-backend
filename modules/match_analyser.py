@@ -9,7 +9,7 @@ from typing import TypedDict
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-from constants.performance.window import GameWindows, WindowType
+from constants.performance.window import AllWindows, WindowType
 from constants.position import PositionConstant
 from models import PlayerGameData, PerformanceTotalData
 from utils import get_both_slot_values
@@ -258,7 +258,7 @@ class MatchAnalyser:
 
         self._is_match_windows_set = False
 
-        windows = GameWindows.VALUES_REAL
+        windows = AllWindows.VALUES_REAL
 
         self._match_windows = [MatchWindow(
             name=window.name,

@@ -1,9 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from utils import PERFORMANCE_FIELD_DICT, performance_data_sort_rating
-
-
-def to_proper_name(value: str, split: str = '_') -> str:
-    return ' '.join(value.split(split)).capitalize()
 
 
 def get_field_name(value: str, sum_total: Optional[bool] = None):
@@ -30,8 +26,13 @@ def update_row_fields(data: List[dict], rows: list[str]) -> None:
             item[row] = get_field_name(item[row])
 
 
-def to_table_format(data: List[dict], value_mapping: list, rows: list, columns: Optional[list] = None,
-                    sum_total: Optional[bool] = None, is_vertical: bool = False) -> dict:
+def to_table_format(
+        data: List[dict],
+        value_mapping: list,
+        rows: list,
+        columns: Optional[list] = None,
+        sum_total: Optional[bool] = None,
+) -> dict:
     # TODO: FIX SUM_TOTAL RIGHT NOW CALCULATING IT'S PRETTY MUCH IMPOSSIBLE. ADD AGG_TYPE TO DB MODELS
 
     if not data:
@@ -45,23 +46,19 @@ def to_table_format(data: List[dict], value_mapping: list, rows: list, columns: 
     values = sorted([key_name for key_name in item.keys() if key_name not in rows],
                     key=performance_data_sort_rating)
 
-    if is_vertical:
-        fields = {'rows': rows,
-                  'columns': columns,
-                  'values': ['value'],
-                  'valueInCols': True, }
+    fields = {
+        'rows': rows,
+              'columns': columns,
+              'values': values,
+              'valueInCols': True,
+    }
 
-        update_row_fields(data, rows)
-
-    else:
-        fields = {'rows': rows,
-                  'columns': columns,
-                  'values': values,
-                  'valueInCols': True, }
-
-    meta = [{
+    meta = [
+        {
         'field': x,
-        'name': get_field_name(x, sum_total), } for x in item.keys()]
+        'name': get_field_name(x, sum_total),
+    } for x in item.keys()
+    ]
 
     return {
         "table_data": {
@@ -83,8 +80,7 @@ def to_table_format_cross_comparison(data: Dict[int, list],
 
     fields = {'rows': [aggregation_type],  # hero/pos/player | l2/g2/etc
               'columns': [],
-              'values': sorted(data.keys(),
-                               key=lambda x: str(x).lower()),  # classic windows/ total_values
+              'values': sorted(data.keys(), key=lambda x: str(x).lower()),  # classic windows/ total_values
               'valueInCols': True, }
 
     return {

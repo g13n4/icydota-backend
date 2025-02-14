@@ -7,9 +7,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from constants.calculation.calculation_type.aggregation import TotalAggregationMethod
 from constants.calculation.calculation_type.helpers import CalculationItem
 from constants.calculation.calculation_types import WindowCalculations
-from constants.performance.window import GameWindows
+from constants.performance.window import AllWindows
 from models import ComparisonType, PlayerGameData
-from models.performance import GamePerformanceType, GamePerformance
+from models.performance import GamePerformance
 from modules.match_analyser import MatchPlayer
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
@@ -28,10 +28,10 @@ def create_totals_map(calculations: list) -> dict[int, list[int]]:
 
 class PerformanceDataProcessor:
     ROWS_SIZE = len(WindowCalculations.VALUES)
-    COLUMNS_SIZE = len(GameWindows.VALUES)
+    COLUMNS_SIZE = len(AllWindows.VALUES)
 
     TOTALS_MAP = create_totals_map(WindowCalculations.VALUES)
-    COLUMN_MAP = {item.name: item.index - OFFSET for item in GameWindows.VALUES}
+    COLUMN_MAP = {item.name: item.index - OFFSET for item in AllWindows.VALUES}
 
     def __init__(self, db_session: AsyncSession, players_data: list[MatchPlayer], ):
         self.session = db_session
@@ -52,7 +52,7 @@ class PerformanceDataProcessor:
 
     def calculate_totals(self):
         for name, matrix in self.windows_data.items():
-            for windows, total_window in GameWindows.WINDOWS_PROCESSING:
+            for windows, total_window in AllWindows.WINDOWS_PROCESSING:
                 columns_idxs = [item.index - OFFSET for item in windows]
                 total_window_idx = total_window.index - OFFSET
 
@@ -65,7 +65,7 @@ class PerformanceDataProcessor:
         slot_data = self.players_data[slot]
 
         GP_obj = GamePerformance(
-            performance_type_id=GamePerformanceType.const.MATCH_DATA,
+            type=GamePerformance.const.MATCH_DATA,
             player_game_data=slot_data['player_game_data'],
             total_data=slot_data['performance_total_data'],
         )
@@ -116,7 +116,7 @@ class PerformanceDataProcessor:
                 )
 
                 GP_obj = GamePerformance(
-                    performance_type_id=GamePerformanceType.const.MATCH_DATA_COMPARISON,
+                    type=GamePerformance.const.MATCH_DATA_COMPARISON,
                     player_game_data=comparandum_data['player_game_data'],
                     comparison_type=comparison_obj,
                 )
@@ -156,7 +156,7 @@ class PerformanceDataProcessor:
             )
 
             GP_obj = GamePerformance(
-                performance_type_id=GamePerformanceType.const.MATCH_DATA_COMPARISON,
+                type=GamePerformance.const.MATCH_DATA_COMPARISON,
                 player_game_data=comparandum_data['player_game_data'],
                 comparison_type=comparison_obj,
             )

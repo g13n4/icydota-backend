@@ -5,12 +5,13 @@ from sqlalchemy.orm import aliased
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api_helpers import LANE_FIELDS, GAME_FIELDS, WINDOW_FIELDS_FILTERED, TOTAL_FIELDS_FILTERED
 from models import League, Game
-from models import PerformanceDataCategory, GameData
+from models import, GameData
+from models.performance import PerformanceDataCalculationCategory
 from utils.sorting_rating import gamedata_sort_rating
 from utils.translation_dictionary import PERFORMANCE_FIELD_DICT, GAMEDATA_FIELD_DICT
 from utils.helpers import to_str_time
+
 
 def _capitalize_name(name: str) -> str:
     return ' '.join([x.capitalize() for x in name.split('_')])
@@ -90,7 +91,7 @@ def _process_menu_item(item, key_add: Optional[str] = None, children_key: Option
 
 
 async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -> list:
-    categories = await db.exec(select(PerformanceDataCategory))
+    categories = await db.exec(select(PerformanceDataCalculationCategory))
     child_params = {'id_is_key': True, }
 
 
@@ -102,7 +103,7 @@ async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -
 
 
 async def _process_performance_data_category(db: AsyncSession):
-    cats = await db.exec(select(PerformanceDataCategory))
+    cats = await db.exec(select(PerformanceDataCalculationCategory))
 
     categories_dict = {0: 'Overview'}
     child_to_parent = dict()

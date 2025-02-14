@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import condecimal, BaseModel
 
+from constants.helpers import get_only_names
+from helpers import to_proper_name
 
 MINUTE = 60
 
@@ -10,12 +12,30 @@ class GameTotal(BaseModel):
     value_type: Any
 
     index: int
-    name: str = ''
-    description: str = ''
+    name: str | None = None
+    description: str | None = None
     # is resposible for boolean values that should trasnform into chance/percent during aggregation or comparison
     pseudo_bool: bool = False
 
 
+def set_total_name(klass: object):
+    values = []
+    for name, type_ in klass.__annotations__.items():
+        if type_ is GameTotal:
+            value = getattr(klass, name)
+            value.name = name
+            if value.description is None:
+                value.description = to_proper_name(name)
+
+            values.append(value)
+
+    setattr(klass, 'VALUES', GameTotal)
+    setattr(klass, 'VALUES_NAMES', get_only_names(values))
+
+    return klass
+
+
+@set_total_name
 class GameTotals:
     total_gold: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=1)
     total_xp: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=2)
@@ -42,7 +62,10 @@ class GameTotals:
     destroyed_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=23)
     first_kill_time: GameTotal = GameTotal(value_type=int, index=24)
     first_death_time: GameTotal = GameTotal(value_type=int, index=25)
-    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=23, pseudo_bool=True)
+    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26, pseudo_bool=True)
     lost_tower_time: GameTotal = GameTotal(value_type=int, index=27)
-    destroyed_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=23, pseudo_bool=True)
+    destroyed_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=28, pseudo_bool=True)
     destroyed_tower_time: GameTotal = GameTotal(value_type=int, index=29)
+
+    VALUES: ClassVar[list[GameTotal]]
+    VALUES_NAMES: ClassVar[list[str]]

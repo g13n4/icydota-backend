@@ -52,6 +52,8 @@ class AggregationType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
+    
     created_at: datetime = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),

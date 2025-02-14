@@ -1,0 +1,89 @@
+from decimal import Decimal
+from typing import Tuple
+
+from constants.performance.window import WINDOWS_BY_TYPE, WindowType, AllWindows
+from models.performance import PerformanceWindowData, PerformanceWindowTable
+from modules.empty_mask_converter import EmptyMaskConverter
+from utils import is_na_decimal, TableMinMaxFinder
+
+
+def set_calculated_data(TMMF: TableMinMaxFinder, calculated_data: dict) -> dict:
+    output = dict()
+    for field_name, value in calculated_data.items():
+        if is_na_decimal(value):
+            value = None
+
+        output[field_name] = value
+
+        # LOOKING FOR MIN AND MAX VALUES
+        TMMF.add(column=field_name, value=value)
+    return output
+
+
+def extract_window_data(
+        PWD_obj: PerformanceWindowData,
+        PWT_obj: PerformanceWindowTable | None,
+        game_stage: str,
+) -> dict:
+    output = dict()
+    if PWT_obj is not None:
+        output = PWT_obj.model_dump(include=WINDOWS_BY_TYPE[game_stage].VALUES_NAMES)
+
+    for stage in WindowType.VALUES:
+        windows_class = WINDOWS_BY_TYPE[game_stage]
+        mask_value = getattr(PWD_obj, windows_class.empty_mask)
+        if game_stage in ['all', stage] and mask_value is not None:
+            mask_data = EmptyMaskConverter.mask_to_dict(mask_value, windows_class.VALUES_NAMES)
+            output.update(mask_data)
+    return output
+
+
+def extract_window_data_for_field(
+        PWD_obj: PerformanceWindowData,
+        value: Decimal | None,
+        field: str | None = None,
+) -> Decimal | None:
+    if value is not None:
+        return value
+
+    window_field_item = getattr(AllWindows, field)
+    mask_value = getattr(PWD_obj, window_field_item.empty_mask)
+    windows_class = WINDOWS_BY_TYPE[window_field_item.window_type]
+    mask_data = EmptyMaskConverter.mask_to_dict(mask_value, windows_class.VALUES_NAMES)
+    return mask_data.get(field, None)
+
+
+def process_db_output(query,
+                      model_names: list[str],
+                      game_stage: str | None = None,
+                      ) ->  Tuple[list, list, bool]:
+    TMMF = TableMinMaxFinder()
+    output = []
+    for row in query:
+        row_data = {name: data for name, data in zip(model_names, row)}
+
+        row_data['side'] = 'Dire' if row_data['side'] else 'Sentinel'
+
+        if 'window_data' in row_data or 'window_data' in row_data:
+            window_data = extract_window_data(row_data['window_data'], row_data['window_table'], game_stage)
+            calculated_data = set_calculated_data(TMMF=TMMF, calculated_data=window_data)
+
+            del row_data['window_data']
+            del row_data['window_table']
+
+        elif 'total_data' in row_data:
+            calculated_data = set_calculated_data(
+                TMMF=TMMF,
+                calculated_data=row_data['total_data'].model_dump(include=WINDOWS_BY_TYPE[game_stage].VALUES_NAMES)
+            )
+
+            del row_data['total_data']
+
+        else:
+            raise Exception("No data to process")
+
+        row_data.update(calculated_data)
+        output.append(row_data)
+
+    return output, TMMF.get_minmax_values(), TMMF.has_totals()
+

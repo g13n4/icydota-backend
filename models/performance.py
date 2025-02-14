@@ -2,6 +2,8 @@ from typing import List, Optional, ClassVar
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from constants.calculation.calculation_types import WindowCalculations
+from constants.calculation.category import WindowCategories
 from constants.game_performance import GamePerformanceConstant
 from models.metaclasses import WindowMeta, TotalMeta
 
@@ -17,6 +19,8 @@ OFFSET = 1
 
 class GamePerformance(SQLModel, table=True):
     __tablename__ = "games_performance"
+
+    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
@@ -67,10 +71,14 @@ class GamePerformance(SQLModel, table=True):
         back_populates="performance"
     )
 
-    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
+
 
 # PERFORMANCE DATA
-class PerformanceDataCategory(SQLModel, table=True):
+class PerformanceDataCalculationCategory(SQLModel, table=True):
+    __tablename__ = "performance_data_categories"
+
+    const: ClassVar[WindowCategories] = WindowCategories
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # damage / interval
     label: Optional[str]
@@ -81,11 +89,12 @@ class PerformanceDataCategory(SQLModel, table=True):
         sa_relationship_kwargs={"lazy": "selectin"},
     )
 
-    __tablename__ = "performance_data_categories"
 
 
 class PerformanceDataCalculation(SQLModel, table=True):
     __tablename__ = "performance_data_calculations"
+
+    const: ClassVar[WindowCalculations] = WindowCalculations
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -97,7 +106,7 @@ class PerformanceDataCalculation(SQLModel, table=True):
     data_category_id: Optional[int] = Field(
         default=None, foreign_key="performance_data_categories.id", index=True
     )
-    data_category: Optional["PerformanceDataCategory"] = Relationship(
+    data_category: Optional["PerformanceDataCalculationCategory"] = Relationship(
         back_populates="data_calculation",
     )
 

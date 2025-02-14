@@ -4,7 +4,6 @@ from sqlmodel import Session, select, col, text
 from typing import Any
 
 from db import get_sync_db_session
-from models import AggregationType, GamePerformance
 
 
 logger = get_task_logger(__name__)
@@ -39,34 +38,34 @@ def _delete_performance_data(db_session, values: str) -> None:
     db_session.execute(text(windows))
 
 
-@shared_task(name="remove_aggregation_data", ignore_result=True)
-def remove_aggregation_data(league_id: int, cross_comparison: bool) -> None:
-    logger.info(f'Removing data for league {league_id}...')
-
-    db_session: Session = get_sync_db_session(expire=False)
-    gp_ids = db_session.exec(select(GamePerformance.id)
-                             .join(AggregationType,
-                                   onclause=GamePerformance.aggregation_id == AggregationType.id)
-                             .where(AggregationType.league_id == league_id,
-                                    GamePerformance.is_aggregation == True,
-                                    GamePerformance.cross_comparison == cross_comparison)).all()
-
-    if gp_ids:
-        gp_ids_sql = str(tuple(gp_ids))
-        # set fk to null in gp
-        logger.info('Nullifying fk in Game Performance...')
-        _set_null_values_gp_sql(db_session, gp_ids_sql)
-        # set fk to null in performance
-        logger.info(f'Deleting Performance Data...')
-        _delete_performance_data(db_session, gp_ids_sql)
-        # delete
-
-        # DON'T DELETE THE GAME PERFORMANCE MODEL HERE BECAUSE IT'S TOO LONG
-        # logger.info(f'Deleting Game Performance...')
-        # db_session.execute(
-        #     text(f"""DELETE FROM games_performance WHERE id IN {gp_ids_sql}""")
-        # )
-
-        db_session.commit()
-    else:
-        logger.info(f'Nothing to delete...')
+# @shared_task(name="remove_aggregation_data", ignore_result=True)
+# def remove_aggregation_data(league_id: int, cross_comparison: bool) -> None:
+#     logger.info(f'Removing data for league {league_id}...')
+#
+#     db_session: Session = get_sync_db_session(expire=False)
+#     gp_ids = db_session.exec(select(GamePerformance.id)
+#                              .join(AggregationType,
+#                                    onclause=GamePerformance.aggregation_id == AggregationType.id)
+#                              .where(AggregationType.league_id == league_id,
+#                                     GamePerformance.is_aggregation == True,
+#                                     GamePerformance.cross_comparison == cross_comparison)).all()
+#
+#     if gp_ids:
+#         gp_ids_sql = str(tuple(gp_ids))
+#         # set fk to null in gp
+#         logger.info('Nullifying fk in Game Performance...')
+#         _set_null_values_gp_sql(db_session, gp_ids_sql)
+#         # set fk to null in performance
+#         logger.info(f'Deleting Performance Data...')
+#         _delete_performance_data(db_session, gp_ids_sql)
+#         # delete
+#
+#         # DON'T DELETE THE GAME PERFORMANCE MODEL HERE BECAUSE IT'S TOO LONG
+#         # logger.info(f'Deleting Game Performance...')
+#         # db_session.execute(
+#         #     text(f"""DELETE FROM games_performance WHERE id IN {gp_ids_sql}""")
+#         # )
+#
+#         db_session.commit()
+#     else:
+#         logger.info(f'Nothing to delete...')

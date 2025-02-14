@@ -4,19 +4,17 @@ import numpy as np
 import pandas as pd
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlmodel import Session, select, col
+from sqlmodel import Session, select
 
+from constants.performance.window import AllWindows
 from db import get_sync_db_session
-from models import AggregationType, PerformanceWindowData, GamePerformance, PerformanceTotalData, ComparisonType, \
-    PlayerGameData
+from models import AggregationType, ComparisonType, PlayerGameData
 from models import League, Game
+from models.performance import GamePerformance
 from utils import get_sqlmodel_fields, to_dec
-from replay_parsing import PerformanceMaskHandler
-from api_helpers.model_field_info import LANE_FIELDS, GAME_FIELDS
 
 
 logger = get_task_logger(__name__)
-PMH = PerformanceMaskHandler(LANE_FIELDS, GAME_FIELDS)
 
 
 # AGGREGATION FIELDS
@@ -30,7 +28,7 @@ AGG_REQUIRED_FIELDS = [
     'is_comparison',
 ]
 
-WINDOW_DATA_FIELDS = get_sqlmodel_fields(PerformanceWindowData)  # w/o data_type_id bc it's a fk
+WINDOW_DATA_FIELDS = AllWindows.VALUES_REAL_NAME
 TOTAL_DATA_FIELDS = get_sqlmodel_fields(PerformanceTotalData)
 
 WINDOW_AGG_REQUIRED_FIELDS = WINDOW_DATA_FIELDS + AGG_REQUIRED_FIELDS + ['data_type_id']

@@ -1,4 +1,4 @@
-from models import PerformanceTotalData
+from models.performance import PerformanceTotalData
 
 
 class TotalPerformanceProcessor:

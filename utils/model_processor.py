@@ -1,10 +1,6 @@
-import re
 from typing import List, Optional, Dict
 from .translation_dictionary import PERFORMANCE_FIELD_DICT
 from .sorting_rating import performance_data_sort_rating
-
-def to_proper_name(value: str, split: str = '_') -> str:
-    return ' '.join(value.split(split)).capitalize()
 
 
 def get_field_name(value: str, sum_total: Optional[bool] = None):

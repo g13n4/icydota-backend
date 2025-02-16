@@ -40,33 +40,36 @@ TOTAL_AGG_REQUIRED_FIELDS = TOTAL_DATA_FIELDS + AGG_REQUIRED_FIELDS
 def get_league_data(db_session: Session,
                     league_id: int,
                     positions: list,
-                    total: bool,
+                    data_calculation_id: int | None,
                     flat: bool) -> List[Dict[str, Any]]:
     clauses = [Game.league_id == league_id,
-               GamePerformance.is_comparison == True,
+               GamePerformance.type_id == GamePerformance.const.MATCH_DATA_COMPARISON,
                ComparisonType.basic == True,
                ComparisonType.flat == flat,
                col(ComparisonType.pos_cpd_id).in_(positions)
                ]
 
     # TOTAL OR WINDOW DATA
-    if total:
-        model = PerformanceTotalData
-        model_join = PerformanceTotalData.game_performance_id == GamePerformance.id
-        fields = get_sqlmodel_fields(PerformanceTotalData, include_ids=False, to_set=True)
-    else:
+    if data_calculation_id:
         model = PerformanceWindowData
         model_join = PerformanceWindowData.game_performance_id == GamePerformance.id
         fields = get_sqlmodel_fields(PerformanceWindowData, include_ids=True, to_set=True)
+    else:
+        model = PerformanceTotalData
+        model_join = PerformanceTotalData.game_performance_id == GamePerformance.id
+        fields = get_sqlmodel_fields(PerformanceTotalData, include_ids=False, to_set=True)
 
-    select_fields = [model,
+
+    select_fields = [
+        model,
                      ComparisonType.flat,
                      ComparisonType.player_cpd_id,
                      ComparisonType.player_cps_id,
                      ComparisonType.hero_cpd_id,
                      ComparisonType.hero_cps_id,
                      ComparisonType.pos_cpd_id,
-                     ComparisonType.pos_cps_id, ]
+                     ComparisonType.pos_cps_id,
+    ]
 
 
     # QUERY BUILDING

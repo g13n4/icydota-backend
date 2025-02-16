@@ -24,7 +24,7 @@ class GamePerformance(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    type: int
+    type_id: int
 
     cross_comparison_id: Optional[int] = _fk(
         "cross_comparison_types", col_type="smallint", index=True
@@ -62,6 +62,9 @@ class GamePerformance(SQLModel, table=True):
     )
     total_data: Optional["PerformanceTotalData"] = Relationship(
         back_populates="game_performance",
+        sa_relationship_kwargs={
+            "cascade": "all,delete",
+        }
     )
 
     player_game_data_id: Optional[int] = Field(
@@ -74,8 +77,8 @@ class GamePerformance(SQLModel, table=True):
 
 
 # PERFORMANCE DATA
-class PerformanceDataCalculationCategory(SQLModel, table=True):
-    __tablename__ = "performance_data_categories"
+class PerformanceWindowCalculationCategory(SQLModel, table=True):
+    __tablename__ = "performance_window_calculation_categories"
 
     const: ClassVar[WindowCategories] = WindowCategories
 
@@ -84,15 +87,15 @@ class PerformanceDataCalculationCategory(SQLModel, table=True):
     label: Optional[str]
     description: Optional[str]
 
-    data_type: List["PerformanceDataCalculation"] = Relationship(
+    data_type: List["PerformanceWindowCalculationType"] = Relationship(
         back_populates="data_category",
         sa_relationship_kwargs={"lazy": "selectin"},
     )
 
 
 
-class PerformanceDataCalculation(SQLModel, table=True):
-    __tablename__ = "performance_data_calculations"
+class PerformanceWindowCalculationType(SQLModel, table=True):
+    __tablename__ = "performance_window_calculation_types"
 
     const: ClassVar[WindowCalculations] = WindowCalculations
 
@@ -106,8 +109,8 @@ class PerformanceDataCalculation(SQLModel, table=True):
     data_category_id: Optional[int] = Field(
         default=None, foreign_key="performance_data_categories.id", index=True
     )
-    data_category: Optional["PerformanceDataCalculationCategory"] = Relationship(
-        back_populates="data_calculation",
+    category: Optional["PerformanceWindowCalculationCategory"] = Relationship(
+        back_populates="calculation_type",
     )
 
 
@@ -117,9 +120,9 @@ class PerformanceWindowData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     data_calculation_id: Optional[int] = Field(
-        default=None, foreign_key="performance_data_calculations.id", index=True
+        default=None, foreign_key="performance_window_calculation_types.id", index=True
     )
-    data_calculation: Optional["PerformanceDataCalculation"] = Relationship(back_populates="pwd")
+    calc_type: Optional["PerformanceWindowCalculationType"] = Relationship(back_populates="pwct")
 
     game_performance_id: Optional[int] = Field(
         default=None, foreign_key="games_performance.id", index=True

@@ -2,31 +2,23 @@ from datetime import datetime
 from typing import List, Optional
 
 import sqlalchemy as db
-from .helpers import _fk, sa_kwargs_setter
+from models.helpers import _fk, sa_kwargs_setter
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 
+from models.metaclasses import SidePerformanceMeta
 
-class GameData(SQLModel, table=True):
-    __tablename__ = "games_data"
+
+class SidePerformanceData(SQLModel, table=True, metaclass=SidePerformanceMeta):
+    __tablename__ = "side_performance_data"
 
     id: int = Field(default=None, primary_key=True, index=True)
 
-    gold: Optional[int]
-    xp: Optional[int]
-    hero_kills: Optional[int]
-    kpm: Optional[int]
+    game_id: int = Field(
+        sa_column=db.Column(db.BIGINT, nullable=False, primary_key=False, index=False),
+    )
 
-    roshan_kills: Optional[int]
-    runes_picked_up: Optional[int]
-
-    obs_placed: Optional[int]
-    obs_kills: Optional[int]
-
-    sentry_placed: Optional[int]
-    sentry_kills: Optional[int]
-
-    first_blood_claimed: bool
+    dire: bool
 
 
 class Game(SQLModel, table=True):
@@ -63,10 +55,10 @@ class Game(SQLModel, table=True):
         default=None, foreign_key="buildings_data.id"
     )
 
-    sent_game_data_id: Optional[int] = _fk(
+    sent_performance_id: Optional[int] = _fk(
         "games_data", cascade=True, **{"index": True}
     )
-    dire_game_data_id: Optional[int] = _fk(
+    dire_performance_id: Optional[int] = _fk(
         "games_data", cascade=True, **{"index": True}
     )
 

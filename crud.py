@@ -6,8 +6,8 @@
 # from sqlmodel.ext.asyncio.session import AsyncSession
 #
 # from models import League, Game
-# from models import, GameData
-# from models.performance import PerformanceDataCalculationCategory
+# from models import, SidePerformanceData
+# from models.performance import PerformanceWindowCalculationCategory
 # from utils.sorting_rating import gamedata_sort_rating
 # from utils.translation_dictionary import PERFORMANCE_FIELD_DICT, GAMEDATA_FIELD_DICT
 # from utils.helpers import to_str_time
@@ -91,7 +91,7 @@
 #
 #
 # async def get_categories_menu(db: AsyncSession, include_disabled: bool | None) -> list:
-#     categories = await db.exec(select(PerformanceDataCalculationCategory))
+#     categories = await db.exec(select(PerformanceWindowCalculationCategory))
 #     child_params = {'id_is_key': True, }
 #
 #
@@ -103,7 +103,7 @@
 #
 #
 # async def _process_performance_data_category(db: AsyncSession):
-#     cats = await db.exec(select(PerformanceDataCalculationCategory))
+#     cats = await db.exec(select(PerformanceWindowCalculationCategory))
 #
 #     categories_dict = {0: 'Overview'}
 #     child_to_parent = dict()
@@ -197,7 +197,7 @@
 #         'dire': dire, }
 #
 #
-# def flatten_league_game(game: Game, sent: GameData, dire: GameData, ):
+# def flatten_league_game(game: Game, sent: SidePerformanceData, dire: SidePerformanceData, ):
 #     sent_dict = sent.dict()
 #     dire_dict = dire.dict()
 #
@@ -222,8 +222,8 @@
 #
 #
 # async def get_league_games_info(db_session: AsyncSession, league_id: int):
-#     dire = aliased(GameData)
-#     sent = aliased(GameData)
+#     dire = aliased(SidePerformanceData)
+#     sent = aliased(SidePerformanceData)
 #
 #     game_objs = await (db_session.exec(select(Game, sent, dire, )
 #                                        .join(sent, onclause=sent.id == Game.sent_game_data_id)

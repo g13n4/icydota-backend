@@ -3,7 +3,7 @@ from typing import Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output, extract_window_data_for_field
-from modules.performance_query_creator import PerformanceQueryCreator
+from modules.query_creators.performance_query_creator import APIPerformanceQueryCreator
 from utils import is_na_decimal, TableMinMaxFinder
 
 
@@ -13,7 +13,7 @@ async def get_performance_data(db_session: AsyncSession,
                                game_stage: str,
                                ):
 
-    PQC = PerformanceQueryCreator()
+    PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_match_query(match_id=match_id, data_type=data_type)
     model_names = PQC.get_model_names()
 
@@ -35,7 +35,7 @@ async def get_performance_data_comparison(db_session: AsyncSession,
                                           basic: bool,
                                           flat: Optional[bool]
                                           ):
-    PQC = PerformanceQueryCreator()
+    PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_match_comparison_query(match_id=match_id, data_type=data_type, basic=basic, flat=flat)
     model_names = PQC.get_model_names()
 
@@ -58,7 +58,7 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
                                           is_comparison: bool,
                                           flat: Optional[bool],
                                           ):
-    PQC = PerformanceQueryCreator()
+    PQC = APIPerformanceQueryCreator()
     if is_comparison:
         select_query = PQC.get_aggregation_comparison_query(
             league_id=league_id,
@@ -110,7 +110,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 ):
     is_total_data = data_type == 0
 
-    PQC = PerformanceQueryCreator()
+    PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_cross_comparison_query(
         league_id=league_id,
     aggregation_type=aggregation_type,

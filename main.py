@@ -11,7 +11,7 @@ from api import get_performance_data, get_performance_data_comparison, get_aggre
     get_cross_comparison_performance_data
 from db import get_async_db_session
 from models import League
-from models.performance import PerformanceDataCalculation, PerformanceDataCalculationCategory
+from models.performance import PerformanceWindowCalculationType, PerformanceWindowCalculationCategory
 from utils import CaseInsensitiveEnum, to_table_format
 
 load_dotenv()
@@ -211,7 +211,7 @@ async def get_field_types_api(field_type: FieldTypes):
 
 @icydota_api.get(API_PREFIX + '/calcs/')
 async def get_performance_types(db=Depends(get_async_db_session)):
-    categories = await get_items(db, PerformanceDataCalculation)
+    categories = await get_items(db, PerformanceWindowCalculationType)
     return categories.all()
 
 
@@ -223,7 +223,7 @@ async def get_leagues(db=Depends(get_async_db_session)):
 
 @icydota_api.get(API_PREFIX + '/categories/')
 async def get_performance_categories(db=Depends(get_async_db_session)):
-    categories = await get_items(db, PerformanceDataCalculationCategory)
+    categories = await get_items(db, PerformanceWindowCalculationCategory)
     return categories.all()
 
 

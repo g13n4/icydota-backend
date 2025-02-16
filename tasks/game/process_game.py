@@ -9,14 +9,14 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session
 
+from constants.performance.game_side import SidePerformance
 from db import get_sync_db_session
-from models import Hero
-from models import Player, Team, GameData
-from models import PlayerGameData, Game, PerformanceTotalData, PositionApproximation
+from models import Player, Team, SidePerformanceData, PlayerGameData, Game, PositionApproximation
+from models.performance import PerformanceTotalData
 from tasks.game.helpers import fix_odota_data
 from tasks.game.proces_game_replay import process_game_replay
 from tasks.league.create_league import get_or_create_league
-from utils import get_all_sqlmodel_objs, none_to_zero, get_or_create, get_positions_approximations
+from utils import none_to_zero, get_or_create, get_positions_approximations
 
 
 CURRENT_DIR = Path.cwd().absolute()
@@ -30,45 +30,33 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 
-def create_game_data_objs(total_data: Dict[int, PerformanceTotalData]) -> tuple[GameData, GameData]:
+def create_game_data_objs(total_data: Dict[int, PerformanceTotalData]) -> tuple[
+    SidePerformanceData, SidePerformanceData]:
     dict_sides = {
-        'sent': {'first_blood_claimed': False},
-        'dire': {'first_blood_claimed': False},
+        'sent': { 'first_blood_claimed': False },
+        'dire': { 'first_blood_claimed': False },
     }
 
-    for slot, item in total_data.items():
-        item_dict = item.model_dump()
+    for slot, PTD_item in total_data.items():
+        PTD_item_dict = PTD_item.model_dump()
         this_side_name = 'sent' if slot < 5 else 'dire'
         this_side_dict = dict_sides[this_side_name]
 
-        for gdn, tn in [
-            ('gold', 'total_gold'),
-            ('xp', 'total_xp'),
-            ('hero_kills', 'hero_kills'),
-            ('kpm', 'kills_per_min'),
+        for field in SidePerformance.VALUES_NAMES:
+            this_value = PTD_item_dict[field]
 
-            ('roshan_kills', 'roshan_kills'),
-            ('runes_picked_up', 'runes_picked_up'),
-
-            ('obs_placed', 'observer_uses'),
-            ('obs_kills', 'observer_kills'),
-
-            ('sentry_placed', 'sentry_uses'),
-            ('sentry_kills', 'sentry_kills'),
-
-            ('first_blood_claimed', 'first_blood_claimed')
-        ]:
-            this_value = item_dict[tn]
-
-            if gdn in ['first_blood_claimed'] and this_value:
-                this_side_dict[gdn] = True
+            if field in ['first_blood_claimed'] and this_value:
+                this_side_dict[field] = True
             else:
-                if gdn not in this_side_dict:
-                    this_side_dict[gdn] = 0
+                if field not in this_side_dict:
+                    this_side_dict[field] = 0
 
-                this_side_dict[gdn] += int(this_value)
+                this_side_dict[field] += int(this_value)
 
-    return GameData(**dict_sides['sent']), GameData(**dict_sides['dire'])
+    dict_sides['sent']['dire'] = False
+    dict_sides['dire']['dire'] = True
+
+    return SidePerformanceData(**dict_sides['sent']), SidePerformanceData(**dict_sides['dire'])
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -95,7 +83,8 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
                 id=data['team_id'],
                 name=data['name'],
                 tag=data['tag'],
-            ))
+            )
+        )
 
         obj_teams[key] = team_obj
         obj_teams[f'{key}_tag'] = data['tag']
@@ -105,7 +94,7 @@ def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, 
 
 
 def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
-    players_dict: dict = {x: None for x in range(10)}
+    players_dict: dict = { x: None for x in range(10) }
 
     for player in players:
         this_account_id = player['account_id']
@@ -124,7 +113,8 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
                 nickname=this_name_to_use,
                 account_id=this_account_id,
                 official_name=official_name,
-            ))
+            )
+        )
 
         if this_nickname and this_nickname != player_obj.nickname:
             player_obj.nickname = this_nickname
@@ -161,16 +151,20 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     fix_odota_data(game_data)
 
-    teams_dict = process_teams(db_session,
-                               dire_data=game_data['dire_team'],
-                               radiant_data=game_data['radiant_team'])
+    teams_dict = process_teams(
+        db_session,
+        dire_data=game_data['dire_team'],
+        radiant_data=game_data['radiant_team']
+    )
 
     players_dict = process_players(db_session, game_data['players'])
 
     # APPROXIMATION POSITIONS
-    approx_pos: dict = get_positions_approximations(db_session=db_session,
-                                                    model=PositionApproximation,
-                                                    league_id=league_id)
+    approx_pos: dict = get_positions_approximations(
+        db_session=db_session,
+        model=PositionApproximation,
+        league_id=league_id
+    )
 
     # INITIAL DATA CREATION
     player_data_dict = dict()
@@ -211,8 +205,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
         db_session.add(PGD_obj)
 
         PTD_obj = PerformanceTotalData(
-            total_gold=none_to_zero(player_info['total_gold']),
-            total_xp=none_to_zero(player_info['total_xp']),
+            gold=none_to_zero(player_info['total_gold']),
+            xp=none_to_zero(player_info['total_xp']),
             kills_per_min=none_to_zero(player_info.get('kills_per_min', None)),
 
             first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0)),
@@ -257,7 +251,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(
-        {slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict}
+        { slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict }
     )
     db_session.add(game_data_sent_obj)
     db_session.add(game_data_dire_obj)

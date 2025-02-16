@@ -3,6 +3,7 @@ from typing import Optional, ClassVar
 from pydantic import condecimal
 from sqlmodel import Field, SQLModel
 
+from constants.performance.game_side import SPItem, SidePerformance
 from constants.performance.total import GameTotals, GameTotal
 from constants.performance.window import AllWindows
 
@@ -19,8 +20,8 @@ class WindowMeta(type(SQLModel)):
 
                 game_window_value.name = attrib_name
 
-            cls.__annotations__['const'] = ClassVar[AllWindows]
-            cls.const = AllWindows
+        cls.__annotations__['const'] = ClassVar[AllWindows]
+        cls.const = AllWindows
 
         return super().__new__(cls, name, bases, dct, **kwargs)
 
@@ -40,9 +41,21 @@ class TotalMeta(type(SQLModel)):
                 else:
                     cls.__annotations__[attrib_name] = Optional[int]
 
-                cls_field_value.name = attrib_name
-
         cls.__annotations__['const'] = ClassVar[GameTotals]
         cls.const = GameTotals
+
+        return super().__new__(cls, name, bases, dct, **kwargs)
+
+
+class SidePerformanceMeta(type(SQLModel)):
+    def __new__(cls, name, bases, dct, **kwargs):
+        for attrib_name, annotation_type in SidePerformance.__annotations__.items():
+            if type(annotation_type) is SPItem:
+                cls_field_value = getattr(SidePerformance, attrib_name)
+                cls.__annotations__[attrib_name] = Optional[cls_field_value.value_type]
+
+
+        cls.__annotations__['const'] = ClassVar[SidePerformance]
+        cls.const = SidePerformance
 
         return super().__new__(cls, name, bases, dct, **kwargs)

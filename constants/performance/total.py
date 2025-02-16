@@ -29,7 +29,7 @@ def set_total_name(klass: object):
 
             values.append(value)
 
-    setattr(klass, 'VALUES', GameTotal)
+    setattr(klass, 'VALUES', values)
     setattr(klass, 'VALUES_NAMES', get_only_names(values))
 
     return klass
@@ -37,8 +37,8 @@ def set_total_name(klass: object):
 
 @set_total_name
 class GameTotals:
-    total_gold: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=1)
-    total_xp: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=2)
+    gold: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=1)
+    xp: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=2)
     kills_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=7), index=3)
     kda: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=4)
     neutral_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=5)
@@ -47,7 +47,7 @@ class GameTotals:
     lane_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=8)
     hero_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=9)
     observer_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=10)
-    sentry_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=11)
+    sentry_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=11, description="Sentries killed")
     roshan_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=12)
     runes_picked_up: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=13)
     ancient_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=14)
@@ -56,7 +56,7 @@ class GameTotals:
     sentry_uses: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=17)
     lane_efficiency: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=18)
     lane_efficiency_pct: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=19)
-    first_blood_claimed: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=20)
+    first_blood_claimed: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=20, description="FB")
     died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21)
     lost_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=22)
     destroyed_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=23)

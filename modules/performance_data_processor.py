@@ -65,7 +65,7 @@ class PerformanceDataProcessor:
         slot_data = self.players_data[slot]
 
         GP_obj = GamePerformance(
-            type=GamePerformance.const.MATCH_DATA,
+            type_id=GamePerformance.const.MATCH_DATA,
             player_game_data=slot_data['player_game_data'],
             total_data=slot_data['performance_total_data'],
         )
@@ -116,7 +116,7 @@ class PerformanceDataProcessor:
                 )
 
                 GP_obj = GamePerformance(
-                    type=GamePerformance.const.MATCH_DATA_COMPARISON,
+                    type_id=GamePerformance.const.MATCH_DATA_COMPARISON,
                     player_game_data=comparandum_data['player_game_data'],
                     comparison_type=comparison_obj,
                 )
@@ -156,7 +156,7 @@ class PerformanceDataProcessor:
             )
 
             GP_obj = GamePerformance(
-                type=GamePerformance.const.MATCH_DATA_COMPARISON,
+                type_id=GamePerformance.const.MATCH_DATA_COMPARISON,
                 player_game_data=comparandum_data['player_game_data'],
                 comparison_type=comparison_obj,
             )

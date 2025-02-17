@@ -66,6 +66,10 @@ class GamePerformance(SQLModel, table=True):
             "cascade": "all,delete",
         }
     )
+    general_data: List["GeneralPerformanceData"] = Relationship(
+        back_populates="general_performance",
+        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+    )
 
     player_game_data_id: Optional[int] = Field(
         default=None, foreign_key="players_game_data.id", index=True
@@ -163,3 +167,21 @@ class PerformanceTotalData(SQLModel, table=True, metaclass=TotalMeta):
         back_populates="total_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
+
+
+# PERFORMANCE META
+class GeneralPerformanceData(SQLModel, table=True):
+    __tablename__ = "general_performance_data"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    game_performance_id: Optional[int] = Field(
+        default=None, foreign_key="games_performance.id", index=True
+    )
+    game_performance: Optional["GamePerformance"] = Relationship(
+        back_populates="general_data",
+        sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
+    )
+
+    win: int
+    picked: int

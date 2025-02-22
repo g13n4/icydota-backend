@@ -1,5 +1,5 @@
-from constants.calculation.calculation_type.helpers import CalculationItem, set_category_and_value, add_values
-from constants.calculation.category import WindowCategories
+from constants.calculation.game.calculation_type.helpers import CalculationItem, set_category_and_value, add_values
+from constants.calculation.game.category import WindowCategories
 
 
 @add_values

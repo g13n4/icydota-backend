@@ -43,12 +43,12 @@ def _delete_performance_data(db_session, values: str) -> None:
 #     logger.info(f'Removing data for league {league_id}...')
 #
 #     db_session: Session = get_sync_db_session(expire=False)
-#     gp_ids = db_session.exec(select(GamePerformance.id)
+#     gp_ids = db_session.exec(select(Performance.id)
 #                              .join(AggregationType,
-#                                    onclause=GamePerformance.aggregation_id == AggregationType.id)
+#                                    onclause=Performance.aggregation_id == AggregationType.id)
 #                              .where(AggregationType.league_id == league_id,
-#                                     GamePerformance.is_aggregation == True,
-#                                     GamePerformance.cross_comparison == cross_comparison)).all()
+#                                     Performance.is_aggregation == True,
+#                                     Performance.cross_comparison == cross_comparison)).all()
 #
 #     if gp_ids:
 #         gp_ids_sql = str(tuple(gp_ids))

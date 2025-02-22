@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from constants.calculation.calculation_type.deward import DewardCalculations
+from constants.calculation.game.calculation_type.deward import DewardCalculations
 from modules import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 

@@ -2,10 +2,10 @@ from typing import List, Optional, ClassVar
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from constants.calculation.calculation_types import WindowCalculations
-from constants.calculation.category import WindowCategories
-from constants.game_performance import GamePerformanceConstant
-from models.metaclasses import WindowMeta, TotalMeta
+from constants.calculation.game.calculation_types import WindowCalculations
+from constants.calculation.game.category import WindowCategories
+from constants.game_performance import PerformanceTypeConstant
+from models.metaclasses import WindowMeta, TotalMeta, AbilityTotalMeta
 
 from .helpers import (
     SMALLINT_FIELD_NULLABLE,
@@ -17,15 +17,16 @@ from .helpers import (
 OFFSET = 1
 
 
-class GamePerformance(SQLModel, table=True):
-    __tablename__ = "games_performance"
+class Performance(SQLModel, table=True):
+    __tablename__ = "performance"
 
-    const: ClassVar[GamePerformanceConstant] = GamePerformanceConstant
+    const: ClassVar[PerformanceTypeConstant] = PerformanceTypeConstant
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
     type_id: int
 
+    # TYPE INFORMATION DATA
     cross_comparison_id: Optional[int] = _fk(
         "cross_comparison_types", col_type="smallint", index=True
     )
@@ -56,6 +57,7 @@ class GamePerformance(SQLModel, table=True):
         },
     )
 
+    # PERFORMANCE DATA
     window_data: List["PerformanceWindowData"] = Relationship(
         back_populates="game_performance",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
@@ -66,10 +68,13 @@ class GamePerformance(SQLModel, table=True):
             "cascade": "all,delete",
         }
     )
-    general_data: List["GeneralPerformanceData"] = Relationship(
-        back_populates="general_performance",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+    ability_total_data: Optional["AbilityTotalData"] = Relationship(
+        back_populates="game_performance",
+        sa_relationship_kwargs={
+            "cascade": "all,delete",
+        }
     )
+
 
     player_game_data_id: Optional[int] = Field(
         default=None, foreign_key="players_game_data.id", index=True
@@ -77,7 +82,6 @@ class GamePerformance(SQLModel, table=True):
     player_game_data: Optional["PlayerGameData"] = Relationship(
         back_populates="performance"
     )
-
 
 
 # PERFORMANCE DATA
@@ -95,7 +99,6 @@ class PerformanceWindowCalculationCategory(SQLModel, table=True):
         back_populates="data_category",
         sa_relationship_kwargs={"lazy": "selectin"},
     )
-
 
 
 class PerformanceWindowCalculationType(SQLModel, table=True):
@@ -131,7 +134,7 @@ class PerformanceWindowData(SQLModel, table=True):
     game_performance_id: Optional[int] = Field(
         default=None, foreign_key="games_performance.id", index=True
     )
-    game_performance: Optional["GamePerformance"] = Relationship(
+    game_performance: Optional["Performance"] = Relationship(
         back_populates="window_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
@@ -163,25 +166,22 @@ class PerformanceTotalData(SQLModel, table=True, metaclass=TotalMeta):
     game_performance_id: Optional[int] = Field(
         default=None, foreign_key="games_performance.id", index=True
     )
-    game_performance: Optional["GamePerformance"] = Relationship(
+    game_performance: Optional["Performance"] = Relationship(
         back_populates="total_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
 
 
-# PERFORMANCE META
-class GeneralPerformanceData(SQLModel, table=True):
-    __tablename__ = "general_performance_data"
+# ABILITY  DATA
+class AbilityTotalData(SQLModel, table=True, metaclass=AbilityTotalMeta):
+    __tablename__ = "ability_performance_data"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
     game_performance_id: Optional[int] = Field(
         default=None, foreign_key="games_performance.id", index=True
     )
-    game_performance: Optional["GamePerformance"] = Relationship(
+    game_performance: Optional["Performance"] = Relationship(
         back_populates="general_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
-
-    win: int
-    picked: int

@@ -16,6 +16,7 @@ class GameTotal(BaseModel):
     description: str | None = None
     # is resposible for boolean values that should trasnform into chance/percent during aggregation or comparison
     pseudo_bool: bool = False
+    aggregation_only: bool = False
 
 
 def set_total_name(klass: object):
@@ -66,6 +67,7 @@ class GameTotals:
     lost_tower_time: GameTotal = GameTotal(value_type=int, index=27)
     destroyed_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=28, pseudo_bool=True)
     destroyed_tower_time: GameTotal = GameTotal(value_type=int, index=29)
+    win: GameTotal = GameTotal(value_type=int, index=30, aggregation_only=True)
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

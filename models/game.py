@@ -102,7 +102,7 @@ class PlayerGameData(SQLModel, table=True):
     game_id: Optional[int] = _fk("games", col_type="bigint", index=True)
     game: Optional["Game"] = Relationship(back_populates="players_data")
 
-    performance: List["GamePerformance"] = Relationship(
+    performance: List["Performance"] = Relationship(
         back_populates="player_game_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
     )

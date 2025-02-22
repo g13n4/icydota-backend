@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from constants.calculation.calculation_type.interval import IntervalCalculations
+from constants.calculation.game.calculation_type.interval import IntervalCalculations
 from modules import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 from replay_parsing.processors.interval import execute_window_aggregation

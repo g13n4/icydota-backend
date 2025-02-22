@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from constants.calculation.calculation_type.interval import IntervalCalculationAggregationMethod as AGG_METHOD
-from constants.calculation.calculation_type.interval import IntervalCalculationColumn as COLUMN
+from constants.calculation.game.calculation_type.interval import IntervalCalculationAggregationMethod as AGG_METHOD
+from constants.calculation.game.calculation_type.interval import IntervalCalculationColumn as COLUMN
 from replay_parsing.processors import normalise_output_type_wrapper
 
 

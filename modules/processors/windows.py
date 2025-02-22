@@ -2,7 +2,7 @@ from typing import Generator
 
 import numpy as np
 
-from constants.calculation.calculation_types import WindowCalculations
+from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.window import AllWindows
 from models.performance import PerformanceWindowData, PerformanceWindowTable
 from modules.constants import OFFSET

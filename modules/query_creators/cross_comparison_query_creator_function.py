@@ -1,7 +1,7 @@
 from sqlmodel import col
 
 from models import Game, PlayerGameData, ComparisonType
-from models.performance import PerformanceWindowTable, PerformanceWindowData, PerformanceTotalData, GamePerformance
+from models.performance import PerformanceWindowTable, PerformanceWindowData, PerformanceTotalData, Performance
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 
@@ -15,7 +15,7 @@ def aggregation_query_creator(
     joins = JoinList()
     where = [
         Game.league_id == league_id,
-        GamePerformance.type_id == GamePerformance.const.MATCH_DATA_COMPARISON,
+        Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON,
         ComparisonType.basic == True,
         ComparisonType.flat == flat,
         col(ComparisonType.pos_cpd_id).in_(positions)
@@ -26,7 +26,7 @@ def aggregation_query_creator(
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
 
-        joins.insert(GamePerformance, PerformanceWindowData.game_performance_id == GamePerformance.id)
+        joins.insert(Performance, PerformanceWindowData.game_performance_id == Performance.id)
 
         joins.insert(
             PerformanceWindowTable,
@@ -38,7 +38,7 @@ def aggregation_query_creator(
         where.append(PerformanceWindowData.data_calculation_id == data_calculation_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
-        joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == GamePerformance.id)
+        joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)
 
     models.add(ComparisonType.player_cpd_id, 'player_cpd_id', True)
     models.add(ComparisonType.player_cps_id, 'player_cps_id', True)
@@ -47,8 +47,8 @@ def aggregation_query_creator(
     models.add(ComparisonType.pos_cpd_id, 'pos_cpd_id', True)
     models.add(ComparisonType.pos_cps_id, 'pos_cps_id', True)
 
-    joins.add(PlayerGameData, PlayerGameData.id == GamePerformance.player_game_data_id)
+    joins.add(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
     joins.add(Game, Game.id == PlayerGameData.game_id)
-    joins.add(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
+    joins.add(ComparisonType, ComparisonType.id == Performance.comparison_id)
 
     return combine_select(models.get_models(), joins.data, where), models.get_names()

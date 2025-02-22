@@ -4,12 +4,12 @@ from functools import reduce
 import numpy as np
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from constants.calculation.calculation_type.aggregation import TotalAggregationMethod
-from constants.calculation.calculation_type.helpers import CalculationItem
-from constants.calculation.calculation_types import WindowCalculations
+from constants.calculation.game.calculation_type.aggregation import TotalAggregationMethod
+from constants.calculation.game.calculation_type.helpers import CalculationItem
+from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.window import AllWindows
 from models import ComparisonType, PlayerGameData
-from models.performance import GamePerformance
+from models.performance import Performance
 from modules.match_analyser import MatchPlayer
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
@@ -64,8 +64,8 @@ class PerformanceDataProcessor:
     def process_slot(self, slot: int) -> None:
         slot_data = self.players_data[slot]
 
-        GP_obj = GamePerformance(
-            type_id=GamePerformance.const.MATCH_DATA,
+        GP_obj = Performance(
+            type_id=Performance.const.game.MATCH_DATA,
             player_game_data=slot_data['player_game_data'],
             total_data=slot_data['performance_total_data'],
         )
@@ -115,8 +115,8 @@ class PerformanceDataProcessor:
                     pos_cps_id=comparans_data['position_id'],
                 )
 
-                GP_obj = GamePerformance(
-                    type_id=GamePerformance.const.MATCH_DATA_COMPARISON,
+                GP_obj = Performance(
+                    type_id=Performance.const.game.MATCH_DATA_COMPARISON,
                     player_game_data=comparandum_data['player_game_data'],
                     comparison_type=comparison_obj,
                 )
@@ -155,8 +155,8 @@ class PerformanceDataProcessor:
                 pos_cpd_id=comparandum_data['position_id'],
             )
 
-            GP_obj = GamePerformance(
-                type_id=GamePerformance.const.MATCH_DATA_COMPARISON,
+            GP_obj = Performance(
+                type_id=Performance.const.game.MATCH_DATA_COMPARISON,
                 player_game_data=comparandum_data['player_game_data'],
                 comparison_type=comparison_obj,
             )

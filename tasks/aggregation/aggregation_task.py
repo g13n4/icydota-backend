@@ -10,7 +10,7 @@ from constants.performance.window import AllWindows
 from db import get_sync_db_session
 from models import AggregationType, ComparisonType, PlayerGameData
 from models import League, Game
-from models.performance import GamePerformance
+from models.performance import Performance
 from utils import get_sqlmodel_fields, to_dec
 
 
@@ -46,11 +46,11 @@ def get_league_data(db_session: Session,
     # TOTAL OR WINDOW DATA
     if total:
         model = PerformanceTotalData
-        model_join = PerformanceTotalData.game_performance_id == GamePerformance.id
+        model_join = PerformanceTotalData.game_performance_id == Performance.id
         fields = get_sqlmodel_fields(PerformanceTotalData, include_ids=False, to_set=True)
     else:
         model = PerformanceWindowData
-        model_join = PerformanceWindowData.game_performance_id == GamePerformance.id
+        model_join = PerformanceWindowData.game_performance_id == Performance.id
         fields = get_sqlmodel_fields(PerformanceWindowData, include_ids=True, to_set=True)
 
     select_fields = [model, PlayerGameData.hero_id, PlayerGameData.player_id, PlayerGameData.position_id]
@@ -60,19 +60,19 @@ def get_league_data(db_session: Session,
 
     # QUERY BUILDING
     select_query = (select(*select_fields)
-                    .join(GamePerformance, model_join)
-                    .join(PlayerGameData, PlayerGameData.id == GamePerformance.player_game_data_id)
+                    .join(Performance, model_join)
+                    .join(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
                     .join(Game, Game.id == PlayerGameData.game_id))
 
     # COMPARISON CHECK
     if comparison:
-        select_query = select_query.join(ComparisonType, ComparisonType.id == GamePerformance.comparison_id)
+        select_query = select_query.join(ComparisonType, ComparisonType.id == Performance.comparison_id)
         clauses.extend([
-            GamePerformance.is_comparison == True,
+            Performance.is_comparison == True,
             ComparisonType.basic == True,
             ComparisonType.flat == flat, ])
     else:
-        clauses.append(GamePerformance.is_comparison == False)
+        clauses.append(Performance.is_comparison == False)
 
     # FINAL QUERY
     select_query = select_query.where(*clauses)
@@ -266,7 +266,7 @@ def process_aggregation(league_id: int):
             )
             db_session.add(DAT)
 
-            GP = GamePerformance(
+            GP = Performance(
                 is_aggregation=True,
                 aggregation=DAT,
                 window_data=wd_items,
@@ -287,7 +287,7 @@ def process_aggregation(league_id: int):
                     basic=False,
                     **comp_obj_data, )
 
-                GP_comp = GamePerformance(
+                GP_comp = Performance(
                     is_aggregation=True,
                     aggregation=DAT,
 

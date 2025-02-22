@@ -1,8 +1,8 @@
 from enum import StrEnum, auto, Enum
 
-from constants.calculation.calculation_type.aggregation import TotalAggregationMethod
-from constants.calculation.calculation_type.helpers import CalculationItem, set_category_and_value, PostprocessingItem, add_values
-from constants.calculation.category import WindowCategories
+from constants.calculation.game.calculation_type.aggregation import TotalAggregationMethod
+from constants.calculation.game.calculation_type.helpers import CalculationItem, set_category_and_value, PostprocessingItem, add_values
+from constants.calculation.game.category import WindowCategories
 
 
 class IntervalCalculationColumn(StrEnum):

@@ -43,7 +43,7 @@ def get_league_data(db_session: Session,
                     data_calculation_id: int | None,
                     flat: bool) -> List[Dict[str, Any]]:
     clauses = [Game.league_id == league_id,
-               GamePerformance.type_id == GamePerformance.const.MATCH_DATA_COMPARISON,
+               GamePerformance.type_id == GamePerformance.cons.game.MATCH_DATA_COMPARISON,
                ComparisonType.basic == True,
                ComparisonType.flat == flat,
                col(ComparisonType.pos_cpd_id).in_(positions)

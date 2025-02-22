@@ -42,7 +42,7 @@ class ComparisonType(SQLModel, table=True):
     pos_cpd_id: Optional[int] = _fk("positions")
     pos_cps_id: Optional[int] = _fk("positions")
 
-    performance: Optional["GamePerformance"] = Relationship(back_populates="comparison")
+    performance: Optional["Performance"] = Relationship(back_populates="comparison")
 
 
 # AGGREGATION
@@ -69,7 +69,7 @@ class AggregationType(SQLModel, table=True):
 
     position_id: Optional[int] = _fk("positions")
 
-    performance: Optional["GamePerformance"] = Relationship(
+    performance: Optional["Performance"] = Relationship(
         back_populates="aggregation"
     )
     const: ClassVar[AggregationConstant] = AggregationConstant
@@ -107,6 +107,6 @@ class CrossComparisonType(SQLModel, table=True):
     position_id: Optional[int] = _fk("positions")
     position_cross_cps_id: Optional[int] = _fk("positions")
 
-    performance: Optional["GamePerformance"] = Relationship(
+    performance: Optional["Performance"] = Relationship(
         back_populates="cross_comparison"
     )

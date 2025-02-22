@@ -3,7 +3,7 @@ from typing import Dict
 
 import pandas as pd
 
-from constants.calculation.calculation_type.gold import GoldCalculations as Calculations
+from constants.calculation.game.calculation_type.gold import GoldCalculations as Calculations
 from modules import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 from replay_parsing.processors import process_output

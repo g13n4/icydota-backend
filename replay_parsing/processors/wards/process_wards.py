@@ -1,6 +1,6 @@
 import pandas as pd
 
-from constants.calculation.calculation_type.wards import WardsCalculations
+from constants.calculation.game.calculation_type.wards import WardsCalculations
 from modules import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 

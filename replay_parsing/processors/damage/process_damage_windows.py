@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from constants.calculation.calculation_type.damage import DamageCalculations as Calculations
+from constants.calculation.game.calculation_type.damage import DamageCalculations as Calculations
 from modules import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 from replay_parsing.processors.processing_utils import process_output

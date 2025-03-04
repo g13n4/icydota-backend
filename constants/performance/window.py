@@ -133,3 +133,9 @@ WINDOWS_BY_TYPE = {
     WindowType.game: GameStageWindows,
     'all': AllWindows,
 }
+
+
+WINDOWS_BY_MASK = {
+    LaneStageWindows.empty_mask: LaneStageWindows,
+    GameStageWindows.empty_mask: GameStageWindows,
+}

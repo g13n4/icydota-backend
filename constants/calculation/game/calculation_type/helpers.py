@@ -47,10 +47,13 @@ def set_category_and_value(category: Item) -> Callable:
 
 def add_values(klass: CalculationType) -> CalculationType:
     VALUES = []
+    VALUES_NAMES = []
     for name, type_ in klass.__annotations__.items():
         if isinstance(type_, CalculationItem):
             value = getattr(klass, name)
             VALUES.append(value)
+            VALUES_NAMES.append(name)
 
     setattr(klass, 'VALUES', VALUES)
+    setattr(klass, 'VALUES_NAMES', VALUES_NAMES)
     return klass

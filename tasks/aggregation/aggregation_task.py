@@ -56,7 +56,7 @@ def get_league_data(db_session: Session,
     select_fields = [model, PlayerGameData.hero_id, PlayerGameData.player_id, PlayerGameData.position_id]
 
     if comparison:
-        select_fields.append(ComparisonType.flat)
+        select_fields.append(ComparisonType.is_flat)
 
     # QUERY BUILDING
     select_query = (select(*select_fields)
@@ -70,7 +70,7 @@ def get_league_data(db_session: Session,
         clauses.extend([
             Performance.is_comparison == True,
             ComparisonType.basic == True,
-            ComparisonType.flat == flat, ])
+            ComparisonType.is_flat == flat, ])
     else:
         clauses.append(Performance.is_comparison == False)
 
@@ -82,7 +82,7 @@ def get_league_data(db_session: Session,
         'position_id': position_id,
         'hero_id': hero_id,
         'player_id': player_id,
-        **{"flat": flat},
+        **{"is_flat": flat},
         **model_obj.model_dump(include=fields), } for model_obj, hero_id, player_id, position_id, *flat in output.all()]
 
 

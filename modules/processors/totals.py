@@ -41,3 +41,14 @@ class TotalPerformanceProcessor:
                 setattr(PTD_obj, field, field_value / field_counter)
 
         return PTD_obj
+
+
+    @staticmethod
+    def create_object_from_dict(data: dict) -> PerformanceTotalData:
+        PTD_obj = PerformanceTotalData()
+
+        for field in PerformanceTotalData.const.VALUES:
+            value = data[field]
+            setattr(PTD_obj, field, value)
+
+        return PTD_obj

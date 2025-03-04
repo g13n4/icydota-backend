@@ -15,8 +15,8 @@ class ComparisonType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # if flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
-    flat: bool = Field(index=True)  # percent or flat
+    # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
+    is_flat: bool = Field(index=True)  # percent or is_flat
 
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
@@ -59,8 +59,8 @@ class AggregationType(SQLModel, table=True):
             "server_default": text("CURRENT_TIMESTAMP"),
         }
     )
-
-    type: int
+    # get from const
+    type_id: int
     # We can combine IDs to show that a hero can be flexed
     player_id: Optional[int] = _fk("players", "account_id")
 

@@ -18,7 +18,7 @@ OFFSET = 1
 
 
 class Performance(SQLModel, table=True):
-    __tablename__ = "performance"
+    __tablename__ = "performances"
 
     const: ClassVar[PerformanceTypeConstant] = PerformanceTypeConstant
 
@@ -132,12 +132,13 @@ class PerformanceWindowData(SQLModel, table=True):
     calc_type: Optional["PerformanceWindowCalculationType"] = Relationship(back_populates="pwct")
 
     game_performance_id: Optional[int] = Field(
-        default=None, foreign_key="games_performance.id", index=True
+        default=None, foreign_key="performances.id", index=True
     )
-    game_performance: Optional["Performance"] = Relationship(
+    performance: Optional["Performance"] = Relationship(
         back_populates="window_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
+
     # Fields to work with empty space
     l_empty_mask: Optional[int] = SMALLINT_FIELD_NULLABLE
     g_empty_mask: Optional[int] = SMALLINT_FIELD_NULLABLE
@@ -164,7 +165,7 @@ class PerformanceTotalData(SQLModel, table=True, metaclass=TotalMeta):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     game_performance_id: Optional[int] = Field(
-        default=None, foreign_key="games_performance.id", index=True
+        default=None, foreign_key="performances.id", index=True
     )
     game_performance: Optional["Performance"] = Relationship(
         back_populates="total_data",
@@ -178,10 +179,10 @@ class AbilityTotalData(SQLModel, table=True, metaclass=AbilityTotalMeta):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    game_performance_id: Optional[int] = Field(
-        default=None, foreign_key="games_performance.id", index=True
+    performance_id: Optional[int] = Field(
+        default=None, foreign_key="performances.id", index=True
     )
-    game_performance: Optional["Performance"] = Relationship(
-        back_populates="general_data",
+    performance: Optional["Performance"] = Relationship(
+        back_populates="ability_data",
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )

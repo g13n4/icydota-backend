@@ -114,7 +114,7 @@ def compare_position_performance(
         # FIRST - COMPARE PERFORMANCE ONE TO ONE
         for comp_name, is_flat, comp_func in [
             ("percent", False, div_df),
-            ("flat", True, sub_df),
+            ("is_flat", True, sub_df),
         ]:
             aggregated_df = get_df_slice(slot=player_slot, empty=True)
             opponents_number = 0

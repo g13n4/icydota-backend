@@ -117,7 +117,7 @@ async def get_performance_data_api(match_id: int,
                                    flat: bool = None,
                                    db=Depends(get_async_db_session)):
     if (comparison and comparison) and flat is None:
-        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be flat or percents")
+        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be is_flat or percents")
 
     is_comparison = COMPARISON_DICT.get(comparison, None)
 
@@ -154,7 +154,7 @@ async def get_performance_aggregated_data_api(league_id: int,
                                               flat: bool = True,
                                               db=Depends(get_async_db_session)):
     if comparison and flat is None:
-        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be flat or percents")
+        raise HTTPException(status_code=400, detail="Choose whether the windows_data for comparison should be is_flat or percents")
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(db_session=db,
                                                                             league_id=league_id,
@@ -180,7 +180,7 @@ async def get_performance_cross_comparison_data_api(league_id: int,
                                                     data_type: int,
                                                     flat: bool = True,
                                                     db=Depends(get_async_db_session)):
-    # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&flat=false HTTP/1.1"
+    # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&is_flat=false HTTP/1.1"
 
     data_dict, values_info = await get_cross_comparison_performance_data(db_session=db,
                                                                          league_id=league_id,

@@ -129,7 +129,10 @@ def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) 
 
 
 def to_dec(number: float | int | None, rounding: int = 2):
-    return number and round(Decimal(number), rounding)
+    if number is None:
+        return None
+
+    return round(Decimal(number), rounding)
 
 
 def get_positions_approximations(db_session: Session, model, league_id) -> Dict[int, int]:

@@ -1,46 +1,11 @@
-from collections import namedtuple
-
-from typing_extensions import ClassVar
-
-from constants.aggregation import AggregationConstant
 from models import PlayerGameData, Hero, Player, Position, Facet, ComparisonType, AggregationType
 from models.performance import PerformanceTotalData, PerformanceWindowData, Performance, \
     PerformanceWindowTable
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
-
-
-# Use the value from the from_model model instead of the actual model if it's set
-AggItem = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
+from const_map import AGGREGATION_MODELS, CCOMPARISON_MODELS
 
 
 class APIPerformanceQueryCreator:
-    AGG_HERO: ClassVar[AggItem] = AggItem(Hero, 'hero_id', AggregationType)
-    AGG_PLAYER: ClassVar[AggItem] = AggItem(Player, 'player_id', None)
-    AGG_POSITION: ClassVar[AggItem] = AggItem(Position, 'hero_id', AggregationType)
-    AGG_FACET: ClassVar[AggItem] = AggItem(Facet, 'facet_id', None)
-
-    AGGREGATION_MODELS: ClassVar[dict] = {
-        AggregationConstant.BY_HERO: AGG_HERO,
-        AggregationConstant.BY_PLAYER: AGG_PLAYER,
-        AggregationConstant.BY_POSITION: AGG_POSITION,
-        AggregationConstant.BY_HERO_PLAYER: [AGG_HERO, AGG_POSITION, ],
-        AggregationConstant.BY_HERO_FACET: [AGG_HERO, AGG_FACET],
-        AggregationConstant.BY_HERO_FACET_PLAYER: [
-            AGG_HERO,
-            AGG_FACET,
-            AGG_PLAYER,
-        ],
-    }
-
-    CCOMPARISON_MODELS: ClassVar[dict] = {
-        "hero": [(Hero.name, 'hero'), (Hero.id, 'hero_id'), (AggregationType.hero_cross_cps_id, 'opponent_id')],
-        "player": [
-            (Player.nickname, 'Player'),
-            (Player.account_id, 'account_id'),
-            (AggregationType.player_cross_cps_id, 'opponent_id')],
-    }
-
-
     def __init__(self):
         self.data_model = None
         self.data_model_name = None
@@ -81,12 +46,12 @@ class APIPerformanceQueryCreator:
             self.where.append(PerformanceWindowData.data_calculation_id == data_calculation_id)
 
 
-    def _set_comparison_model(self, flat: bool, basic: bool | None = None, name: None | str = None):
+    def _set_comparison_model(self, is_flat: bool, basic: bool | None = None, name: None | str = None):
         self.models.add(ComparisonType.cps_name_short, name or 'opponent', True)
         self.joins.add(ComparisonType, Performance.comparison_id == ComparisonType.id)
 
         self.where.append(ComparisonType.basic == basic)
-        self.where.append(ComparisonType.flat == flat)
+        self.where.append(ComparisonType.is_flat == is_flat)
 
 
     def _set_match_select_query_data(
@@ -117,9 +82,9 @@ class APIPerformanceQueryCreator:
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
-    def get_match_comparison_query(self, match_id: int, data_calculation_id: int, basic: bool, flat: bool, **kwargs):
+    def get_match_comparison_query(self, match_id: int, data_calculation_id: int, basic: bool, is_flat: bool, **kwargs):
         self._set_match_select_query_data(data_calculation_id=data_calculation_id, match_id=match_id)
-        self._set_comparison_model(basic=basic, flat=flat, name='compared_to')
+        self._set_comparison_model(basic=basic, is_flat=is_flat, name='compared_to')
         self.where.append(Performance.performance_type_id == Performance.const.game.MATCH_DATA_COMPARISON)
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
@@ -137,10 +102,12 @@ class APIPerformanceQueryCreator:
 
         self.joins.add(AggregationType, Performance.aggregation_id == AggregationType.id)
 
-        for agg_model, agg_mode_name in self.AGGREGATION_MODELS[aggregation_type]:
-            if agg_mode_name is not None:
-                agg_model = getattr(agg_model, agg_mode_name)
-            self.models.add(agg_model, agg_mode_name)
+        for agg_item in AGGREGATION_MODELS[aggregation_type]:
+            if agg_item.from_model is not None:
+                agg_model = getattr(agg_item.from_model, agg_item.associated_field)
+            else:
+                agg_model = agg_item.model
+            self.models.add(agg_model, agg_item.associated_field)
 
 
     def get_aggregation_query(self, league_id: int, aggregation_type: int, data_calculation_id: int, **kwargs):
@@ -149,7 +116,7 @@ class APIPerformanceQueryCreator:
             aggregation_type=aggregation_type,
             data_calculation_id=data_calculation_id
         )
-        self.where.append(AggregationType.type == aggregation_type)
+        self.where.append(AggregationType.type_ == aggregation_type)
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
@@ -158,7 +125,7 @@ class APIPerformanceQueryCreator:
             league_id: int,
             aggregation_type: int,
             data_calculation_id: int,
-            flat: bool,
+            is_flat: bool,
             **kwargs
     ):
         self._set_aggregation_select_query_data(
@@ -166,8 +133,8 @@ class APIPerformanceQueryCreator:
             aggregation_type=aggregation_type,
             data_calculation_id=data_calculation_id
         )
-        self._set_comparison_model(flat=flat)
-        self.where.append(AggregationType.type == aggregation_type)
+        self._set_comparison_model(is_flat=is_flat)
+        self.where.append(AggregationType.type_ == aggregation_type)
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
@@ -177,16 +144,16 @@ class APIPerformanceQueryCreator:
             position: str,
             data_field: str,
             data_calculation_id: int,
-            flat: bool,
+            is_flat: bool,
             **kwargs
     ):
         self._set_data_model(data_calculation_id=data_calculation_id, field=data_field)
 
         self.where.append(AggregationType.league_id == league_id)
-        self.where.append(ComparisonType.flat == flat)
+        self.where.append(ComparisonType.is_flat == is_flat)
         self.where.append(Performance.performance_type_id == Performance.const.game.CROSS_COMPARISON)
 
-        for model, model_name in self.CCOMPARISON_MODELS[aggregation_type]:
+        for model, model_name in CCOMPARISON_MODELS[aggregation_type]:
             self.models.add(model, model_name)
 
         self.joins.add(AggregationType, Performance.aggregation_id == AggregationType.id)
@@ -214,7 +181,7 @@ class APIPerformanceQueryCreator:
             position: str,
             data_field: str,
             data_calculation_id: int,
-            flat: bool,
+            is_flat: bool,
             **kwargs
     ):
 
@@ -225,7 +192,7 @@ class APIPerformanceQueryCreator:
             position=position,
             data_field=data_field,
             data_calculation_id=data_calculation_id,
-            flat=flat,
+            is_flat=is_flat,
             **kwargs,
         )
 

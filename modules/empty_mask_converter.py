@@ -1,6 +1,5 @@
 from itertools import zip_longest
-from typing import Any
-from typing import Iterable
+from collections.abc import Iterable
 
 from utils.helpers import is_invalid_value, to_bin_list
 

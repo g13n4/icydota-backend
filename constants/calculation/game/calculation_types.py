@@ -19,3 +19,4 @@ class WindowCalculations(
     GoldCalculations
 ):
     VALUES: list[CalculationItem]
+    VALUES_NAMES: list[str]

@@ -5,7 +5,7 @@ from models.performance import PerformanceWindowTable, PerformanceWindowData, Pe
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 
-def aggregation_query_creator(
+def ccomparison_query_creator(
         league_id: int,
         data_calculation_id: int | None,
         positions: list,
@@ -17,7 +17,7 @@ def aggregation_query_creator(
         Game.league_id == league_id,
         Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON,
         ComparisonType.basic == True,
-        ComparisonType.flat == flat,
+        ComparisonType.is_flat == flat,
         col(ComparisonType.pos_cpd_id).in_(positions)
     ]
 

@@ -4,6 +4,7 @@ from typing import Optional
 from typing_extensions import ClassVar
 
 from constants.aggregation import AggregationConstant
+from constants.calculation.cross_comparison import CrossComparisonConstant
 from .helpers import _fk
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
@@ -16,7 +17,8 @@ class ComparisonType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
-    is_flat: bool = Field(index=True)  # percent or is_flat
+    # can be none if it's a basic cross-comparison
+    is_flat: Optional[bool] = Field(index=True)  # percent or is_flat
 
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
@@ -33,14 +35,14 @@ class ComparisonType(SQLModel, table=True):
     player_cpd_id: Optional[int] = _fk("players", "account_id")
     player_cps_id: Optional[int] = _fk("players", "account_id")
 
-    hero_cpd_id: Optional[int] = _fk("heroes")
-    hero_cps_id: Optional[int] = _fk("heroes")
+    hero_cpd_id: Optional[int] = _fk("heroes", col_type="smallint")
+    hero_cps_id: Optional[int] = _fk("heroes", col_type="smallint")
 
-    facet_cpd_id: Optional[int] = _fk("facets")
-    facet_cps_id: Optional[int] = _fk("facets")
+    facet_cpd_id: Optional[int] = _fk("facets", col_type="smallint")
+    facet_cps_id: Optional[int] = _fk("facets", col_type="smallint")
 
-    pos_cpd_id: Optional[int] = _fk("positions")
-    pos_cps_id: Optional[int] = _fk("positions")
+    pos_cpd_id: Optional[int] = _fk("positions", col_type="smallint")
+    pos_cps_id: Optional[int] = _fk("positions", col_type="smallint")
 
     performance: Optional["Performance"] = Relationship(back_populates="comparison")
 
@@ -64,10 +66,10 @@ class AggregationType(SQLModel, table=True):
     # We can combine IDs to show that a hero can be flexed
     player_id: Optional[int] = _fk("players", "account_id")
 
-    hero_id: Optional[int] = _fk("heroes")
-    facet_id: Optional[int] = _fk("facets")
+    hero_id: Optional[int] = _fk("heroes", col_type="smallint")
+    facet_id: Optional[int] = _fk("facets", col_type="smallint")
 
-    position_id: Optional[int] = _fk("positions")
+    position_id: Optional[int] = _fk("positions", col_type="smallint")
 
     performance: Optional["Performance"] = Relationship(
         back_populates="aggregation"
@@ -88,25 +90,11 @@ class CrossComparisonType(SQLModel, table=True):
         }
     )
 
-    pos_player_cross: Optional[bool] = Field(default=False, index=True)
-    pos_hero_cross: Optional[bool] = Field(default=False, index=True)
-
-    sup_cross: Optional[bool] = Field(default=False, index=True)
-    carry_cross: Optional[bool] = Field(default=False, index=True)
-    mid_cross: Optional[bool] = Field(default=False, index=True)
-
-    player_id: Optional[int] = _fk("players", "account_id")
-    player_cross_cps_id: Optional[int] = _fk("players", "account_id")
-
-    hero_id: Optional[int] = _fk("heroes")
-    hero_cross_cps_id: Optional[int] = _fk("heroes")
-
-    facet_id: Optional[int] = _fk("facets")
-    facet_cps_id: Optional[int] = _fk("facets")
-
-    position_id: Optional[int] = _fk("positions")
-    position_cross_cps_id: Optional[int] = _fk("positions")
+    type_id: int
+    position_aggregation_id: int
 
     performance: Optional["Performance"] = Relationship(
         back_populates="cross_comparison"
     )
+
+    const: ClassVar[CrossComparisonConstant] = CrossComparisonConstant

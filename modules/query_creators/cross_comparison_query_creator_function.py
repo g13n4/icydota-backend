@@ -9,7 +9,7 @@ def ccomparison_query_creator(
         league_id: int,
         data_calculation_id: int | None,
         positions: list,
-        flat: bool | None = None
+        is_flat: bool | None = None
 ) -> tuple:
     models = ModelList()
     joins = JoinList()
@@ -17,7 +17,7 @@ def ccomparison_query_creator(
         Game.league_id == league_id,
         Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON,
         ComparisonType.basic == True,
-        ComparisonType.is_flat == flat,
+        ComparisonType.is_flat == is_flat,
         col(ComparisonType.pos_cpd_id).in_(positions)
     ]
 

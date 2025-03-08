@@ -17,12 +17,27 @@ class PositionConstant:
         HARD_SUPPORT,
     ]
 
-    OPPONENTS: dict = {
-        CARRY.value: [CARRY.value, OFFLANE.value],
-        MIDDLE.value: [MIDDLE.value],
-        OFFLANE.value: [CARRY.value, OFFLANE.value],
-        SOFT_SUPPORT.value: [SOFT_SUPPORT.value, HARD_SUPPORT.value],
-        HARD_SUPPORT.value: [SOFT_SUPPORT.value, HARD_SUPPORT.value],
-    }
+    POSITION_TO_NAME: dict = { pos.value: pos.name for pos in POSITIONS }
 
-    POS_TO_NAME: dict = {pos.value: pos.name for pos in POSITIONS}
+
+POSITION_OPPONENTS: dict = {
+    PositionConstant.CARRY.value: [
+        PositionConstant.CARRY.value,
+        PositionConstant.OFFLANE.value
+    ],
+    PositionConstant.MIDDLE.value: [
+        PositionConstant.MIDDLE.value,
+    ],
+    PositionConstant.OFFLANE.value: [
+        PositionConstant.CARRY.value,
+        PositionConstant.OFFLANE.value,
+    ],
+    PositionConstant.SOFT_SUPPORT.value: [
+        PositionConstant.SOFT_SUPPORT.value,
+        PositionConstant.HARD_SUPPORT.value,
+    ],
+    PositionConstant.HARD_SUPPORT.value: [
+        PositionConstant.SOFT_SUPPORT.value,
+        PositionConstant.HARD_SUPPORT.value,
+    ],
+}

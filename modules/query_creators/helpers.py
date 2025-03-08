@@ -27,7 +27,7 @@ class JoinList:
         self.data.append(create_join_dict(target=target, onclause=onclause, isouter=isouter))
 
 
-    def insert(self, target, onclause, isouter: bool = False, /, index: int = 0):
+    def insert(self, target, onclause, isouter: bool = False, *, index: int = 0):
         """Adds a join clause the end of the beginning of JoinList"""
         self.data.insert(index, create_join_dict(target=target, onclause=onclause, isouter=isouter))
 

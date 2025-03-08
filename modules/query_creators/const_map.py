@@ -1,17 +1,18 @@
 from collections import namedtuple
 
 from constants.aggregation import AggregationConstant
-from models import Hero, Player, Position, Facet, AggregationType
+from constants.calculation.cross_comparison import CrossComparisonTypeConstant, CrossComparisonPositionConstant
+from models import Hero, Player, Position, Facet, AggregationType, CrossComparisonType, ComparisonType
 
 
 # Use the value from the from_model model instead of the actual model if it's set
-Item = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
+AggItem = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
 
 
-HERO = Item(Hero, 'hero_id', AggregationType)
-PLAYER = Item(Player, 'player_id', None)
-POSITION = Item(Position, 'hero_id', AggregationType)
-FACET = Item(Facet, 'facet_id', None)
+HERO = AggItem(Hero, 'hero_id', AggregationType)
+PLAYER = AggItem(Player, 'player_id', None)
+POSITION = AggItem(Position, 'hero_id', AggregationType)
+FACET = AggItem(Facet, 'facet_id', None)
 
 
 AGGREGATION_MODELS = {
@@ -36,12 +37,32 @@ AGGREGATION_MODELS = {
 
 }
 
+CComItem = namedtuple('CComItem', ['field', 'field_name', 'auxiliary'], defaults=[False])
 
 
 CCOMPARISON_MODELS = {
-    "hero": [(Hero.name, 'hero'), (Hero.id, 'hero_id'), (AggregationType.hero_cross_cps_id, 'opponent_id')],
-    "player": [
-        (Player.nickname, 'Player'),
-        (Player.account_id, 'account_id'),
-        (AggregationType.player_cross_cps_id, 'opponent_id')],
+    CrossComparisonTypeConstant.POSITION_HERO: [
+        CComItem(ComparisonType.hero_cpd_id, 'hero_cpd_id', False),
+        CComItem(ComparisonType.hero_cps_id, 'hero_cps_id', False),
+    ],
+    CrossComparisonTypeConstant.POSITION_PLAYER: [
+        CComItem(Player.nickname, 'player', True),
+        CComItem(ComparisonType.player_cpd_id, 'player_cpd_id', False),
+        CComItem(ComparisonType.player_cps_id, 'player_cps_id', False),
+    ],
+    CrossComparisonTypeConstant.POSITION_HERO_FACET: [
+        CComItem(ComparisonType.hero_cpd_id, 'hero_cpd_id', False),
+        CComItem(ComparisonType.hero_cps_id, 'hero_cps_id', False),
+        CComItem(ComparisonType.facet_cpd_id, 'facet_cpd_id', False),
+        CComItem(ComparisonType.facet_cps_id, 'facet_cps_id', False),
+    ],
 }
+
+CCOMPARISON_JOIN = {
+    CrossComparisonTypeConstant.POSITION_HERO: [ ],
+    CrossComparisonTypeConstant.POSITION_PLAYER: [
+        (Player, AggregationType.player_id == Player.account_id)
+    ],
+    CrossComparisonTypeConstant.POSITION_HERO_FACET: [ ],
+}
+

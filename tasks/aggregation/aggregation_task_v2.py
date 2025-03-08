@@ -1,64 +1,15 @@
-from collections.abc import Iterable
-from typing import Any
-
-import numpy as np
-import pandas as pd
-
 from constants.calculation.game.calculation_types import WindowCalculations
-from constants.performance.total import GameTotals
-from constants.performance.window import AllWindows, WINDOWS_BY_MASK
 from db import get_sync_db_session
 from models import AggregationType, ComparisonType, League
 from models.performance import Performance
-from modules.empty_mask_converter import EmptyMaskConverter
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.aggregation_query_creator_function import aggregation_query_creator
-from tasks.aggregation.helpers import league_participants_data_query_creator, AggregationKeyCreator, COMPARISON_MAP
+from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, aggregation_league_participants_query_creator
 from sqlmodel import Session
 from celery import shared_task
 
-
-DATA_MODEL_FK_FIELDS = ['id', 'game_performance_id']
-# comparison / is_flat
-FLAT_LIST = [(False, None), (True, True), (True, False), ]
-
-
-def process_data(data: list[dict[str, Any]], group_by: list[str], is_window: bool) -> Iterable:
-    df = pd.DataFrame(data)
-    df.replace([np.inf, -np.inf, np.nan], None, inplace=True)
-
-    columns = AllWindows.VALUES_NAMES if is_window else GameTotals.VALUES_NAMES
-    aggregated_df = df.groupby(group_by)[columns].mean()
-
-    for idx, this_values_dict in aggregated_df.reset_index().T.to_dict().items():
-        yield this_values_dict
-
-
-def _process_mask(mask_name: str, mask: int | None) -> dict:
-    if mask is None:
-        return { }
-
-    windows = WINDOWS_BY_MASK[mask_name].VALUES_NAMES
-    return EmptyMaskConverter.mask_to_dict(mask, windows)
-
-
-def unpack_row(row: Iterable, names: list[str]) -> dict[str, Any]:
-    output_mask = { }
-    output = { }
-
-    for name, value in zip(names, row):
-        if name in ['l_empty_mask', 'g_empty_mask']:
-            mask_data = _process_mask(name, value)
-            output_mask.update(mask_data)
-        elif name in ['window_table', 'total_data']:
-            model_dump = value.model_dump(exclude=set(DATA_MODEL_FK_FIELDS))
-            output.update(model_dump)
-        else:
-            output[name] = value
-
-    output.update(output_mask)
-    return output
+from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data
 
 
 def create_performance_objs(
@@ -67,14 +18,14 @@ def create_performance_objs(
         AGC: AggregationKeyCreator,
         ) -> dict[tuple, Performance]:
     output = dict()
-    query, names = league_participants_data_query_creator(league_id=league_id)
+    query, names = aggregation_league_participants_query_creator(league_id=league_id)
     league_participants = db_session.exec(query)
 
     for row in league_participants:
         row_data = { name: value for name, value in zip(row, names) }
         required_row_data = AGC.create_dict(row_data)
 
-        for is_comparison, is_flat in FLAT_LIST:
+        for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
             row_key = AGC.create_key(row_data, append=is_flat)
 
             aggregation_obj = AggregationType(
@@ -131,7 +82,7 @@ def aggregation_task(league_id: int, aggregation_type: int):
 
     performance_dict = create_performance_objs(db_session=db_session, league_id=league_id, AGC=AGC)
 
-    for is_comparison, is_flat in FLAT_LIST:
+    for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
         for calculation in WindowCalculations.VALUES:
             query, names = aggregation_query_creator(
                 league_id=league_id,
@@ -164,6 +115,3 @@ def aggregation_task(league_id: int, aggregation_type: int):
             db_session.add(PTD_obj)
 
         db_session.commit()
-
-
-

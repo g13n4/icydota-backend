@@ -1,8 +1,8 @@
-from models import PlayerGameData, Hero, Player, Position, Facet, ComparisonType, AggregationType
+from models import PlayerGameData, Hero, Player, Position, Facet, ComparisonType, AggregationType, CrossComparisonType
 from models.performance import PerformanceTotalData, PerformanceWindowData, Performance, \
     PerformanceWindowTable
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
-from const_map import AGGREGATION_MODELS, CCOMPARISON_MODELS
+from const_map import AGGREGATION_MODELS, CCOMPARISON_MODELS, CCOMPARISON_JOIN
 
 
 class APIPerformanceQueryCreator:
@@ -140,45 +140,37 @@ class APIPerformanceQueryCreator:
 
     def _set_cross_comparison_query_data(
             self, league_id: int,
-            aggregation_type: str,
-            position: str,
+            aggregation_type_id: int,
+            position_id: int,
             data_field: str,
             data_calculation_id: int,
-            is_flat: bool,
+            is_flat: bool | None,
             **kwargs
     ):
         self._set_data_model(data_calculation_id=data_calculation_id, field=data_field)
 
         self.where.append(AggregationType.league_id == league_id)
         self.where.append(ComparisonType.is_flat == is_flat)
+
         self.where.append(Performance.performance_type_id == Performance.const.game.CROSS_COMPARISON)
 
-        for model, model_name in CCOMPARISON_MODELS[aggregation_type]:
-            self.models.add(model, model_name)
+        for item in CCOMPARISON_MODELS[aggregation_type_id]:
+            self.models.add(item.field, item.field_name)
 
-        self.joins.add(AggregationType, Performance.aggregation_id == AggregationType.id)
         self.joins.add(ComparisonType, Performance.comparison_id == ComparisonType.id)
+        self.joins.add(CrossComparisonType, Performance.cross_comparison_id == CrossComparisonType.id)
 
-        if aggregation_type == "player":
-            self.joins.add(Player, onclause=AggregationType.player_id == Player.account_id)
-            self.where.append(AggregationType.pos_player_cross == True)
-        else:
-            self.joins.add(Hero, onclause=AggregationType.hero_id == Hero.id)
-            self.where.append(AggregationType.pos_hero_cross == True)
+        self.where.append(CrossComparisonType.position_aggregation_id == position_id)
 
-        if position == 'support':
-            self.where.append(AggregationType.sup_cross == True)
-        elif position == 'core':
-            self.where.append(AggregationType.carry_cross == True)
-        else:
-            self.where.append(AggregationType.mid_cross == True)
+        for model, join in CCOMPARISON_JOIN[aggregation_type_id]:
+            self.joins.add(model, onclause=join)
 
 
     def get_cross_comparison_query(
             self,
             league_id: int,
-            aggregation_type: str,
-            position: str,
+            aggregation_type_id: int,
+            position_id: int,
             data_field: str,
             data_calculation_id: int,
             is_flat: bool,
@@ -188,8 +180,8 @@ class APIPerformanceQueryCreator:
 
         self._set_cross_comparison_query_data(
             league_id=league_id,
-            aggregation_type=aggregation_type,
-            position=position,
+            aggregation_type_id=aggregation_type_id,
+            position_id=position_id,
             data_field=data_field,
             data_calculation_id=data_calculation_id,
             is_flat=is_flat,

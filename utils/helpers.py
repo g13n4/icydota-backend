@@ -1,9 +1,9 @@
-import re
 import enum
+import re
+from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
 from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
-from datetime import datetime
 
 import numpy as np
 from psycopg2.errors import IntegrityError
@@ -11,6 +11,7 @@ from sqlmodel import select, Session
 
 
 T = TypeVar('T')
+
 
 def is_numeric_type(value, none_is_true: bool = True) -> bool:
     if none_is_true and value is None:
@@ -36,7 +37,7 @@ def get_both_slot_values(key: str | int) -> Tuple[str, int]:
 
 
 def combine_slot_dicts(*args) -> dict:
-    data = {f'_{x}': {} for x in range(10)}
+    data = { f'_{x}': { } for x in range(10) }
     for x in range(10):
         for item in args:
             key = f'_{x}'
@@ -81,10 +82,12 @@ def refresh_objects(db_session: Session, objects, ) -> None:
     return None
 
 
-def get_or_create_base(db_session: Session,
-                       model_obj: Type[T],
-                       get_key: Any,
-                       object_data: Dict[str, Any]) -> T:
+def get_or_create_base(
+        db_session: Session,
+        model_obj: Type[T],
+        get_key: Any,
+        object_data: Dict[str, Any]
+        ) -> T:
     obj = db_session.get(model_obj, get_key)
 
     if not obj:
@@ -106,8 +109,10 @@ def get_or_create(logger, *args, **kwargs):
             try:
                 output = get_or_create_base(*args, **kwargs)
             except IntegrityError:
-                logger.warning('It seems that the there is a problem with creating an object.' +
-                               "Let's give it another chance to ensure that it's not just an inserting error...")
+                logger.warning(
+                    'It seems that the there is a problem with creating an object.' +
+                    "Let's give it another chance to ensure that it's not just an inserting error..."
+                    )
         else:
             output = get_or_create_base(*args, **kwargs)
 
@@ -136,10 +141,12 @@ def to_dec(number: float | int | None, rounding: int = 2):
 
 
 def get_positions_approximations(db_session: Session, model, league_id) -> Dict[int, int]:
-    objs = db_session.exec(select(model.player_id, model.position_id).
-                           where(model.league_id == league_id))
+    objs = db_session.exec(
+        select(model.player_id, model.position_id).
+        where(model.league_id == league_id)
+        )
 
-    return {pid: poid for pid, poid in objs}
+    return { pid: poid for pid, poid in objs }
 
 
 class CaseInsensitiveEnum(str, enum.Enum):
@@ -159,3 +166,11 @@ def is_na_decimal(value: Any) -> bool:
 
 def to_str_time(unix_timestamp: int) -> str:
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y/%m/%d')
+
+
+def unique_list(*args) -> list:
+    output = []
+    for arg in args:
+        output += arg
+
+    return output

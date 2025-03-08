@@ -10,7 +10,7 @@ import pandas as pd
 from fuzzywuzzy import fuzz
 
 from constants.performance.window import AllWindows, WindowType
-from constants.position import PositionConstant
+from constants.position import PositionConstant, POSITION_OPPONENTS
 from models import PlayerGameData, PerformanceTotalData
 from utils import get_both_slot_values
 
@@ -147,7 +147,7 @@ class MatchPlayersData:
             slot_text, slot = get_both_slot_values(k)
             player = getattr(self, slot_text)
             player['position'] = v
-            player['position_name'] = PositionConstant.POS_TO_NAME[v]
+            player['position_name'] = PositionConstant.POSITION_TO_NAME[v]
         self._set_opponents()
 
 
@@ -168,7 +168,7 @@ class MatchPlayersData:
     def _set_position_names(self):
         players = self.get_all()
         for player in players:
-            player['position_name'] = PositionConstant.POS_TO_NAME[player['position']]
+            player['position_name'] = PositionConstant.POSITION_TO_NAME[player['position']]
         return
 
 
@@ -176,7 +176,7 @@ class MatchPlayersData:
         players = self.get_all()
         for player, pos in zip(players, opponents):
             player['position'] = pos
-            player['position_name'] = PositionConstant.POS_TO_NAME[pos]
+            player['position_name'] = PositionConstant.POSITION_TO_NAME[pos]
         self._set_opponents()
 
 
@@ -184,7 +184,7 @@ class MatchPlayersData:
         players = self.get_all()
         for player in players:
             player_position = player['position']
-            player_opponents_positions = PositionConstant.OPPONENTS[player_position]
+            player_opponents_positions = POSITION_OPPONENTS[player_position]
 
             for opponent in players:
                 if player['side'] == opponent['side'] or opponent['position'] not in player_opponents_positions:

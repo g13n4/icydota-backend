@@ -45,7 +45,7 @@ def get_league_data(db_session: Session,
     clauses = [Game.league_id == league_id,
                GamePerformance.type_id == GamePerformance.cons.game.MATCH_DATA_COMPARISON,
                ComparisonType.basic == True,
-               ComparisonType.flat == flat,
+               ComparisonType.is_flat == flat,
                col(ComparisonType.pos_cpd_id).in_(positions)
                ]
 
@@ -62,7 +62,7 @@ def get_league_data(db_session: Session,
 
     select_fields = [
         model,
-                     ComparisonType.flat,
+                     ComparisonType.is_flat,
                      ComparisonType.player_cpd_id,
                      ComparisonType.player_cps_id,
                      ComparisonType.hero_cpd_id,
@@ -84,7 +84,7 @@ def get_league_data(db_session: Session,
 
     output = db_session.exec(select_query)
     return [{
-        'flat': selected_fields[0],
+        'is_flat': selected_fields[0],
         'player_cpd_id': selected_fields[1],
         'player_cps_id': selected_fields[2],
         'hero_cpd_id': selected_fields[3],
@@ -172,7 +172,7 @@ def create_cross_comparison_aggregation(league_id: int):
         
     
         # TOTAL DATA
-        logger.info(f'Getting processing totals data (flat) [{pos_name}]')
+        logger.info(f'Getting processing totals data (is_flat) [{pos_name}]')
         process_td_flat = get_league_data(db_session=db_session, league_id=league_id, positions=positions, total=True, flat=True)
         PLAYER_TO_POS: Dict[int, int] = {item['player_cpd_id']: item['pos_cpd_id'] for item in process_td_flat}
         HERO_TO_POS: Dict[int, int] = {item['hero_cpd_id']: item['pos_cpd_id'] for item in process_td_flat}
@@ -183,7 +183,7 @@ def create_cross_comparison_aggregation(league_id: int):
         process_td_perc = process_data(data=process_td_perc, total=True)
 
         # WINDOW DATA
-        logger.info(f'Getting processing windows data (flat) [{pos_name}]')
+        logger.info(f'Getting processing windows data (is_flat) [{pos_name}]')
         window_wd_flat = get_league_data(db_session=db_session, league_id=league_id, positions=positions, total=False, flat=True)
         window_wd_flat = process_data(data=window_wd_flat, total=False)
 

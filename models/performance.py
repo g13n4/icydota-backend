@@ -1,12 +1,12 @@
 from typing import List, Optional, ClassVar
 
+import sqlalchemy as db
 from sqlmodel import Field, Relationship, SQLModel
 
 from constants.calculation.game.calculation_types import WindowCalculations
 from constants.calculation.game.category import WindowCategories
 from constants.game_performance import PerformanceTypeConstant
 from models.metaclasses import WindowMeta, TotalMeta, AbilityTotalMeta
-
 from .helpers import (
     SMALLINT_FIELD_NULLABLE,
     _fk,
@@ -24,7 +24,7 @@ class Performance(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    type_id: int
+    type_id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=True))
 
     # TYPE INFORMATION DATA
     cross_comparison_id: Optional[int] = _fk(
@@ -75,7 +75,6 @@ class Performance(SQLModel, table=True):
         }
     )
 
-
     player_game_data_id: Optional[int] = Field(
         default=None, foreign_key="players_game_data.id", index=True
     )
@@ -91,13 +90,14 @@ class PerformanceWindowCalculationCategory(SQLModel, table=True):
     const: ClassVar[WindowCategories] = WindowCategories
 
     id: Optional[int] = Field(default=None, primary_key=True)
+
     name: str  # damage / interval
     label: Optional[str]
     description: Optional[str]
 
     data_type: List["PerformanceWindowCalculationType"] = Relationship(
         back_populates="data_category",
-        sa_relationship_kwargs={"lazy": "selectin"},
+        sa_relationship_kwargs={ "lazy": "selectin" },
     )
 
 
@@ -107,6 +107,7 @@ class PerformanceWindowCalculationType(SQLModel, table=True):
     const: ClassVar[WindowCalculations] = WindowCalculations
 
     id: Optional[int] = Field(default=None, primary_key=True)
+
     name: str
 
     is_active: bool = Field(default=True)
@@ -131,7 +132,7 @@ class PerformanceWindowData(SQLModel, table=True):
     )
     calc_type: Optional["PerformanceWindowCalculationType"] = Relationship(back_populates="pwct")
 
-    game_performance_id: Optional[int] = Field(
+    performance_id: Optional[int] = Field(
         default=None, foreign_key="performances.id", index=True
     )
     performance: Optional["Performance"] = Relationship(
@@ -164,7 +165,7 @@ class PerformanceTotalData(SQLModel, table=True, metaclass=TotalMeta):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    game_performance_id: Optional[int] = Field(
+    performance_id: Optional[int] = Field(
         default=None, foreign_key="performances.id", index=True
     )
     game_performance: Optional["Performance"] = Relationship(

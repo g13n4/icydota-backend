@@ -4,12 +4,12 @@ from models import AggregationType, ComparisonType, League
 from models.performance import Performance
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
-from modules.query_creators.aggregation_query_creator_function import aggregation_query_creator
-from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, aggregation_league_participants_query_creator
+from modules.query_creators.match_aggregation_query_creator_function import match_aggregation_query_creator
+from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, match_aggregation_league_participants_query_creator
 from sqlmodel import Session
 from celery import shared_task
 
-from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data
+from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data, get_query_data
 
 
 def create_performance_objs(
@@ -18,7 +18,7 @@ def create_performance_objs(
         AGC: AggregationKeyCreator,
         ) -> dict[tuple, Performance]:
     output = dict()
-    query, names = aggregation_league_participants_query_creator(league_id=league_id)
+    query, names = match_aggregation_league_participants_query_creator(league_id=league_id)
     league_participants = db_session.exec(query)
 
     for row in league_participants:
@@ -38,7 +38,7 @@ def create_performance_objs(
                 comparison_data = { COMPARISON_MAP[name].cpd: value for name, value in required_row_data.items() }
 
                 comparison_obj = ComparisonType(
-                    flat=is_flat,
+                    is_flat=is_flat,
                     basic=False,
                     **comparison_data,
                 )
@@ -58,18 +58,7 @@ def create_performance_objs(
     return output
 
 
-def get_query_data(db_session, query, names: list[str]) -> list[dict]:
-    query_output = db_session.exec(query)
-
-    data = list()
-    for row in query_output.all():
-        row_data = unpack_row(row, names)
-        data.append(row_data)
-
-    return data
-
-
-@shared_task(name="aggregate_league", ignore_result=True)
+@shared_task(name="aggregate_league_match", ignore_result=True)
 def aggregation_task(league_id: int, aggregation_type: int):
     db_session: Session = get_sync_db_session(expire=False)
 
@@ -84,12 +73,12 @@ def aggregation_task(league_id: int, aggregation_type: int):
 
     for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
         for calculation in WindowCalculations.VALUES:
-            query, names = aggregation_query_creator(
+            query, names = match_aggregation_query_creator(
                 league_id=league_id,
                 data_calculation_id=calculation.value,
                 is_comparison=is_comparison,
-                is_flat=is_flat,
-            )
+                is_flat=is_flat
+                )
             data = get_query_data(db_session=db_session, query=query, names=names)
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):
@@ -100,12 +89,12 @@ def aggregation_task(league_id: int, aggregation_type: int):
 
             db_session.commit()
 
-        query, names = aggregation_query_creator(
+        query, names = match_aggregation_query_creator(
             league_id=league_id,
             data_calculation_id=None,
             is_comparison=is_comparison,
-            is_flat=is_flat,
-        )
+            is_flat=is_flat
+            )
         data = get_query_data(db_session=db_session, query=query, names=names)
 
         for total_data in process_data(data=data, group_by=columns, is_window=False):

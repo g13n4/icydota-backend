@@ -3,7 +3,7 @@ from models.performance import PerformanceWindowTable, PerformanceWindowData, Pe
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 
-def aggregation_query_creator(
+def match_aggregation_query_creator(
         league_id: int,
         data_calculation_id: int | None,
         is_comparison: bool = False,

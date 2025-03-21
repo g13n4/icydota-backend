@@ -87,3 +87,10 @@ class GetItemHelper:
         return getattr(cls, key)
 
 
+def sec_to_min(value: int) -> str:
+    return f"{value / 60:.1f} min."
+
+
+def to_range(value1: int, value2: int) -> str:
+    return " - ".join(map(sec_to_min, [value1, value2]))
+

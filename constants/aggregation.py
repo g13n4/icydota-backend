@@ -9,3 +9,4 @@ class AggregationConstant:
 
     BY_HERO_FACET_PLAYER: int = 7
     BY_PLAYER_HERO_FACET: int = 8
+

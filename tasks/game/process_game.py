@@ -12,6 +12,7 @@ from sqlmodel import Session
 from constants.performance.game_side import SidePerformance
 from db import get_sync_db_session
 from models import Player, Team, SidePerformanceData, PlayerGameData, Game, PositionApproximation
+from models.game import Patch
 from models.performance import PerformanceTotalData
 from tasks.game.helpers import fix_odota_data
 from tasks.game.proces_game_replay import process_game_replay
@@ -134,8 +135,10 @@ def process_game_data(match_id: int, league_id: int | None = None):
     db_session: Session = get_sync_db_session()
 
     game = db_session.get(Game, match_id)
+    processed_counter = 1
     if game:
         logger.warning('Deleting already existing Game object')
+        processed_counter = game.processed_counter
         db_session.delete(game)
         db_session.commit()
 
@@ -144,6 +147,16 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     with open(json_path, "r") as match_json:
         game_data = json.load(match_json)
+
+    patch_id = game_data['patch']
+    patch_obj = db_session.get(Patch, patch_id)
+    if patch_obj is None:
+        patch_obj = Patch(
+            id=...,
+            name=...,
+            date=...,
+        )
+
 
     if not league_id:
         league_id = game_data['league']['leagueid']
@@ -272,11 +285,13 @@ def process_game_data(match_id: int, league_id: int | None = None):
     game = Game(
         id=match_id,
 
+        processed_counter=processed_counter,
+
         league=league_obj,
         league_id=league_obj.id,
         name=f"{teams_dict['radiant'].name} vs {teams_dict['dire'].name}",
 
-        patch=game_data['patch'],
+        patch_id=patch_obj.id,
 
         sent_team_id=teams_dict['radiant'].id,
         dire_team_id=teams_dict['dire'].id,
@@ -294,8 +309,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
         dire_building_status_id=additional_data['dire_building_status_id'],
         sent_building_status_id=additional_data['sent_building_status_id'],
 
-        sent_game_data_id=game_data_sent_obj.id,
-        dire_game_data_id=game_data_dire_obj.id,
+        sent_performance_id=game_data_sent_obj.id,
+        dire_performance_id=game_data_dire_obj.id,
 
         game_start_time=game_data['start_time'],
         duration=game_data['duration'],

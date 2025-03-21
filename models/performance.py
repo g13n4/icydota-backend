@@ -57,6 +57,16 @@ class Performance(SQLModel, table=True):
         },
     )
 
+    by_team_id: Optional[int] = Field(
+        default=None, foreign_key="by_team_types.id", index=True
+    )
+    by_team_type: Optional["ByTeamType"] = Relationship(
+        back_populates="performance",
+        sa_relationship_kwargs={
+            "cascade": "all,delete",
+        },
+    )
+
     # PERFORMANCE DATA
     window_data: List["PerformanceWindowData"] = Relationship(
         back_populates="game_performance",

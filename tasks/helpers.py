@@ -3,8 +3,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from celery import shared_task, shared_task
-from sqlmodel import Session, Session
 
 from constants.performance.total import GameTotals
 from constants.performance.window import WINDOWS_BY_MASK, AllWindows
@@ -50,3 +48,14 @@ def process_data(data: list[dict[str, Any]], group_by: list[str], is_window: boo
 
     for idx, this_values_dict in aggregated_df.reset_index().T.to_dict().items():
         yield this_values_dict
+
+
+def get_query_data(db_session, query, names: list[str]) -> list[dict]:
+    query_output = db_session.exec(query)
+
+    data = list()
+    for row in query_output.all():
+        row_data = unpack_row(row, names)
+        data.append(row_data)
+
+    return data

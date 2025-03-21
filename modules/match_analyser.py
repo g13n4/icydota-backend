@@ -3,15 +3,15 @@ import json
 import math
 import pathlib
 import re
-from typing import Any, Tuple, Optional
-from typing import TypedDict
+from typing import Any, Optional, TypedDict
 
 import pandas as pd
 from fuzzywuzzy import fuzz
 
 from constants.performance.window import AllWindows, WindowType
 from constants.position import PositionConstant, POSITION_OPPONENTS
-from models import PlayerGameData, PerformanceTotalData
+from models import PlayerGameData
+from models.performance import PerformanceTotalData
 from utils import get_both_slot_values
 
 
@@ -32,6 +32,8 @@ class MatchPlayer(TypedDict, total=False):
 
     player: str | None
     player_id: int | None
+
+    team_id: int | None
 
     opponents: list[int]
 

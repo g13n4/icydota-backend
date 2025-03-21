@@ -23,7 +23,7 @@ class TotalPerformanceProcessor:
 
 
     @staticmethod
-    def reduce_total_objs(objects: list[PerformanceTotalData]) -> PerformanceTotalData:
+    def reduce_total_objs(objects: list[PerformanceTotalData], *, mode: str = "avg") -> PerformanceTotalData:
         PTD_obj = PerformanceTotalData()
 
         for field in PerformanceTotalData.const.VALUES:
@@ -38,7 +38,13 @@ class TotalPerformanceProcessor:
                     field_counter += 1
 
             if field_value is not None:
-                setattr(PTD_obj, field, field_value / field_counter)
+                match mode:
+                    case "avg":
+                        setattr(PTD_obj, field, field_value / field_counter)
+                    case "sum":
+                        setattr(PTD_obj, field, field_value)
+                    case _:
+                        raise ValueError(f"{_} mode does not exist for totals reducing!")
 
         return PTD_obj
 

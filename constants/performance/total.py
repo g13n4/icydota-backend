@@ -57,16 +57,21 @@ class GameTotals:
     sentry_uses: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=17)
     lane_efficiency: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=18)
     lane_efficiency_pct: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=19)
+
     first_blood_claimed: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=20, description="FB")
-    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21)
-    lost_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=22)
-    destroyed_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=23)
     first_kill_time: GameTotal = GameTotal(value_type=int, index=24)
+
+    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21)
     first_death_time: GameTotal = GameTotal(value_type=int, index=25)
-    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26, pseudo_bool=True)
+
+    lost_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=22)
     lost_tower_time: GameTotal = GameTotal(value_type=int, index=27)
+    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26, pseudo_bool=True)
+
+    destroyed_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=23)
     destroyed_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=28, pseudo_bool=True)
     destroyed_tower_time: GameTotal = GameTotal(value_type=int, index=29)
+
     win: GameTotal = GameTotal(value_type=int, index=30, aggregation_only=True)
 
     VALUES: ClassVar[list[GameTotal]]

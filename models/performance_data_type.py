@@ -5,6 +5,7 @@ from typing_extensions import ClassVar
 
 from constants.aggregation import AggregationConstant
 from constants.calculation.cross_comparison import CrossComparisonConstant
+from constants.match import TeamMatchConstant, TeamSideConstant
 from .helpers import _fk
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
@@ -56,7 +57,7 @@ class AggregationType(SQLModel, table=True):
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
     
-    created_at: datetime = Field(
+    created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
         }
@@ -84,7 +85,7 @@ class CrossComparisonType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
-    created_at: datetime = Field(
+    created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
         }
@@ -98,3 +99,29 @@ class CrossComparisonType(SQLModel, table=True):
     )
 
     const: ClassVar[CrossComparisonConstant] = CrossComparisonConstant
+
+
+class ByTeamType(SQLModel, table=True):
+    __tablename__ = "by_team_types"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    match_id: Optional[int] = _fk('games', col_type='big')
+    team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
+
+    created_at: Optional[datetime] = Field(
+        sa_column_kwargs={
+            "server_default": text("CURRENT_TIMESTAMP"),
+        }
+    )
+
+    is_flat: Optional[bool] = Field(index=True)
+
+    team_cpd_id: Optional[int] = Field(default=None, foreign_key="teams.id")
+    team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")
+
+    performance: Optional["Performance"] = Relationship(
+        back_populates="aggregation"
+    )

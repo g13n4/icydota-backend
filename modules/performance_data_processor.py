@@ -1,3 +1,5 @@
+import copy
+import operator
 from collections import defaultdict
 from functools import reduce
 
@@ -10,6 +12,7 @@ from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.window import AllWindows
 from models import ComparisonType, PlayerGameData
 from models.performance import Performance
+from models.performance_data_type import ByTeamType
 from modules.match_analyser import MatchPlayer
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
@@ -33,13 +36,23 @@ class PerformanceDataProcessor:
     TOTALS_MAP = create_totals_map(WindowCalculations.VALUES)
     COLUMN_MAP = {item.name: item.index - OFFSET for item in AllWindows.VALUES}
 
-    def __init__(self, db_session: AsyncSession, players_data: list[MatchPlayer], ):
+    DIRE = "dire"
+    SENT = "sent"
+
+    SIDE_OPPOSITE = {
+        DIRE: SENT,
+        SENT: DIRE,
+    }
+
+    def __init__(self, db_session: AsyncSession, players_data: list[MatchPlayer]):
         self.session = db_session
 
         self.windows_data = dict()
         self.game_performance = dict()
         self.players_data = dict()
         self.opponents = dict()
+
+        self.windows_teams = dict()
 
         for this_player in players_data:
             slot: int = this_player['slot']
@@ -49,8 +62,10 @@ class PerformanceDataProcessor:
             self.players_data[slot] = this_player
             self.opponents[slot] = this_player['opponents']
 
+        self.PROCESSED_GAME_DATA = False
 
-    def calculate_totals(self):
+
+    def calculate_windows_totals_by_type(self):
         for name, matrix in self.windows_data.items():
             for windows, total_window in AllWindows.WINDOWS_PROCESSING:
                 columns_idxs = [item.index - OFFSET for item in windows]
@@ -80,6 +95,39 @@ class PerformanceDataProcessor:
         self.game_performance[slot].append(GP_obj)
 
 
+    def _fill_performance_with_comparison_data(
+            self,
+            P_obj: Performance,
+            windows_ndarray_cpd,
+            windows_ndarray_cps,
+            total_obj_cpd,
+            total_obj_cps,
+            is_flat: bool,
+            add_to_session: bool = False,
+    ) -> None | Performance:
+
+        pwd_objs = []
+        for PWD_obj in WindowsPerformanceProcessor.comparison_data_to_pwds(
+                windows_ndarray_cpd,
+                windows_ndarray_cps,
+                is_flat
+        ):
+            pwd_objs.append(PWD_obj)
+
+        P_obj.window_data = pwd_objs
+
+        P_obj.total_data = TotalPerformanceProcessor.comparison_data_objs_to_ptd(
+            total_obj_cpd,
+            total_obj_cps,
+            is_flat,
+        )
+
+        if add_to_session:
+            self.session.add(P_obj)
+        else:
+            return P_obj
+
+
     def process_slot_comparisons(self, comparandum_slot: int):
         comparandum_data = self.players_data[comparandum_slot]
         opponents = self.opponents[comparandum_slot]
@@ -99,7 +147,7 @@ class PerformanceDataProcessor:
             for is_flat in [True, False]:
 
                 comparison_obj = ComparisonType(
-                    flat=is_flat,
+                    is_flat=is_flat,
                     basic=True,
 
                     player_cpd_id=comparandum_data['player_id'],
@@ -141,13 +189,13 @@ class PerformanceDataProcessor:
                 self.game_performance[comparandum_slot].append(GP_obj)
 
         # Aggregated comparison
-        windows_data_aggregation = reduce(lambda x, y: x + y, windows_data) / opponents_size
+        windows_data_aggregation = reduce(operator.add, windows_data) / opponents_size
         totals_data_aggregation = TotalPerformanceProcessor.reduce_total_objs(totals_data)
 
         for is_flat in [True, False]:
 
             comparison_obj = ComparisonType(
-                flat=is_flat,
+                is_flat=is_flat,
                 basic=False,
 
                 player_cpd_id=comparandum_data['player_id'],
@@ -161,32 +209,109 @@ class PerformanceDataProcessor:
                 comparison_type=comparison_obj,
             )
 
-            pwd_objs = []
-            for PWD_obj in WindowsPerformanceProcessor.comparison_data_to_pwds(
-                    comparandum_windows_data,
-                    windows_data_aggregation,
-                    is_flat
-            ):
-                pwd_objs.append(PWD_obj)
-
-            GP_obj.window_data = pwd_objs
-
-            GP_obj.total_data = TotalPerformanceProcessor.comparison_data_objs_to_ptd(
-                comparandum_total_data,
-                totals_data_aggregation,
-                is_flat,
+            GP_obj = self._process_comparison(
+                P_obj=GP_obj,
+                windows_ndarray_cpd=comparandum_windows_data,
+                windows_ndarray_cps=windows_data_aggregation,
+                total_obj_cpd=comparandum_total_data,
+                total_obj_cps=totals_data_aggregation,
+                is_flat=is_flat,
             )
 
             self.session.add(GP_obj)
             self.game_performance[comparandum_slot].append(GP_obj)
 
 
+
+    def process_side_data(self, match_data: dict):
+        if not self.PROCESSED_GAME_DATA:
+            raise AssertionError("To process sides you need to process players data first!")
+
+        side_data = {
+                "ndarray": None,
+                "total": None,
+            }
+
+        sides_data = {
+            self.DIRE: copy.deepcopy(side_data),
+            self.SENT: copy.deepcopy(side_data),
+        }
+
+        for side, side_offset in [
+            (self.DIRE, 0),  # sentinel_offset
+            (self.SENT, 5),  # dire_offset
+        ]:
+
+            TT_obj = ByTeamType(
+                league_id=match_data["league_id"],
+                match_id=match_data["league_id"],
+                patch_id=match_data["league_id"],
+                team_id=match_data[side],
+            )
+
+            GP_obj = Performance(
+                type_id=Performance.const.team.TEAM_MATCH,
+                by_team_type=TT_obj,
+            )
+
+            side_indexes = [self.windows_data[slot] for slot in range(side_offset, 5 + side_offset)]
+            windows_df = reduce(operator.add, side_indexes)
+
+            total_objs = [self.players_data[idx]["performance_total_data"] for idx in side_indexes]
+            total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs)
+
+            GP_obj.total_data = total_obj
+
+            pwd_objs = []
+            for PWD_obj in WindowsPerformanceProcessor.data_to_pwds(windows_df):
+                pwd_objs.append(PWD_obj)
+
+            GP_obj.window_data = pwd_objs
+
+            sides_data[side]["ndarray"] = windows_df
+            sides_data[side]["total"] = total_obj
+
+            self.session.add(GP_obj)
+
+
+        for side, data in sides_data.items():
+            for is_flat in [True, False]:
+
+                opponents_side = self.SIDE_OPPOSITE[side]
+                TT_obj = ByTeamType(
+                    league_id=match_data["league_id"],
+                    match_id=match_data["league_id"],
+                    patch_id=match_data["league_id"],
+                    team_id=match_data[side],
+
+                    is_flat=is_flat,
+                    team_cpd_id=match_data[side],
+                    team_cps_id=match_data[opponents_side],
+                )
+
+                P_obj = Performance(
+                    type_id=Performance.const.team.TEAM_MATCH_COMPARISON,
+                    by_team_type=TT_obj,
+                )
+
+                self._fill_performance_with_comparison_data(
+                    P_obj=P_obj,
+                    windows_ndarray_cpd=sides_data[side]["ndarray"],
+                    windows_ndarray_cps=sides_data[opponents_side]["ndarray"],
+                    total_obj_cpd=sides_data[side]["ndarray"],
+                    total_obj_cps=sides_data[opponents_side]["ndarray"],
+                    is_flat=is_flat,
+                    add_to_session=True
+                )
+
+
     def process_game_data(self):
-        self.calculate_totals()
+        self.calculate_windows_totals_by_type()
         for slot in self.windows_data.keys():
             self.process_slot(slot)
             self.process_slot_comparisons(slot)
 
+        self.PROCESSED_GAME_DATA = True
 
 
     def get_all_player_game_data(self) -> list[PlayerGameData]:

@@ -1,11 +1,9 @@
 from collections import namedtuple
 from typing import Any
 
-from celery import shared_task, shared_task
-from sqlmodel import Session, Session
-
 from models import Game, PlayerGameData
 from models.performance import Performance
+from models.performance_data_type import ByTeamType
 from modules.query_creators.const_map import AGGREGATION_MODELS
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
@@ -14,15 +12,17 @@ APPEND_CONST = "___APPEND_CONST"
 
 
 class AggregationKeyCreator:
-    def __init__(self, type_id: int):
-        self.type_id = type_id
-        self.models = AGGREGATION_MODELS[type_id]
-        self.fields = [item.associated_field for item in AGGREGATION_MODELS[type_id]]
-
+    def __init__(self, match_type_id: int | None = None, *, fields: list[str] | None = None ):
+        if match_type_id:
+            self.type_id = match_type_id
+            self.fields = [item.associated_field for item in AGGREGATION_MODELS[match_type_id]]
+        elif fields:
+            self.fields = fields
+        else:
+            raise ValueError("Can't create {self.__name__} without id for match or fields for team")
 
     def get_fields(self):
         return self.fields
-
 
     def create_key(self, data: dict, fields: list[str] | None = None, *, append: Any = APPEND_CONST) -> tuple:
         """Get a dictionary and extract values from it according to the fields set"""
@@ -53,7 +53,7 @@ COMPARISON_MAP = {
 }
 
 
-def aggregation_league_participants_query_creator(league_id: int) -> tuple:
+def match_aggregation_league_participants_query_creator(league_id: int) -> tuple:
     models = ModelList()
     joins = JoinList()
     where = [Game.league_id == league_id]
@@ -65,5 +65,17 @@ def aggregation_league_participants_query_creator(league_id: int) -> tuple:
 
     joins.add(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
     joins.add(Game, Game.id == PlayerGameData.game_id)
+
+    return combine_select(models.get_models(), joins.data, where).distinct(), models.get_names()
+
+
+def team_aggregation_league_participants_query_creator(league_id: int) -> tuple:
+    models = ModelList()
+    joins = JoinList()
+    where = [ByTeamType.league_id == league_id]
+
+    models.add(ByTeamType.team_id, 'team_id', True)
+    models.add(ByTeamType.patch_id, 'patch_id', True)
+    joins.add(Performance, PlayerGameData.id == Performance.player_game_data_id)
 
     return combine_select(models.get_models(), joins.data, where).distinct(), models.get_names()

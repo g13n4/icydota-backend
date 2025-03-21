@@ -27,6 +27,7 @@ class Game(SQLModel, table=True):
     )  # match_id
 
     name: Optional[str]
+    processed_counter: int
 
     league: Optional["League"] = Relationship(back_populates="games")
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
@@ -107,7 +108,7 @@ class PlayerGameData(SQLModel, table=True):
         sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
     )
 
-    created_at: datetime = Field(
+    created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
         }

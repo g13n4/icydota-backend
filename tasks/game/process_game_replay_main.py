@@ -1,9 +1,15 @@
 import pandas as pd
 
-from modules import MatchAnalyser, MatchSplitter
+from modules.match_analyser import MatchAnalyser
+from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
-from replay_parsing import process_interval_windows, process_pings_windows, process_damage_windows, process_xp_windows, \
-    process_gold_windows, process_deward_windows, process_wards_windows
+from replay_parsing.processors.damage import process_damage_windows
+from replay_parsing.processors.deward import process_deward_windows
+from replay_parsing.processors.gold import process_gold_windows
+from replay_parsing.processors.interval.process_interval_windows import process_interval_windows
+from replay_parsing.processors.pings import process_pings_windows
+from replay_parsing.processors.wards import process_wards_windows
+from replay_parsing.processors.xp import process_xp_windows
 
 
 def set_processor_data(match: MatchAnalyser,

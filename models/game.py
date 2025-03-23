@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import List, Optional
 
 import sqlalchemy as db
-from models.helpers import _fk, sa_kwargs_setter
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 
+from models.helpers import _fk, sa_kwargs_setter
 from models.metaclasses import SidePerformanceMeta
 
 
@@ -39,14 +39,21 @@ class Game(SQLModel, table=True):
     dire_win: bool
 
     players_game_data: List["PlayerGameData"] = Relationship(
-        back_populates="game", sa_relationship_kwargs=sa_kwargs_setter()
+        back_populates="game",
+        sa_relationship_kwargs=sa_kwargs_setter(add_default=True)
     )
 
     average_roshan_window_time: Optional[int]
-    roshan_death: List["RoshanDeath"] = Relationship(back_populates="game")
+    roshan_death: List["RoshanDeath"] = Relationship(
+        back_populates="game",
+        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+    )
 
     first_ten_kills_dire: bool
-    hero_death: List["HeroDeath"] = Relationship(back_populates="game")
+    hero_death: List["HeroDeath"] = Relationship(
+        back_populates="game",
+        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+    )
 
     dire_lost_first_tower: bool
     dire_building_status_id: Optional[int] = Field(
@@ -57,10 +64,10 @@ class Game(SQLModel, table=True):
     )
 
     sent_performance_id: Optional[int] = _fk(
-        "games_data", cascade=True, **{"index": True}
+        "games_data", cascade=True, **{ "index": True }
     )
     dire_performance_id: Optional[int] = _fk(
-        "games_data", cascade=True, **{"index": True}
+        "games_data", cascade=True, **{ "index": True }
     )
 
     game_start_time: int = Field(

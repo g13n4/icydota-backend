@@ -13,7 +13,6 @@ class SPItem(BaseModel):
 
     index: int
     name: str | None = None
-    total_name: str | None = None
     description: str | None = None
 
 
@@ -26,9 +25,6 @@ def set_total_name(klass: object):
 
             if value.description is None:
                 value.description = to_proper_name(name)
-
-            if value.odota_name is None:
-                value.odota_name = name
 
             values.append(value)
 

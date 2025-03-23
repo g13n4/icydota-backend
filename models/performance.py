@@ -180,7 +180,6 @@ class PerformanceTotalData(SQLModel, table=True, metaclass=TotalMeta):
     )
     game_performance: Optional["Performance"] = Relationship(
         back_populates="total_data",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
 
 
@@ -195,5 +194,4 @@ class AbilityTotalData(SQLModel, table=True, metaclass=AbilityTotalMeta):
     )
     performance: Optional["Performance"] = Relationship(
         back_populates="ability_data",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )

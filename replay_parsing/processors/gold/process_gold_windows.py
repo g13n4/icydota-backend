@@ -4,9 +4,9 @@ from typing import Dict
 import pandas as pd
 
 from constants.calculation.game.calculation_type.gold import GoldCalculations as Calculations
-from modules import MatchSplitter
+from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
-from replay_parsing.processors import process_output
+from replay_parsing.processors.processing_utils import process_output
 
 
 GOLD_REASON = {

@@ -52,7 +52,7 @@ def create_performance_dict(
 
 
 @shared_task(name="cross_comparison_league_match", ignore_result=True)
-def aggregation_task(league_id: int, ccomparison_type: int):
+def cross_comparison_league_match(league_id: int, ccomparison_type: int):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)

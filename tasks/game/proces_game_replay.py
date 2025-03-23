@@ -4,8 +4,9 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, Any, Tuple, List
 
-from models import PerformanceTotalData, GamePerformance, PlayerGameData
-from modules import MatchAnalyser, MatchSplitter
+from models import PlayerGameData
+from modules.match_analyser import MatchAnalyser
+from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 from tasks.game.process_game_replay_addtitional import process_additional_replay_data
 from tasks.game.process_game_replay_main import set_processor_data

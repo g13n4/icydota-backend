@@ -1,4 +1,3 @@
-from typing import Callable
 import numpy as np
 
 
@@ -10,16 +9,6 @@ def process_output(output, allow_none: bool = False):
         return output
 
     return float(output)
-
-
-def normalise_output_type_wrapper(allow_none: bool = False):
-    def wrapper_outer(func: Callable) -> Callable:
-        def wrapper_inner(*args, **kwargs) -> int | float | None:
-            output = func(*args, **kwargs)
-
-            return process_output(output, allow_none=allow_none)
-        return wrapper_inner
-    return wrapper_outer
 
 
 def is_numeric_type(value, none_is_true: bool = True) -> bool:

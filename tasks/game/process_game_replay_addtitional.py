@@ -5,9 +5,10 @@ import pandas as pd
 from models import HeroDeath
 from models import Building, BuildingDestroyed, BuildingNotDestroyed
 from models import RoshanDeath, BuildingData
-from modules import MatchAnalyser, MatchPlayersData
+from modules.match_analyser import MatchPlayersData, MatchAnalyser
 from modules.performance_data_processor import PerformanceDataProcessor
-from replay_parsing import process_building, process_hero_deaths, process_roshan_deaths
+from replay_parsing.processors.buildings import process_building
+from replay_parsing.processors.deaths import process_hero_deaths, process_roshan_deaths
 from utils import get_all_sqlmodel_objs
 
 

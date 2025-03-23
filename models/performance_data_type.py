@@ -5,7 +5,6 @@ from typing_extensions import ClassVar
 
 from constants.aggregation import AggregationConstant
 from constants.calculation.cross_comparison import CrossComparisonConstant
-from constants.match import TeamMatchConstant, TeamSideConstant
 from .helpers import _fk
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
@@ -108,7 +107,7 @@ class ByTeamType(SQLModel, table=True):
 
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
-    match_id: Optional[int] = _fk('games', col_type='big')
+    match_id: Optional[int] = _fk('games', col_type='bigint')
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 
     created_at: Optional[datetime] = Field(
@@ -123,5 +122,5 @@ class ByTeamType(SQLModel, table=True):
     team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 
     performance: Optional["Performance"] = Relationship(
-        back_populates="aggregation"
+        back_populates="by_team"
     )

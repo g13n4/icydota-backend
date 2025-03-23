@@ -1,7 +1,7 @@
 class CrossComparisonTypeConstant:
-    POSITION_PLAYER: 1
-    POSITION_HERO: 2
-    POSITION_HERO_FACET: 3
+    POSITION_PLAYER = 1
+    POSITION_HERO = 2
+    POSITION_HERO_FACET = 3
 
 
 class CrossComparisonPositionConstant:

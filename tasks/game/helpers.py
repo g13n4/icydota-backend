@@ -1,6 +1,6 @@
 from typing import Dict, Any
 
-from modules import ODOTAPositionNormaliser
+from modules.odota_position_normaliser import ODOTAPositionNormaliser
 
 
 def fix_odota_data(odota_data: Dict[str, Any]) -> None:

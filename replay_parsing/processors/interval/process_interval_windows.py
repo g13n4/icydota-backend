@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 
 from constants.calculation.game.calculation_type.interval import IntervalCalculations
-from modules import MatchSplitter
+from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
-from replay_parsing.processors.interval import execute_window_aggregation
+from replay_parsing.processors.interval.aggregation_executer import execute_window_aggregation
 
 
 def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: PerformanceDataProcessor, ) -> None:

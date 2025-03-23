@@ -6,14 +6,14 @@ from sqlmodel import Field, SQLModel
 from constants.abilities.total import AbilityTotals, AbilityTotal
 from constants.performance.game_side import SPItem, SidePerformance
 from constants.performance.total import GameTotals, GameTotal
-from constants.performance.window import AllWindows
+from constants.performance.window import AllWindows, GameWindow
 
 
 class WindowMeta(type(SQLModel)):
     def __new__(cls, name, bases, dct, **kwargs):
         for attrib_name, annotation_type in AllWindows.__annotations__.items():
             game_window_value = getattr(AllWindows, attrib_name)
-            if type(annotation_type) is AllWindows:
+            if type(annotation_type) is GameWindow:
                 # create it for pydantic
                 setattr(cls, attrib_name, Field(default=None, nullable=True))
                 cls.__annotations__[attrib_name] = condecimal(max_digits=10, decimal_places=2)

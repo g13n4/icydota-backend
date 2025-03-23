@@ -59,7 +59,7 @@ def create_performance_objs(
 
 
 @shared_task(name="aggregate_league_team", ignore_result=True)
-def aggregation_task(league_id: int):
+def aggregate_league_team(league_id: int):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)

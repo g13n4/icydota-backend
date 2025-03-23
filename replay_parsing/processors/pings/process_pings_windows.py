@@ -1,7 +1,7 @@
 import pandas as pd
 
 from constants.calculation.game.calculation_type.pings import PingsCalculations as Calculations
-from modules import MatchSplitter
+from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
 
 

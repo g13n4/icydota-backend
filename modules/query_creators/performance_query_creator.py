@@ -2,7 +2,7 @@ from models import PlayerGameData, Hero, Player, Position, Facet, ComparisonType
 from models.performance import PerformanceTotalData, PerformanceWindowData, Performance, \
     PerformanceWindowTable
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
-from const_map import AGGREGATION_MODELS, CCOMPARISON_MODELS, CCOMPARISON_JOIN
+from modules.query_creators.const_map import AGGREGATION_MODELS, CCOMPARISON_MODELS, CCOMPARISON_JOIN
 
 
 class APIPerformanceQueryCreator:

@@ -61,7 +61,7 @@ def sa_kwargs_setter(
 SMALLINT_FIELD_NULLABLE = Field(
     sa_column=db.Column(
         db.SMALLINT,
-        nullable=False,
+        nullable=True,
         primary_key=False,
     )
 )

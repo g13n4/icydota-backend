@@ -1,9 +1,20 @@
+from typing import Callable
+
 import numpy as np
 import pandas as pd
 
 from constants.calculation.game.calculation_type.interval import IntervalCalculationAggregationMethod as AGG_METHOD
 from constants.calculation.game.calculation_type.interval import IntervalCalculationColumn as COLUMN
-from replay_parsing.processors import normalise_output_type_wrapper
+
+
+def normalise_output_type_wrapper(allow_none: bool = False):
+    def wrapper_outer(func: Callable) -> Callable:
+        def wrapper_inner(*args, **kwargs) -> int | float | None:
+            output = func(*args, **kwargs)
+
+            return process_output(output, allow_none=allow_none)
+        return wrapper_inner
+    return wrapper_outer
 
 
 def _clean_division(x, y) -> int | float:

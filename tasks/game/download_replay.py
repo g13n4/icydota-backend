@@ -11,9 +11,11 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 
 
-CURRENT_DIR = Path(__file__).parent.parent.absolute()
+CURRENT_DIR = Path(__file__).parent.parent.parent.absolute()
 BASE_REPLAY_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
-
+print(BASE_REPLAY_PATH)
+print(Path(BASE_REPLAY_PATH))
+print(Path(BASE_REPLAY_PATH).is_dir())
 assert Path(BASE_REPLAY_PATH).is_dir() == True
 
 logger = get_task_logger(__name__)

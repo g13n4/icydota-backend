@@ -170,7 +170,7 @@ async def get_performance_aggregated_data_api(
         db_session=db,
         league_id=league_id,
         aggregation_type=aggregation_type,
-        data_type=data_type,
+        data_calculation_id=data_type,
         game_stage=game_stage,
         is_comparison=comparison,
         flat=flat
@@ -201,8 +201,8 @@ async def get_performance_cross_comparison_data_api(
         league_id=league_id,
         aggregation_type=aggregation_type.value,
         position=position.value,
-        data_type=data_type,
         data_field=data_field,
+        data_calculation_id=data_type,
         flat=flat
         )
 
@@ -264,8 +264,8 @@ async def get_performance_cross_comparison_data_api(
 if not LIGHT_MODE:
     from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks.bulk_aggregation_process import process_full_cycle, mass_process
-    from tasks.aggregation_tasks_helper import approximate_positions_helper, cross_compare_league_helper, \
-        aggregate_league_helper, set_comparison_names_helper
+    from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, approximate_positions_helper, set_comparison_names_helper
+
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
@@ -284,12 +284,12 @@ if not LIGHT_MODE:
 
     @icydota_api.post(API_PREFIX + '/aggregate/league/{league_id}', status_code=202)
     async def aggregate_league_api(league_id: int):
-        aggregate_league_helper(league_id=league_id, )
+        aggregate_league_task_helper(league_id=league_id, )
 
 
     @icydota_api.post(API_PREFIX + '/aggregate/cross_comparison/{league_id}', status_code=202)
     async def create_cross_comparison_api(league_id: int):
-        cross_compare_league_helper(league_id=league_id, )
+        cross_compare_league_task_helper(league_id=league_id, )
 
 
     @icydota_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)

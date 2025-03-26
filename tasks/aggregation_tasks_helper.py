@@ -22,24 +22,22 @@ def delete_league(league_id: int) -> None:
     delete_league_task.si(league_id=league_id)
 
 
-def aggregate_league_match_helper(league_id: int) -> None:
-    (delete_aggregation_league_match.si(league_id=league_id, cross_comparison=False) |
-     aggregate_league_match.si(league_id=league_id)).apply_async()
+def aggregate_league_task_helper(league_id: int) -> None:
+    (
+            delete_aggregation_league_team.si(league_id=league_id, cross_comparison=False) |
+            aggregate_league_team.si(league_id=league_id) |
+            delete_aggregation_league_match.si(league_id=league_id, cross_comparison=False) |
+            aggregate_league_match.si(league_id=league_id)
+    ).apply_async()
 
 
-def aggregate_league_team_helper(league_id: int) -> None:
-    (delete_aggregation_league_team.si(league_id=league_id, cross_comparison=False) |
-     aggregate_league_team.si(league_id=league_id)).apply_async()
-
-
-def cross_compare_league_match_helper(league_id: int) -> None:
-    (delete_cross_comparison_match.si(league_id=league_id, cross_comparison=True) |
-     cross_comparison_league_match.si(league_id=league_id)).apply_async()
-
-
-def cross_compare_league_team_helper(league_id: int) -> None:
-    (delete_cross_comparison_team.si(league_id=league_id, cross_comparison=True) |
-     cross_comparison_league_team.si(league_id=league_id)).apply_async()
+def cross_compare_league_task_helper(league_id: int) -> None:
+    (
+            delete_cross_comparison_team.si(league_id=league_id, cross_comparison=True) |
+            cross_comparison_league_team.si(league_id=league_id) |
+            delete_cross_comparison_match.si(league_id=league_id, cross_comparison=True) |
+            cross_comparison_league_match.si(league_id=league_id)
+    ).apply_async()
 
 
 def set_comparison_names_helper() -> None:

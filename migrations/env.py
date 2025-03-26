@@ -7,8 +7,9 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from models import SQLModel
+from sqlmodel import SQLModel
 from dotenv import load_dotenv
+from models import *
 
 
 # this is the Alembic Config object, which provides

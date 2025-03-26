@@ -21,17 +21,17 @@ class PerformanceRanking(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    performance_ranking_type_id: Optional[int] = Field(
+    type_id: Optional[int] = Field(
         default=None, foreign_key="performance_ranking_types.id", index=True
     )
 
     player_id: Optional[int] = Field(
-        default=None, foreign_key="players.account_id", index=True
+        default=None, foreign_key="players.account_id"
     )
-    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id", index=True)
+    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
 
-    team_id: Optional[int] = Field(default=None, foreign_key="teams.id", index=True)
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
 
 
 class PerformanceWindowRanking(SQLModel, table=True):

@@ -1,16 +1,20 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 
+from constants.performance.game_side import SidePerformance
 from models.helpers import _fk, sa_kwargs_setter
-from models.metaclasses import SidePerformanceMeta
+from models.mixins.helpers import inherit_annotations
+from models.mixins.side_performance import SidePerformanceDataMixin
 
+@inherit_annotations
+class SidePerformanceData(SidePerformanceDataMixin, SQLModel, table=True):
+    __tablename__ = "sides_performance_data"
 
-class SidePerformanceData(SQLModel, table=True, metaclass=SidePerformanceMeta):
-    __tablename__ = "side_performance_data"
+    const: ClassVar[SidePerformance] = SidePerformance
 
     id: int = Field(default=None, primary_key=True, index=True)
 
@@ -64,10 +68,10 @@ class Game(SQLModel, table=True):
     )
 
     sent_performance_id: Optional[int] = _fk(
-        "games_data", cascade=True, **{ "index": True }
+        "sides_performance_data", cascade=True
     )
     dire_performance_id: Optional[int] = _fk(
-        "games_data", cascade=True, **{ "index": True }
+        "sides_performance_data", cascade=True
     )
 
     game_start_time: int = Field(

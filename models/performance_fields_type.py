@@ -1,12 +1,15 @@
-from typing import Optional, ClassVar
+from typing import Optional
 
+import sqlalchemy as db
 from sqlmodel import Field, SQLModel
 
 
 class PerformanceWindowField(SQLModel, table=True):
     __tablename__ = "performance_window_fields"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    # id from const
+    id: Optional[int] = Field(sa_column=db.Column(db.SMALLINT, primary_key=True))
+
     name: str
     is_active: bool = Field(default=True)
 
@@ -15,7 +18,11 @@ class PerformanceWindowField(SQLModel, table=True):
 class PerformanceTotalField(SQLModel, table=True):
     __tablename__ = "performance_total_fields"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    # id from const
+    id: Optional[int] = Field(sa_column=db.Column(db.SMALLINT, primary_key=True))
 
+    field_id: int
     name: str
     is_active: bool = Field(default=True)
+
+

@@ -7,10 +7,10 @@ from sqlmodel import Session, select
 
 from db import get_sync_db_session
 from models import Game, League
-from tasks.league.create_league import get_or_create_league, update_league_obj_dates
-from tasks.game.process_game import process_game_data
-from tasks.game.download_replay import get_match_replay
 from tasks.approximate_positions import approximate_positions
+from tasks.game.download_replay import get_match_replay
+from tasks.game.process_game import process_game_data
+from tasks.league.create_league import get_or_create_league, update_league_obj_dates
 from utils import bool_pool
 
 
@@ -28,9 +28,11 @@ def process_game_helper(match_id: int, league_id: int | None = None, get_chain: 
     match_chain.apply_async()
 
 
-def process_league(league_obj: League | None = None,
-                   league_id: int | None = None,
-                   overwrite: bool = False):
+def process_league(
+        league_obj: League | None = None,
+        league_id: int | None = None,
+        overwrite: bool = False
+        ):
     db_session: Session = get_sync_db_session()
 
     league_obj = get_or_create_league(league_id, db_session, league_obj)
@@ -38,14 +40,15 @@ def process_league(league_obj: League | None = None,
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_obj.id}/matches')
     league_match_data = r.json()
 
-    db_league_games: Dict[int, Game] = {x.id: x for x in league_obj.games}
+    db_league_games: Dict[int, Game] = { x.id: x for x in league_obj.games }
     new_games_found = 0
     for idx, game in enumerate(league_match_data):
         if game['match_id'] in db_league_games and not overwrite:
             continue
         else:
-            process_game_helper(match_id=game['match_id'],
-                                league_id=league_obj.id, )
+            process_game_helper(
+                match_id=game['match_id'],
+                league_id=league_obj.id, )
 
             new_games_found += 1
 
@@ -53,14 +56,14 @@ def process_league(league_obj: League | None = None,
     return new_games_found
 
 
-
 @shared_task(name='process_league_games_(cron)')
 def process_leagues_cron() -> None:
     db_session: Session = get_sync_db_session()
     logger.info(f'Processing leagues: start')
 
-    sel_res = db_session.exec(select(League).where(League.has_started == True and
-                                                   League.fully_parsed == False))
+    sel_res = db_session.exec(
+        select(League).where(League.has_started == True and League.fully_parsed == False)
+    )
     league_objs: List[League] = sel_res.all()
 
     for league_obj in league_objs:
@@ -95,4 +98,3 @@ def update_leagues_dates_cron() -> None:
     db_session.commit()
     db_session.close()
     logger.info(f'Updating leagues dates: complete')
-

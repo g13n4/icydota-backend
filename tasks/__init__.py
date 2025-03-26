@@ -1,2 +1,3 @@
-from tasks.game.proces_game_replay import process_game_replay
 from tasks.league.cron_tasks import process_league, process_leagues_cron, update_leagues_dates_cron
+from tasks.approximate_positions import approximate_positions
+from tasks.set_comparison_names import set_comparison_names

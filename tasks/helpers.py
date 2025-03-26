@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from constants.performance.total import GameTotals
-from constants.performance.window import WINDOWS_BY_MASK, AllWindows
+from constants.performance.window import WINDOWS_BY_MASK, AllWindows, WindowEmptyMask
 from modules.empty_mask_converter import EmptyMaskConverter
 
 
@@ -26,7 +26,7 @@ def unpack_row(row: Iterable, names: list[str]) -> dict[str, Any]:
     output = { }
 
     for name, value in zip(names, row):
-        if name in ['l_empty_mask', 'g_empty_mask']:
+        if name in [WindowEmptyMask.l_empty_masWindowEmptyMask.g_empty_mask]:
             mask_data = process_mask(name, value)
             output_mask.update(mask_data)
         elif name in ['window_table', 'total_data']:

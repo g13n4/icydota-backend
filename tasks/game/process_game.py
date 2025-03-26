@@ -31,14 +31,13 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 
-def create_game_data_objs(total_data: Dict[int, PerformanceTotalData]) -> tuple[
-    SidePerformanceData, SidePerformanceData]:
+def create_game_data_objs(totala: Dict[int, PerformanceTotalData]) -> tuple[SidePerformanceData, SidePerformanceData]:
     dict_sides = {
         'sent': { 'first_blood_claimed': False },
         'dire': { 'first_blood_claimed': False },
     }
 
-    for slot, PTD_item in total_data.items():
+    for slot, PTD_item in totala.items():
         PTD_item_dict = PTD_item.model_dump()
         this_side_name = 'sent' if slot < 5 else 'dire'
         this_side_dict = dict_sides[this_side_name]
@@ -265,7 +264,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(
         { slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict }
-    )
+        )
     db_session.add(game_data_sent_obj)
     db_session.add(game_data_dire_obj)
 

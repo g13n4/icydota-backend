@@ -1,0 +1,3 @@
+from tasks.cross_comparison.delete import delete_cross_comparison_team, delete_cross_comparison_match
+from tasks.cross_comparison.match import cross_comparison_league_match
+from tasks.cross_comparison.team import cross_comparison_league_team

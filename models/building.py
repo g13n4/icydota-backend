@@ -47,7 +47,9 @@ class BuildingDestroyed(SQLModel, table=True):
     naked_throne: bool = Field(default=False)
 
     building_data_id: Optional[int] = Field(
-        default=None, foreign_key="buildings_data.id"
+        default=None,
+        foreign_key="buildings_data.id",
+        ondelete="CASCADE",
     )
     building_data: Optional["BuildingData"] = Relationship(
         back_populates="destruction_order"
@@ -80,12 +82,15 @@ class BuildingNotDestroyed(SQLModel, table=True):
 
 
 class BuildingData(SQLModel, table=True):
+    __tablename__ = "buildings_data"
+
     id: Optional[int] = Field(default=None, primary_key=True)
 
     dire: bool
 
-    destruction_order: List["InGameBuildingDestroyed"] = Relationship(
-        back_populates="building_data"
+    destruction_order: List["BuildingDestroyed"] = Relationship(
+        back_populates="building_data",
+        cascade_delete = True,
     )
 
     destroyed_buildings: Optional[int]
@@ -102,11 +107,10 @@ class BuildingData(SQLModel, table=True):
     # additional tower info
     naked_throne: Optional[bool]
 
-    not_destroyed: Optional["InGameBuildingNotDestroyed"] = Relationship(
-        back_populates="building_data"
+    not_destroyed: Optional["BuildingNotDestroyed"] = Relationship(
+        back_populates="building_data",
     )
     not_destroyed_id: Optional[int] = Field(
         default=None, foreign_key="in_game_buildings_not_destroyed.id"
     )
 
-    __tablename__ = "buildings_data"

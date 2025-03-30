@@ -9,9 +9,12 @@ from fastapi.middleware.gzip import GZipMiddleware
 from api.table.table_data import get_performance_data, get_performance_data_comparison, get_aggregated_performance_data, \
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
+from celery_app import celery_app
 from db import get_async_db_session
 from utils import CaseInsensitiveEnum
 
+
+__all__ = ['celery_app']
 
 load_dotenv()
 
@@ -47,13 +50,6 @@ icydota_api.add_middleware(
 
 icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 
-
-# CHECKING IF CELERY IS RUNNING
-# try:
-#     celery_app.broker_connection().ensure_connection(max_retries=3)
-# except Exception as ex:
-#     raise RuntimeError("Failed to connect to celery broker, {}".format(str(ex)))
-#
 
 # TEST
 @icydota_api.get(API_PREFIX + '/index/', status_code=200)
@@ -116,12 +112,12 @@ async def get_performance_data_api(
         comparison: Optional[str] = None,
         flat: bool = None,
         db=Depends(get_async_db_session)
-        ):
+):
     if (comparison and comparison) and flat is None:
         raise HTTPException(
             status_code=400,
             detail="Choose whether the windows_data for comparison should be is_flat or percents"
-            )
+        )
 
     is_comparison = COMPARISON_DICT.get(comparison, None)
 
@@ -131,7 +127,7 @@ async def get_performance_data_api(
             match_id=match_id,
             data_type=data_type,
             game_stage=game_stage.value,
-            )
+        )
     else:
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(
             db_session=db,
@@ -140,7 +136,7 @@ async def get_performance_data_api(
             game_stage=game_stage.value,
             basic=comparison == "player",
             flat=flat,
-            )
+        )
 
     output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
 
@@ -159,22 +155,22 @@ async def get_performance_aggregated_data_api(
         comparison: bool = False,
         flat: bool = True,
         db=Depends(get_async_db_session)
-        ):
+):
     if comparison and flat is None:
         raise HTTPException(
             status_code=400,
             detail="Choose whether the windows_data for comparison should be is_flat or percents"
-            )
+        )
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(
         db_session=db,
         league_id=league_id,
         aggregation_type=aggregation_type,
-        data_calculation_id=data_type,
+        calculation_type_id=data_type,
         game_stage=game_stage,
         is_comparison=comparison,
         flat=flat
-        )
+    )
 
     if not items:
         raise HTTPException(status_code=404)
@@ -193,7 +189,7 @@ async def get_performance_cross_comparison_data_api(
         data_type: int,
         flat: bool = True,
         db=Depends(get_async_db_session)
-        ):
+):
     # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&is_flat=false HTTP/1.1"
 
     data_dict, values_info = await get_cross_comparison_performance_data(
@@ -202,9 +198,9 @@ async def get_performance_cross_comparison_data_api(
         aggregation_type=aggregation_type.value,
         position=position.value,
         data_field=data_field,
-        data_calculation_id=data_type,
+        calculation_type_id=data_type,
         flat=flat
-        )
+    )
 
     if not data_dict.keys():
         raise HTTPException(status_code=404)
@@ -264,7 +260,8 @@ async def get_performance_cross_comparison_data_api(
 if not LIGHT_MODE:
     from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks.bulk_aggregation_process import process_full_cycle, mass_process
-    from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, approximate_positions_helper, set_comparison_names_helper
+    from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
+        approximate_positions_helper, set_comparison_names_helper
 
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
@@ -278,7 +275,7 @@ if not LIGHT_MODE:
 
     @icydota_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
     async def process_match_api(match_id: int):
-        process_game_helper(match_id=match_id, )
+        process_game_helper(match_id=match_id)
         return { 'status': 'processing' }
 
 
@@ -312,7 +309,7 @@ if not LIGHT_MODE:
     async def mass_process_api(
             process_type: ProcessTypes,
             ids: Annotated[Union[list[int], None], Query()] = None
-            ):
+    ):
         mass_process(process_type=process_type.value, league_ids=ids)
 
 

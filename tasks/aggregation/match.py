@@ -75,7 +75,7 @@ def aggregate_league_match(league_id: int, aggregation_type: int):
         for calculation in WindowCalculations.VALUES:
             query, names = match_aggregation_query_creator(
                 league_id=league_id,
-                data_calculation_id=calculation.value,
+                calculation_type_id=calculation.value,
                 is_comparison=is_comparison,
                 is_flat=is_flat
                 )
@@ -91,7 +91,7 @@ def aggregate_league_match(league_id: int, aggregation_type: int):
 
         query, names = match_aggregation_query_creator(
             league_id=league_id,
-            data_calculation_id=None,
+            calculation_type_id=None,
             is_comparison=is_comparison,
             is_flat=is_flat
             )

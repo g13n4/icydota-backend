@@ -19,7 +19,7 @@ class WindowsPerformanceProcessor:
             to_decimal: bool = False,
     ) -> PerformanceWindowData:
         PWT_data = dict()
-        PWD_obj = PerformanceWindowData(data_calculation_id=calculation_id)
+        PWD_obj = PerformanceWindowData(calc_type_id=calculation_id)
         for windows_fields, empty_mask_name in AllWindows.EMPTY_MASK_WINDOWS_MAP:
 
             calculation_window_data = dict()

@@ -12,7 +12,7 @@ def delete_cross_comparison_match(league_id: int):
     db_session: Session = get_sync_db_session(expire=False)
 
     select_performance_ids = (select(Performance.id)
-    .join(AggregationType, AggregationType.id == Performance.aggregation_id)
+    .join(AggregationType, AggregationType.performance_id == Performance.id)
     .where(
         AggregationType.league_id == league_id,
         Performance.type_id.in_(
@@ -31,7 +31,7 @@ def delete_cross_comparison_team(league_id: int):
     db_session: Session = get_sync_db_session(expire=False)
 
     select_performance_ids = (select(Performance.id)
-    .join(ByTeamType, ByTeamType.id == Performance.by_team_id)
+    .join(ByTeamType, ByTeamType.performance_id == Performance.id)
     .where(
         ByTeamType.league_id == league_id,
         Performance.type_id.in_(

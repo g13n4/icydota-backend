@@ -1,8 +1,7 @@
 from typing import Dict
 
 import sqlalchemy as db
-from sqlmodel import Field
-from sqlmodel import ForeignKey
+from sqlmodel import Field, ForeignKey
 
 
 column_type = {
@@ -33,7 +32,7 @@ def _fk(
     )
 
 
-DEFAULT_SA_KWARGS = {"cascade": "all,delete", "join_depth": 3, "lazy": "selectin"}
+DEFAULT_SA_KWARGS = { "cascade": "all,delete", "join_depth": 3, "lazy": "selectin" }
 
 
 def sa_kwargs_setter(
@@ -73,5 +72,3 @@ SMALLINT_FIELD_NOT_NULLABLE = Field(
         primary_key=False,
     )
 )
-
-

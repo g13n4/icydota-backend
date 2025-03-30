@@ -5,7 +5,7 @@ from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 def match_aggregation_query_creator(
         league_id: int,
-        data_calculation_id: int | None,
+        calculation_type_id: int | None,
         is_comparison: bool = False,
         is_flat: bool | None = None
 ) -> tuple:
@@ -25,7 +25,7 @@ def match_aggregation_query_creator(
         models.add(ComparisonType.is_flat, 'is_flat', True)
 
         joins.add(Game, Game.id == PlayerGameData.game_id)
-        joins.add(ComparisonType, ComparisonType.id == Performance.comparison_id)
+        joins.add(ComparisonType, ComparisonType.performance_id == Performance.id)
 
         where.append(Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON)
         where.append(ComparisonType.basic == True)
@@ -33,7 +33,7 @@ def match_aggregation_query_creator(
     else:
         where.append(Performance.type_id == Performance.const.game.MATCH_DATA)
 
-    if data_calculation_id:
+    if calculation_type_id:
         models.add(PerformanceWindowData.l_empty_mask, 'l_empty_mask', True)
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
@@ -47,7 +47,7 @@ def match_aggregation_query_creator(
             index=1,
         )
 
-        where.append(PerformanceWindowData.data_calculation_id == data_calculation_id)
+        where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
         joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)

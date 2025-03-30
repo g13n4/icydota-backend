@@ -73,6 +73,7 @@ class GameTotals:
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
     win: GameTotal = GameTotal(value_type=Optional[int], index=30, aggregation_only=True)
+    picked: GameTotal = GameTotal(value_type=Optional[int], index=31, aggregation_only=True)
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

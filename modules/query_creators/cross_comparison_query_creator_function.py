@@ -8,7 +8,7 @@ from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 def match_ccomparison_query_creator(
         league_id: int,
-        data_calculation_id: int | None,
+        calculation_type_id: int | None,
         positions: list,
         is_flat: bool | None = None
 ) -> tuple:
@@ -22,7 +22,7 @@ def match_ccomparison_query_creator(
         col(ComparisonType.pos_cpd_id).in_(positions)
     ]
 
-    if data_calculation_id:
+    if calculation_type_id:
         models.add(PerformanceWindowData.l_empty_mask, 'l_empty_mask', True)
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
@@ -36,7 +36,7 @@ def match_ccomparison_query_creator(
             index=1,
         )
 
-        where.append(PerformanceWindowData.data_calculation_id == data_calculation_id)
+        where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
         joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)
@@ -50,14 +50,14 @@ def match_ccomparison_query_creator(
 
     joins.add(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
     joins.add(Game, Game.id == PlayerGameData.game_id)
-    joins.add(ComparisonType, ComparisonType.id == Performance.comparison_id)
+    joins.add(ComparisonType, ComparisonType.performance_id == Performance.id)
 
     return combine_select(models.get_models(), joins.data, where), models.get_names()
 
 
 def team_ccomparison_query_creator(
         league_id: int,
-        data_calculation_id: int | None,
+        calculation_type_id: int | None,
         positions: list,
         is_flat: bool | None = None
 ) -> tuple:
@@ -70,7 +70,7 @@ def team_ccomparison_query_creator(
         col(ComparisonType.pos_cpd_id).in_(positions),
     ]
 
-    if data_calculation_id:
+    if calculation_type_id:
         models.add(PerformanceWindowData.l_empty_mask, 'l_empty_mask', True)
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
@@ -84,7 +84,7 @@ def team_ccomparison_query_creator(
             index=1,
         )
 
-        where.append(PerformanceWindowData.data_calculation_id == data_calculation_id)
+        where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
         joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)
@@ -93,6 +93,6 @@ def team_ccomparison_query_creator(
     models.add(ByTeamType.team_cps_id, 'team_cps_id', True)
     models.add(ByTeamType.patch_id, 'patch_id', True)
 
-    joins.add(ByTeamType, ByTeamType.id == Performance.by_team_id)
+    joins.add(ByTeamType, ByTeamType.performance_id == Performance.id)
 
     return combine_select(models.get_models(), joins.data, where), models.get_names()

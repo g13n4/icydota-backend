@@ -69,7 +69,7 @@ def cross_comparison_league_match(league_id: int, ccomparison_type: int):
             for calculation in WindowCalculations.VALUES:
                 query, names = match_ccomparison_query_creator(
                     league_id=league_id,
-                    data_calculation_id=calculation.value,
+                    calculation_type_id=calculation.value,
                     positions=enemies,
                     is_flat=is_flat
                     )
@@ -97,7 +97,7 @@ def cross_comparison_league_match(league_id: int, ccomparison_type: int):
 
             query, names = match_ccomparison_query_creator(
                 league_id=league_id,
-                data_calculation_id=None,
+                calculation_type_id=None,
                 positions=enemies,
                 is_flat=is_flat
                 )

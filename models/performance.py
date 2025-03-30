@@ -11,7 +11,6 @@ from constants.performance.total import GameTotals
 from constants.performance.window import AllWindows
 from .helpers import (
     _fk,
-    sa_kwargs_setter,
 )
 from .mixins.abilities import AbilityTotalDataMixin
 from .mixins.helpers import inherit_annotations
@@ -21,8 +20,6 @@ from .mixins.windows import PerformanceWindowTableMixin
 
 OFFSET = 1
 
-
-# TODO: Delete this version of db and create a new one
 
 class Performance(SQLModel, table=True):
     __tablename__ = "performances"
@@ -34,66 +31,39 @@ class Performance(SQLModel, table=True):
     type_id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=False))
 
     # TYPE INFORMATION DATA
-    cross_comparison_id: Optional[int] = _fk(
-        "cross_comparison_types", col_type="smallint"
-    )
     cross_comparison_type: Optional["CrossComparisonType"] = Relationship(
         back_populates="performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        },
+        cascade_delete=True,
     )
 
-    comparison_id: Optional[int] = Field(
-        default=None, foreign_key="comparison_types.id"
-    )
     comparison_type: Optional["ComparisonType"] = Relationship(
         back_populates="performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        },
+        cascade_delete=True,
     )
 
-    aggregation_id: Optional[int] = Field(
-        default=None, foreign_key="data_aggregation_types.id"
-    )
     aggregation_type: Optional["AggregationType"] = Relationship(
         back_populates="performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        },
+        cascade_delete=True,
     )
 
-    by_team_id: Optional[int] = Field(
-        default=None, foreign_key="by_team_types.id"
-    )
     by_team_type: Optional["ByTeamType"] = Relationship(
         back_populates="performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        },
+        cascade_delete=True,
     )
 
     # PERFORMANCE DATA
     window_data: List["PerformanceWindowData"] = Relationship(
-        back_populates="game_performance",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+        back_populates="performance",
     )
     total_data: Optional["PerformanceTotalData"] = Relationship(
-        back_populates="game_performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        }
+        back_populates="performance",
     )
-    ability_total_data: Optional["AbilityTotalData"] = Relationship(
-        back_populates="game_performance",
-        sa_relationship_kwargs={
-            "cascade": "all,delete",
-        }
+    ability_data: Optional["AbilityTotalData"] = Relationship(
+        back_populates="performance",
     )
 
     player_game_data_id: Optional[int] = Field(
-        default=None, foreign_key="players_game_data.id"
+        default=None, foreign_key="players_game_data.id", ondelete="CASCADE",
     )
     player_game_data: Optional["PlayerGameData"] = Relationship(
         back_populates="performance"
@@ -112,8 +82,8 @@ class PerformanceWindowCalculationCategory(SQLModel, table=True):
     label: Optional[str]
     description: Optional[str]
 
-    data_type: List["PerformanceWindowCalculationType"] = Relationship(
-        back_populates="data_category",
+    calc_type: List["PerformanceWindowCalculationType"] = Relationship(
+        back_populates="category",
         sa_relationship_kwargs={ "lazy": "selectin" },
     )
 
@@ -131,12 +101,14 @@ class PerformanceWindowCalculationType(SQLModel, table=True):
 
     description: Optional[str]
 
-    data_category_id: Optional[int] = Field(
+    calc_category_id: Optional[int] = Field(
         default=None, foreign_key="performance_window_calculation_categories.id", index=True
     )
-    category: Optional["PerformanceWindowCalculationCategory"] = Relationship(
-        back_populates="calculation_type",
+    calc_category: Optional["PerformanceWindowCalculationCategory"] = Relationship(
+        back_populates="calc_type",
     )
+
+
 
 
 class PerformanceWindowData(SQLModel, table=True):
@@ -144,17 +116,15 @@ class PerformanceWindowData(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    data_calculation_id: Optional[int] = Field(
+    calc_type_id: Optional[int] = Field(
         default=None, foreign_key="performance_window_calculation_types.id", index=True
     )
-    calc_type: Optional["PerformanceWindowCalculationType"] = Relationship(back_populates="pwct")
 
     performance_id: Optional[int] = Field(
-        default=None, foreign_key="performances.id", index=True
+        default=None, foreign_key="performances.id", ondelete="CASCADE",
     )
     performance: Optional["Performance"] = Relationship(
         back_populates="window_data",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
 
     # Fields to work with empty space
@@ -162,12 +132,12 @@ class PerformanceWindowData(SQLModel, table=True):
     g_empty_mask: Optional[int] = Field(sa_column=db.Column(db.SMALLINT, primary_key=False, nullable=True))
 
     performance_table_id: Optional[int] = Field(
-        default=None, foreign_key="performance_windows_table.id"
+        default=None, foreign_key="performance_windows_table.id", ondelete="CASCADE",
     )
     performance_table: Optional["PerformanceWindowTable"] = Relationship(
         back_populates="window_data",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True, join_depth=0),
     )
+
 
 @inherit_annotations
 class PerformanceWindowTable(PerformanceWindowTableMixin, SQLModel, table=True):
@@ -176,6 +146,10 @@ class PerformanceWindowTable(PerformanceWindowTableMixin, SQLModel, table=True):
     const: ClassVar[AllWindows] = AllWindows
 
     id: Optional[int] = Field(default=None, primary_key=True)
+
+    window_data: Optional["PerformanceWindowTable"] = Relationship(
+        back_populates="performance_table",
+    )
 
 
 # PERFORMANCE TOTAL
@@ -187,10 +161,8 @@ class PerformanceTotalData(PerformanceTotalDataMixin, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    performance_id: Optional[int] = Field(
-        default=None, foreign_key="performances.id"
-    )
-    game_performance: Optional["Performance"] = Relationship(
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
+    performance: Optional["Performance"] = Relationship(
         back_populates="total_data",
     )
 
@@ -204,9 +176,7 @@ class AbilityTotalData(AbilityTotalDataMixin, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    performance_id: Optional[int] = Field(
-        default=None, foreign_key="performances.id"
-    )
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
     performance: Optional["Performance"] = Relationship(
         back_populates="ability_data",
     )

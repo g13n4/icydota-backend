@@ -1,20 +1,22 @@
 from datetime import datetime
 from typing import Optional
-
+import sqlalchemy as db
+from sqlalchemy.sql import text
+from sqlmodel import Field, Relationship, SQLModel
 from typing_extensions import ClassVar
 
 from constants.aggregation import AggregationConstant
 from constants.calculation.cross_comparison import CrossComparisonConstant
 from .helpers import _fk
-from sqlalchemy.sql import text
-from sqlmodel import Field, Relationship, SQLModel
 
 
 # COMPARISON
 class ComparisonType(SQLModel, table=True):
     __tablename__ = "comparison_types"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(
+        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
+    )
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     # can be none if it's a basic cross-comparison
@@ -44,18 +46,22 @@ class ComparisonType(SQLModel, table=True):
     pos_cpd_id: Optional[int] = _fk("positions", col_type="smallint")
     pos_cps_id: Optional[int] = _fk("positions", col_type="smallint")
 
-    performance: Optional["Performance"] = Relationship(back_populates="comparison")
-
+    performance: Optional["Performance"] = Relationship(
+        back_populates="comparison_type",
+    )
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
 
 # AGGREGATION
 class AggregationType(SQLModel, table=True):
     __tablename__ = "data_aggregation_types"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(
+        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
+    )
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
-    
+
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
@@ -72,8 +78,11 @@ class AggregationType(SQLModel, table=True):
     position_id: Optional[int] = _fk("positions", col_type="smallint")
 
     performance: Optional["Performance"] = Relationship(
-        back_populates="aggregation"
+        back_populates="aggregation_type",
+        cascade_delete=True,
     )
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
+
     const: ClassVar[AggregationConstant] = AggregationConstant
 
 
@@ -81,7 +90,9 @@ class AggregationType(SQLModel, table=True):
 class CrossComparisonType(SQLModel, table=True):
     __tablename__ = "cross_comparison_types"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(
+        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
+    )
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     created_at: Optional[datetime] = Field(
@@ -94,8 +105,9 @@ class CrossComparisonType(SQLModel, table=True):
     position_aggregation_id: int
 
     performance: Optional["Performance"] = Relationship(
-        back_populates="cross_comparison"
+        back_populates="cross_comparison_type",
     )
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
 
     const: ClassVar[CrossComparisonConstant] = CrossComparisonConstant
 
@@ -103,7 +115,9 @@ class CrossComparisonType(SQLModel, table=True):
 class ByTeamType(SQLModel, table=True):
     __tablename__ = "by_team_types"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(
+        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
+    )
 
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
@@ -122,5 +136,6 @@ class ByTeamType(SQLModel, table=True):
     team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 
     performance: Optional["Performance"] = Relationship(
-        back_populates="by_team"
+        back_populates="by_team_type",
     )
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )

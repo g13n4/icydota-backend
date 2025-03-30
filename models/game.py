@@ -44,27 +44,29 @@ class Game(SQLModel, table=True):
 
     players_game_data: List["PlayerGameData"] = Relationship(
         back_populates="game",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True)
+        cascade_delete=True,
     )
 
     average_roshan_window_time: Optional[int]
     roshan_death: List["RoshanDeath"] = Relationship(
         back_populates="game",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+        cascade_delete=True,
     )
 
     first_ten_kills_dire: bool
     hero_death: List["HeroDeath"] = Relationship(
         back_populates="game",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+        cascade_delete=True,
     )
 
     dire_lost_first_tower: bool
     dire_building_status_id: Optional[int] = Field(
-        default=None, foreign_key="buildings_data.id"
+        default=None,
+        foreign_key="buildings_data.id"
     )
     sent_building_status_id: Optional[int] = Field(
-        default=None, foreign_key="buildings_data.id"
+        default=None,
+        foreign_key="buildings_data.id"
     )
 
     sent_performance_id: Optional[int] = _fk(
@@ -112,11 +114,11 @@ class PlayerGameData(SQLModel, table=True):
     pings: int
 
     game_id: Optional[int] = _fk("games", col_type="bigint", index=True)
-    game: Optional["Game"] = Relationship(back_populates="players_data")
+    game: Optional["Game"] = Relationship(back_populates="players_game_data")
 
     performance: List["Performance"] = Relationship(
         back_populates="player_game_data",
-        sa_relationship_kwargs=sa_kwargs_setter(add_default=True),
+        cascade_delete=True,
     )
 
     created_at: Optional[datetime] = Field(

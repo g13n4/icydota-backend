@@ -53,7 +53,7 @@ async def get_performance_data_comparison(db_session: AsyncSession,
 async def get_aggregated_performance_data(db_session: AsyncSession,
                                           league_id: int,
                                           aggregation_type: int,
-                                          data_calculation_id: int,
+                                          calculation_type_id: int,
                                           game_stage: str,
                                           is_comparison: bool,
                                           flat: Optional[bool],
@@ -63,14 +63,14 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
         select_query = PQC.get_aggregation_comparison_query(
             league_id=league_id,
             aggregation_type=aggregation_type,
-            data_calculation_id=data_calculation_id,
+            calculation_type_id=calculation_type_id,
             flat=flat,
         )
     else:
         select_query = PQC.get_aggregation_query(
             league_id=league_id,
             aggregation_type=aggregation_type,
-            data_calculation_id=data_calculation_id,
+            calculation_type_id=calculation_type_id,
         )
     model_names = PQC.get_model_names()
 
@@ -105,10 +105,10 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
                                                 aggregation_type: str,
                                                 position: str,
                                                 data_field: str,
-                                                data_calculation_id: int,
+                                                calculation_type_id: int,
                                                 flat: bool,
                                                 ):
-    is_total_data = data_calculation_id == 0
+    is_total_data = calculation_type_id == 0
 
     PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_cross_comparison_query(
@@ -116,7 +116,7 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
     aggregation_type=aggregation_type,
     position=position,
     data_field=data_field,
-    data_calculation_id=data_calculation_id,
+    calculation_type_id=calculation_type_id,
     flat=flat,
     )
 

@@ -46,10 +46,10 @@ class ComparisonType(SQLModel, table=True):
     pos_cpd_id: Optional[int] = _fk("positions", col_type="smallint")
     pos_cps_id: Optional[int] = _fk("positions", col_type="smallint")
 
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
     performance: Optional["Performance"] = Relationship(
         back_populates="comparison_type",
     )
-    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
 
 # AGGREGATION
 class AggregationType(SQLModel, table=True):
@@ -77,11 +77,10 @@ class AggregationType(SQLModel, table=True):
 
     position_id: Optional[int] = _fk("positions", col_type="smallint")
 
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
     performance: Optional["Performance"] = Relationship(
         back_populates="aggregation_type",
-        cascade_delete=True,
     )
-    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
 
     const: ClassVar[AggregationConstant] = AggregationConstant
 
@@ -104,10 +103,10 @@ class CrossComparisonType(SQLModel, table=True):
     type_id: int
     position_aggregation_id: int
 
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
     performance: Optional["Performance"] = Relationship(
         back_populates="cross_comparison_type",
     )
-    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
 
     const: ClassVar[CrossComparisonConstant] = CrossComparisonConstant
 
@@ -135,7 +134,7 @@ class ByTeamType(SQLModel, table=True):
     team_cpd_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 
+    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )
     performance: Optional["Performance"] = Relationship(
         back_populates="by_team_type",
     )
-    performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )

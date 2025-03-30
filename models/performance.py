@@ -83,7 +83,7 @@ class PerformanceWindowCalculationCategory(SQLModel, table=True):
     description: Optional[str]
 
     calc_type: List["PerformanceWindowCalculationType"] = Relationship(
-        back_populates="category",
+        back_populates="calc_category",
         sa_relationship_kwargs={ "lazy": "selectin" },
     )
 
@@ -147,7 +147,7 @@ class PerformanceWindowTable(PerformanceWindowTableMixin, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    window_data: Optional["PerformanceWindowTable"] = Relationship(
+    window_data: Optional["PerformanceWindowData"] = Relationship(
         back_populates="performance_table",
     )
 

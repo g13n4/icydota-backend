@@ -116,7 +116,7 @@ class APIPerformanceQueryCreator:
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id
         )
-        self.where.append(AggregationType.type_ == aggregation_type)
+        self.where.append(AggregationType.type_id == aggregation_type)
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
@@ -134,7 +134,7 @@ class APIPerformanceQueryCreator:
             calculation_type_id=calculation_type_id
         )
         self._set_comparison_model(is_flat=is_flat)
-        self.where.append(AggregationType.type_ == aggregation_type)
+        self.where.append(AggregationType.type_id == aggregation_type)
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 

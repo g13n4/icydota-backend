@@ -31,13 +31,15 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
 
-def create_game_data_objs(totala: Dict[int, PerformanceTotalData]) -> tuple[SidePerformanceData, SidePerformanceData]:
+def create_game_data_objs(
+        totals: Dict[int, PerformanceTotalData]
+) -> tuple[SidePerformanceData, SidePerformanceData]:
     dict_sides = {
         'sent': { 'first_blood_claimed': False },
         'dire': { 'first_blood_claimed': False },
     }
 
-    for slot, PTD_item in totala.items():
+    for slot, PTD_item in totals.items():
         PTD_item_dict = PTD_item.model_dump()
         this_side_name = 'sent' if slot < 5 else 'dire'
         this_side_dict = dict_sides[this_side_name]
@@ -137,7 +139,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
     processed_counter = 1
     if game:
         logger.warning('Deleting already existing Game object')
-        processed_counter = game.processed_counter
+        processed_counter = game.processed_counter + 1
         db_session.delete(game)
         db_session.commit()
 
@@ -151,11 +153,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
     patch_obj = db_session.get(Patch, patch_id)
     if patch_obj is None:
         patch_obj = Patch(
-            id=...,
-            name=...,
-            date=...,
+            id=patch_id,
         )
-
 
     if not league_id:
         league_id = game_data['league']['leagueid']
@@ -170,6 +169,16 @@ def process_game_data(match_id: int, league_id: int | None = None):
     )
 
     players_dict = process_players(db_session, game_data['players'])
+
+    # META DATA
+    match_meta_info = {
+        "league_id": league_obj.id,
+        "match_id": match_id,
+        "patch_id": patch_id,
+
+        "dire": teams_dict['dire'].id,
+        "sent": teams_dict['radiant'].id,
+    }
 
     # APPROXIMATION POSITIONS
     approx_pos: dict = get_positions_approximations(
@@ -266,25 +275,16 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(
-        { slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict }
-        )
+        totals={ slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict }
+    )
     db_session.add(game_data_sent_obj)
     db_session.add(game_data_dire_obj)
 
     db_session.commit()
 
-    # PARSING
-    PGD_objs, additional_data = process_game_replay(
-        db_session=db_session,
-        match_id=match_id,
-        match_replay_folder_path=match_folder_path,
-        additional_player_data=player_data_dict,
-        logger=logger,
-    )
+    # GAME OBJECT
 
-    logger.info("Creating Game object...")
-
-    game = Game(
+    game_ibj = Game(
         id=match_id,
 
         processed_counter=processed_counter,
@@ -299,27 +299,38 @@ def process_game_data(match_id: int, league_id: int | None = None):
         dire_team_id=teams_dict['dire'].id,
         dire_win=(not game_data['radiant_win']),
 
-        players_game_data=PGD_objs,
-
-        average_roshan_window_time=additional_data['average_roshan_window_time'],
-        roshan_death=additional_data['roshan_death'],
-
-        first_ten_kills_dire=additional_data['first_ten_kills_dire'],
-        hero_death=additional_data['hero_death'],
-
-        dire_lost_first_tower=additional_data['dire_lost_first_tower'],
-        dire_building_status_id=additional_data['dire_building_status_id'],
-        sent_building_status_id=additional_data['sent_building_status_id'],
-
-        sent_performance_id=game_data_sent_obj.id,
-        dire_performance_id=game_data_dire_obj.id,
+        sides_performance=[game_data_sent_obj, game_data_dire_obj],
 
         game_start_time=game_data['start_time'],
         duration=game_data['duration'],
         replay_url=game_data['replay_url'],
     )
 
-    db_session.add(game)
+    match_meta_info['game_obj'] = game_ibj
+
+    db_session.add(game_ibj)
+
+    # PARSING
+    PGD_objs, additional_data = process_game_replay(
+        db_session=db_session,
+        match_info=match_meta_info,
+        match_replay_folder_path=match_folder_path,
+        additional_player_data=player_data_dict,
+        logger=logger,
+    )
+
+    logger.info("Creating Game object...")
+
+    game_ibj.players_game_data = PGD_objs
+    game_ibj.average_roshan_window_time = additional_data['average_roshan_window_time']
+    game_ibj.roshan_death = additional_data['roshan_death']
+    game_ibj.first_ten_kills_dire = additional_data['first_ten_kills_dire']
+    game_ibj.hero_death = additional_data['hero_death']
+    game_ibj.dire_lost_first_tower = additional_data['dire_lost_first_tower']
+    game_ibj.dire_building_status_id = additional_data['dire_building_status_id']
+    game_ibj.sent_building_status_id = additional_data['sent_building_status_id']
+
+    db_session.add(game_ibj)
     db_session.commit()
     db_session.close()
     logger.info("Parsing complete")

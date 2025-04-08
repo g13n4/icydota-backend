@@ -4,6 +4,7 @@ from sqlmodel import Field, SQLModel
 import sqlalchemy as db
 
 from models.helpers import _fk
+from sqlmodel import Field, Relationship
 
 
 class Hero(SQLModel, table=True):
@@ -21,6 +22,9 @@ class Hero(SQLModel, table=True):
     img_url: Optional[str]
     icon_url: Optional[str]
 
+    facets: list["Facet"] = Relationship(
+        back_populates="hero",
+    )
 
 class Facet(SQLModel, table=True):
     """We can get them from dotaconstants provided by opendota.
@@ -32,6 +36,10 @@ class Facet(SQLModel, table=True):
     const_id: int
 
     hero_id: Optional[int] = _fk("heroes", col_type="smallint")
+    hero: Optional[Hero] = Relationship(
+        back_populates="facets",
+    )
+
     cdota_name: str = Field(unique=True, index=True)
     icon: str
     gradient_id: int

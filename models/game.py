@@ -2,13 +2,15 @@ from datetime import datetime
 from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
+from sqlalchemy import ForeignKey
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 
 from constants.performance.game_side import SidePerformance
-from models.helpers import _fk, sa_kwargs_setter
+from models.helpers import _fk
 from models.mixins.helpers import inherit_annotations
 from models.mixins.side_performance import SidePerformanceDataMixin
+
 
 @inherit_annotations
 class SidePerformanceData(SidePerformanceDataMixin, SQLModel, table=True):
@@ -19,13 +21,21 @@ class SidePerformanceData(SidePerformanceDataMixin, SQLModel, table=True):
     id: int = Field(default=None, primary_key=True, index=True)
 
     game_id: int = Field(
-        sa_column=db.Column(db.BIGINT, nullable=False, primary_key=False, index=False),
+        sa_column=db.Column(
+            db.BIGINT,
+            ForeignKey("games.id", ondelete="CASCADE"),
+            nullable=True, primary_key=False, index=False
+        )
     )
+
+    game: Optional["Game"] = Relationship(back_populates="sides_performance")
 
     dire: bool
 
 
 class Game(SQLModel, table=True):
+    __tablename__ = "games"
+
     id: int = Field(
         sa_column=db.Column(db.BIGINT, nullable=False, primary_key=True, index=True),
     )  # match_id
@@ -53,27 +63,27 @@ class Game(SQLModel, table=True):
         cascade_delete=True,
     )
 
-    first_ten_kills_dire: bool
+    first_ten_kills_dire: Optional[bool]
     hero_death: List["HeroDeath"] = Relationship(
         back_populates="game",
         cascade_delete=True,
     )
 
-    dire_lost_first_tower: bool
+    dire_lost_first_tower: Optional[bool]
     dire_building_status_id: Optional[int] = Field(
         default=None,
-        foreign_key="buildings_data.id"
+        foreign_key="buildings_data.id",
+        ondelete="CASCADE",
     )
     sent_building_status_id: Optional[int] = Field(
         default=None,
-        foreign_key="buildings_data.id"
+        foreign_key="buildings_data.id",
+        ondelete="CASCADE",
     )
 
-    sent_performance_id: Optional[int] = _fk(
-        "sides_performance_data", cascade=True
-    )
-    dire_performance_id: Optional[int] = _fk(
-        "sides_performance_data", cascade=True
+    sides_performance: List[SidePerformanceData] = Relationship(
+        back_populates="game",
+        cascade_delete=True,
     )
 
     game_start_time: int = Field(
@@ -85,8 +95,6 @@ class Game(SQLModel, table=True):
     broken_replay: Optional[bool]
     assumed_positions: Optional[bool]
     final_processing: Optional[bool]
-
-    __tablename__ = "games"
 
 
 class PlayerGameData(SQLModel, table=True):
@@ -134,5 +142,5 @@ class Patch(SQLModel, table=True):
     __tablename__ = "patches"
 
     id: int = Field(default=None, primary_key=True)  # open_dota id
-    name: str
-    date: datetime = Field(default=None, nullable=True)
+    name: Optional[str]
+    date: Optional[datetime] = Field(default=None, nullable=True)

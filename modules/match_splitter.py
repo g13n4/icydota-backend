@@ -1,6 +1,5 @@
 import copy
-from decimal import Decimal
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 
@@ -26,13 +25,8 @@ class MatchSplitter:
     def __init__(self, game_length: int, match_windows: list):
         """The variable _game_total_length doesn't need _offset.
         It breaks proper processing in _calculate_time_in_window"""
-        self._game_length = game_length
+        self.game_length = game_length
         self.match_windows = match_windows
-
-
-    @property
-    def game_length(self) -> int:
-        return self._game_length
 
 
     def split_into_windows(self, df: pd.DataFrame, use_index: bool = False) -> list[dict]:

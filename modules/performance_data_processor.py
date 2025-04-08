@@ -2,6 +2,7 @@ import copy
 import operator
 from collections import defaultdict
 from functools import reduce
+from typing import Any
 
 import numpy as np
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -25,7 +26,7 @@ def create_totals_map(calculations: list) -> dict[int, list[int]]:
     totals_map = defaultdict(list)
     for calc in calculations:
         if calc.postprocessing and calc.postprocessing.total_format:
-            totals_map[calc.postprocessing.total_format.value].append(calc.value - OFFSET)
+            totals_map[calc.postprocessing.total_format].append(calc.value)
     return totals_map
 
 
@@ -34,7 +35,7 @@ class PerformanceDataProcessor:
     COLUMNS_SIZE = len(AllWindows.VALUES)
 
     TOTALS_MAP = create_totals_map(WindowCalculations.VALUES)
-    COLUMN_MAP = {item.name: item.index - OFFSET for item in AllWindows.VALUES}
+    COLUMN_MAP = { item.name: item.index - OFFSET for item in AllWindows.VALUES }
 
     DIRE = "dire"
     SENT = "sent"
@@ -44,10 +45,11 @@ class PerformanceDataProcessor:
         SENT: DIRE,
     }
 
+
     def __init__(self, db_session: AsyncSession, players_data: list[MatchPlayer]):
         self.session = db_session
 
-        self.windows_data = dict()
+        self.windows_data: dict[int, np.ndarray] = dict()
         self.game_performance = dict()
         self.players_data = dict()
         self.opponents = dict()
@@ -59,7 +61,7 @@ class PerformanceDataProcessor:
 
             self.windows_data[slot] = np.zeros(shape=(self.ROWS_SIZE, self.COLUMNS_SIZE), dtype=np.float32)
             self.game_performance[slot] = []
-            self.players_data[slot] = this_player
+            self.players_data[slot]: MatchPlayer = this_player
             self.opponents[slot] = this_player['opponents']
 
         self.PROCESSED_GAME_DATA = False
@@ -71,9 +73,9 @@ class PerformanceDataProcessor:
                 columns_idxs = [item.index - OFFSET for item in windows]
                 total_window_idx = total_window.index - OFFSET
 
-                for total_method, rows_idxs in self.TOTALS_MAP.items():
-                    agg_func = TotalAggregationMethod.FUNCTION_MAP[total_method]
-                    matrix[rows_idxs, total_window_idx] = agg_func(matrix[rows_idxs, columns_idxs], axis=1)
+                for total_func_idx, rows_idxs in self.TOTALS_MAP.items():
+                    func = TotalAggregationMethod.FUNCTION_MAP[total_func_idx]
+                    matrix[rows_idxs, :][:, total_window_idx] = func(matrix[rows_idxs, :][:, columns_idxs], axis=1)
 
 
     def process_slot(self, slot: int) -> None:
@@ -209,7 +211,7 @@ class PerformanceDataProcessor:
                 comparison_type=comparison_obj,
             )
 
-            GP_obj = self._process_comparison(
+            GP_obj = self._fill_performance_with_comparison_data(
                 P_obj=GP_obj,
                 windows_ndarray_cpd=comparandum_windows_data,
                 windows_ndarray_cps=windows_data_aggregation,
@@ -222,15 +224,14 @@ class PerformanceDataProcessor:
             self.game_performance[comparandum_slot].append(GP_obj)
 
 
-
-    def process_side_data(self, match_data: dict):
+    def process_side_data(self, match_data: dict[str, Any]):
         if not self.PROCESSED_GAME_DATA:
             raise AssertionError("To process sides you need to process players data first!")
 
         side_data = {
-                "ndarray": None,
-                "total": None,
-            }
+            "ndarray": None,
+            "total": None,
+        }
 
         sides_data = {
             self.DIRE: copy.deepcopy(side_data),
@@ -244,8 +245,8 @@ class PerformanceDataProcessor:
 
             TT_obj = ByTeamType(
                 league_id=match_data["league_id"],
-                match_id=match_data["league_id"],
-                patch_id=match_data["league_id"],
+                match_id=match_data["game_obj"].id,
+                patch_id=match_data["patch_id"],
                 team_id=match_data[side],
             )
 
@@ -254,8 +255,9 @@ class PerformanceDataProcessor:
                 by_team_type=TT_obj,
             )
 
-            side_indexes = [self.windows_data[slot] for slot in range(side_offset, 5 + side_offset)]
-            windows_df = reduce(operator.add, side_indexes)
+            side_indexes = [slot for slot in range(side_offset, 5 + side_offset)]
+            total_windows = [self.windows_data[slot] for slot in side_indexes]
+            windows_df: np.ndarray = reduce(operator.add, total_windows)
 
             total_objs = [self.players_data[idx]["performance_total_data"] for idx in side_indexes]
             total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs)
@@ -273,15 +275,14 @@ class PerformanceDataProcessor:
 
             self.session.add(GP_obj)
 
-
         for side, data in sides_data.items():
             for is_flat in [True, False]:
 
                 opponents_side = self.SIDE_OPPOSITE[side]
                 TT_obj = ByTeamType(
                     league_id=match_data["league_id"],
-                    match_id=match_data["league_id"],
-                    patch_id=match_data["league_id"],
+                    match_id=match_data["game_obj"].id,
+                    patch_id=match_data["patch_id"],
                     team_id=match_data[side],
 
                     is_flat=is_flat,
@@ -298,8 +299,8 @@ class PerformanceDataProcessor:
                     P_obj=P_obj,
                     windows_ndarray_cpd=sides_data[side]["ndarray"],
                     windows_ndarray_cps=sides_data[opponents_side]["ndarray"],
-                    total_obj_cpd=sides_data[side]["ndarray"],
-                    total_obj_cps=sides_data[opponents_side]["ndarray"],
+                    total_obj_cpd=sides_data[side]["total"],
+                    total_obj_cps=sides_data[opponents_side]["total"],
                     is_flat=is_flat,
                     add_to_session=True
                 )
@@ -328,10 +329,16 @@ class PerformanceDataProcessor:
 
 
     def set_value(self, slot: int, calculation: int | CalculationItem, window_index: int, value):
-        if type(calculation) is CalculationItem:
+        if isinstance(calculation, CalculationItem):
             calculation = CalculationItem.value
         elif calculation is None:
-            raise ValueError(f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}, ")
+            raise ValueError(
+                f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}, "
+                )
 
-        self.windows_data[slot][calculation-OFFSET][window_index-OFFSET] = value
+        if calculation > self.ROWS_SIZE:
+            raise KeyError(
+                f"The value for calculation is too big! The value will be used in a matrix slicing and can't be bigger than the matrix itself ({self.ROWS_SIZE})"
+                )
 
+        self.windows_data[slot][calculation][window_index - OFFSET] = value

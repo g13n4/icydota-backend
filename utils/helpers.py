@@ -1,5 +1,6 @@
 import enum
 import re
+from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from itertools import cycle
@@ -23,7 +24,7 @@ def is_numeric_type(value, none_is_true: bool = True) -> bool:
     return True
 
 
-def get_all_sqlmodel_objs(db_session: Session, model, ) -> list:
+def get_all_sqlmodel_objs(db_session: Session, model, ) -> Iterable:
     sel_result = db_session.exec(select(model))
     return sel_result.all()
 
@@ -87,7 +88,7 @@ def get_or_create_base(
         model_obj: Type[T],
         get_key: Any,
         object_data: Dict[str, Any]
-        ) -> T:
+) -> T:
     obj = db_session.get(model_obj, get_key)
 
     if not obj:
@@ -112,7 +113,7 @@ def get_or_create(logger, *args, **kwargs):
                 logger.warning(
                     'It seems that the there is a problem with creating an object.' +
                     "Let's give it another chance to ensure that it's not just an inserting error..."
-                    )
+                )
         else:
             output = get_or_create_base(*args, **kwargs)
 
@@ -134,17 +135,17 @@ def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) 
 
 
 def to_dec(number: float | int | None, rounding: int = 2):
-    if number is None:
+    if number in [-np.inf, np.inf, np.nan, None]:
         return None
 
-    return round(Decimal(number), rounding)
+    return round(Decimal(float(number)), rounding)
 
 
 def get_positions_approximations(db_session: Session, model, league_id) -> Dict[int, int]:
     objs = db_session.exec(
         select(model.player_id, model.position_id).
         where(model.league_id == league_id)
-        )
+    )
 
     return { pid: poid for pid, poid in objs }
 

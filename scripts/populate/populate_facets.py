@@ -5,12 +5,12 @@ from models import Facet, Hero
 
 
 def create_facets(db_session: Session, heroes: list[Hero]) -> None:
-    heroes_dict: dict[str, Hero] = {x.npc_name: x for x in heroes}
+    heroes_dict: dict[str, Hero] = { x.npc_name: x for x in heroes }
 
-    r = requests.get('https://api.opendota.com/api/constants/patch')
-    patches = r.json()
+    r = requests.get('https://api.opendota.com/api/constants/hero_abilities')
+    facets = r.json()
 
-    for key, hero_data in patches.items():
+    for key, hero_data in facets.items():
         hero_obj: Hero | None = heroes_dict.get(key, None)
         if hero_obj is None:
             raise Exception(f'No object for hero {key}')
@@ -19,9 +19,9 @@ def create_facets(db_session: Session, heroes: list[Hero]) -> None:
             facet_idx = facet_data['id']
             new_facet = Facet(
                 id=hero_obj.id * 100 + (facet_idx + 1),
-                const_id= facet_idx,
+                const_id=facet_idx,
 
-                hero_id=hero_obj.id,
+                hero=hero_obj,
                 cdota_name=facet_data['name'],
                 icon=facet_data['icon'],
                 gradient_id=facet_data['gradient_id'],

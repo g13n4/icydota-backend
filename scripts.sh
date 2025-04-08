@@ -19,7 +19,7 @@ do
 		break
 		;;
 	2)
-		celery --app=celery_app worker --concurrency=4 -l INFO -E -P solo
+		celery --app=celery_app worker --concurrency=1 -l INFO -E -P solo
 		break
 		;;
 	3)

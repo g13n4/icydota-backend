@@ -114,7 +114,7 @@ class CrossComparisonType(SQLModel, table=True):
 class ByTeamType(SQLModel, table=True):
     __tablename__ = "by_team_types"
 
-    id: int = Field(
+    id: Optional[int] = Field(
         sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
     )
 

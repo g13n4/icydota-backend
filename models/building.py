@@ -1,8 +1,9 @@
 from typing import List, Optional, ClassVar
 
+from sqlmodel import Field, Relationship, SQLModel
+
 from constants.building import BuildingConstant
 from .helpers import _fk
-from sqlmodel import Field, Relationship, SQLModel
 
 
 # BUILDINGS
@@ -90,7 +91,7 @@ class BuildingData(SQLModel, table=True):
 
     destruction_order: List["BuildingDestroyed"] = Relationship(
         back_populates="building_data",
-        cascade_delete = True,
+        cascade_delete=True,
     )
 
     destroyed_buildings: Optional[int]

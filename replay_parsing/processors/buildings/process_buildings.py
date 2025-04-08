@@ -123,10 +123,10 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
 
             if item['tower']['tier'] == 4:
                 throne_towers += 1
-                item['lane']['tower4'] = False
+                item['lane']['first_tower_4'] = False
                 if throne_towers == 2:
                     item['naked_throne'] = True
-                    item['lane']['tower4'] = True
+                    item['lane']['first_tower_4'] = True
         else:
             rax_counter += 1
             item['rax']['destruction_order'] = rax_counter
@@ -187,7 +187,7 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
             },
             'is_tower': False if values['rax'] > 0 else True,
             'lane': {
-                'tower4': None,
+                'first_tower_4': None,
                 'value': values['lane'],
                 'name': lane_names[values['lane']],
                 'destroyed_lane': False,

@@ -11,11 +11,11 @@ H = 60 * M
 
 
 class GameWindow(BaseModel):
-    order: int | None = None
+    order: int | None = None  # is local to window group
     start_time: int | None
     end_time: int | None
 
-    index: int | None = None
+    index: int | None = None  # is global
     name: str | None = None
     description: str | None = None
     window_type: str | None = None
@@ -105,7 +105,7 @@ class LaneStageWindows:
 @set_window_data(WindowType.game, WindowEmptyMask.g_empty_mask)
 class GameStageWindows:
     # first 5 minutes
-    g5: GameWindow = GameWindow(start_time=-90 * M, end_time=5 * M)
+    g5: GameWindow = GameWindow(start_time=-90, end_time=5 * M)
     # 5 - 15
     g15: GameWindow = GameWindow(start_time=5 * M, end_time=15 * M)
     # 15 - 25

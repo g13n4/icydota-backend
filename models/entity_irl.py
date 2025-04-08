@@ -13,7 +13,7 @@ class Position(SQLModel, table=True):
     id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=True))  # position number
     name: str
 
-    const: ClassVar[object] = PositionConstant
+    const: ClassVar[PositionConstant] = PositionConstant
 
 
 class Player(SQLModel, table=True):

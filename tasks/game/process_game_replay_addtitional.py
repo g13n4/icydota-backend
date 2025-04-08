@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from models import HeroDeath
+from models import HeroDeath, PerformanceTotalData
 from models import Building, BuildingDestroyed, BuildingNotDestroyed
 from models import RoshanDeath, BuildingData
 from modules.match_analyser import MatchPlayersData, MatchAnalyser
@@ -76,10 +76,10 @@ def _get_building_dict(db_session, ) -> dict:
     igb_dict = dict()
     for igb_obj in igb_objs:
         if igb_obj.is_tower:
-            if igb_obj.tower4 is None:
+            if igb_obj.first_tower_4 is None:
                 igb_dict[(1, igb_obj.lane, igb_obj.tier)] = igb_obj
             else:
-                igb_dict[(1, igb_obj.tower4, igb_obj.tier)] = igb_obj
+                igb_dict[(1, igb_obj.first_tower_4, igb_obj.tier)] = igb_obj
         else:
             igb_dict[(0, igb_obj.lane, igb_obj.melee)] = igb_obj
 
@@ -94,9 +94,11 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
         bk_died_data = building_kill[bk_died_name]
         bd_objs = []  # KeyError: (1, 2, 1)
         for bk in bk_died_data:
-            b_obj = igb_dict[(int(bk['is_tower']),
-                              (bk['lane']['value'] if bk['lane']['tower4'] is None else bk['lane']['tower4']),
-                              bk['tower']['tier'])]
+            b_obj = igb_dict[
+                (int(bk['is_tower']),
+                 (bk['lane']['value'] if bk['lane']['first_tower_4'] is None else bk['lane']['first_tower_4']),
+                 bk['tower']['tier'])
+            ]
             bk_obj = BuildingDestroyed(
                 building_id=b_obj.id,
                 death_time=bk['time'],
@@ -136,7 +138,7 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             rax_left_total=bk_left_data['rax_left_total'], )
         db_session.add(bnk_obj)
 
-        bs = BuildingData(
+        building_data_obj = BuildingData(
             dire=is_dire,
 
             destruction_order=bd_objs,
@@ -156,18 +158,19 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             naked_throne=bd_objs[-1].naked_throne if len(bd_objs) else False,
 
             not_destroyed=bnk_obj, )
-        db_session.add(bs)
+        db_session.add(building_data_obj)
 
-        output_dict[side] = bs
+        output_dict[side] = building_data_obj
 
     return output_dict
 
 
-def process_additional_replay_data(db_session,
-                                   match: MatchAnalyser,
-                                   match_data: Dict[str, pd.DataFrame],
-                                   PDP: PerformanceDataProcessor
-                                   ):
+def process_additional_replay_data(
+        db_session,
+        match: MatchAnalyser,
+        match_data: Dict[str, pd.DataFrame],
+        PDP: PerformanceDataProcessor,
+        ):
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(
         match_data['roshan_deaths'],
         players_to_slot=match.players.get_name_slot_dict(),
@@ -187,26 +190,27 @@ def process_additional_replay_data(db_session,
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
     for player_slot in range(10):
-        this_pperf_obj = PDP.get_player_data(player_slot)
+        this_player_data = PDP.get_player_data(player_slot)
+        this_total_perf_obj: PerformanceTotalData = this_player_data['performance_total_data']
 
         hero_death_player_data = player_data[player_slot]
 
-        this_pperf_obj.first_blood_claimed = hero_death_player_data['first_blood_claimed']
-        this_pperf_obj.first_kill_time = hero_death_player_data['first_kill_time']
-        this_pperf_obj.died_first = hero_death_player_data['died_first']
-        this_pperf_obj.first_death_time = hero_death_player_data['first_death_time']
+        this_total_perf_obj.first_blood_claimed = hero_death_player_data['first_blood_claimed']
+        this_total_perf_obj.first_kill_time = hero_death_player_data['first_kill_time']
+        this_total_perf_obj.died_first = hero_death_player_data['died_first']
+        this_total_perf_obj.first_death_time = hero_death_player_data['first_death_time']
 
         hero_building_data = player_building[player_slot]
 
-        this_pperf_obj.lost_tower_first = hero_building_data['lost_tower_first']
-        this_pperf_obj.lost_tower_lane = hero_building_data['lost_tower_lane']
-        this_pperf_obj.lost_tower_time = hero_building_data['lost_tower_time']
+        this_total_perf_obj.lost_tower_first = hero_building_data['lost_tower_first']
+        this_total_perf_obj.lost_tower_lane = hero_building_data['lost_tower_lane']
+        this_total_perf_obj.lost_tower_time = hero_building_data['lost_tower_time']
 
-        this_pperf_obj.destroyed_tower_first = hero_building_data['destroyed_tower_first']
-        this_pperf_obj.destroyed_tower_lane = hero_building_data['destroyed_tower_lane']
-        this_pperf_obj.destroyed_tower_time = hero_building_data['destroyed_tower_time']
+        this_total_perf_obj.destroyed_tower_first = hero_building_data['destroyed_tower_first']
+        this_total_perf_obj.destroyed_tower_lane = hero_building_data['destroyed_tower_lane']
+        this_total_perf_obj.destroyed_tower_time = hero_building_data['destroyed_tower_time']
 
-        db_session.add(this_pperf_obj)
+        db_session.add(this_total_perf_obj)
 
     return dict(
         average_roshan_window_time=avg_rosh_death_time,

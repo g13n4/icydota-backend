@@ -22,6 +22,7 @@ class CalculationItem(BaseModel):
     name: str
     description: str
     value: int | None = None
+    value_db: int | None = None
 
     is_active: bool = True
     index: int
@@ -31,13 +32,20 @@ class CalculationItem(BaseModel):
     postprocessing: PostprocessingItem = Field(default_factory=PostprocessingItem)
 
 
+GLOBAL_VALUE_COUNTER = 0
+
+
 def set_category_and_value(category: Item) -> Callable:
     def decorator(klass: object) -> object:
         for name, type_ in klass.__annotations__.items():
-            if isinstance(type_, CalculationItem):
+            if type_ is CalculationItem:
                 item = getattr(klass, name)
                 item.category = category
-                item.value = category.value * 100 + item.index
+                item.value_db = category.value * 100 + item.index
+
+                global GLOBAL_VALUE_COUNTER
+                item.value = GLOBAL_VALUE_COUNTER
+                GLOBAL_VALUE_COUNTER += 1
 
         return klass
 
@@ -49,7 +57,7 @@ def add_values(klass: CalculationType) -> CalculationType:
     VALUES = []
     VALUES_NAMES = []
     for name, type_ in klass.__annotations__.items():
-        if isinstance(type_, CalculationItem):
+        if type_ is CalculationItem:
             value = getattr(klass, name)
             VALUES.append(value)
             VALUES_NAMES.append(name)

@@ -8,10 +8,10 @@ from typing import Any, Optional, TypedDict
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-from constants.performance.window import AllWindows, WindowType
 from constants.position import PositionConstant, POSITION_OPPONENTS
 from models import PlayerGameData
 from models.performance import PerformanceTotalData
+from modules.match_windows_handler import MatchWindowsHandler
 from utils import get_both_slot_values
 
 
@@ -45,35 +45,37 @@ class MatchPlayer(TypedDict, total=False):
 class MatchPlayersData:
     def __init__(self):
         for x in range(10):
-            setattr(self, f'_{x}', MatchPlayer(
-                slot=x,
-                slot_text=f'_{x}',
-                side='sentinel' if x < 5 else 'dire',
+            setattr(
+                self, f'_{x}',
+                MatchPlayer(
+                    slot=x,
+                    slot_text=f'_{x}',
+                    side='sentinel' if x < 5 else 'dire',
 
-                hero_npc_name=None,
-                hero_npc_name_alias=None,
-                hero_name_cdota=None,
-                hero_id=None,
-                facet_id=None,
+                    hero_npc_name=None,
+                    hero_npc_name_alias=None,
+                    hero_name_cdota=None,
+                    hero_id=None,
+                    facet_id=None,
 
-                position=None,
-                position_id=None,
-                position_name=None,
+                    position=None,
+                    position_id=None,
+                    position_name=None,
 
-                player=None,
-                player_id=None,
+                    player=None,
+                    player_id=None,
 
-                opponents=[],
+                    opponents=[],
 
-                player_game_data=None,
-                performance_total_data=None,
+                    player_game_data=None,
+                    performance_total_data=None,
+                )
             )
-                    )
 
 
     def update_slot_info(self, slot: int, **kwargs) -> None:
         info = getattr(self, f'_{slot}')
-        setattr(self, f'_{slot}', {**info, **kwargs})
+        setattr(self, f'_{slot}', { **info, **kwargs })
 
 
     def update_slot_name(self, slot: int, name: str) -> None:
@@ -102,9 +104,9 @@ class MatchPlayersData:
 
     def get_name_slot_dict(self) -> dict[str, int]:
         items = self.get_all()
-        names = {x['hero_npc_name']: x['slot'] for x in items}
-        alias = {x['hero_npc_name_alias']: x['slot'] for x in items if x['hero_npc_name_alias']}
-        return {**names, **alias}
+        names = { x['hero_npc_name']: x['slot'] for x in items }
+        alias = { x['hero_npc_name_alias']: x['slot'] for x in items if x['hero_npc_name_alias'] }
+        return { **names, **alias }
 
 
     def get_all(self) -> list[MatchPlayer]:
@@ -223,33 +225,14 @@ def _compare_name_complex(cdota_name, npc_name) -> int:
     return fuzz.ratio(cdota_name_processed, npc_name_processed)
 
 
-class MatchWindow(TypedDict):
-    name: str
-    window_type: str
-    index: int
-    order: int
-
-    start_time: int | None
-    end_time: int | None
-
-    window_start: int | None
-    window_end: int | None
-    window_length: int | None
-
-    length: int
-    minutes: int
-
-    exists: bool
-    empty: bool | None
-    incomplete: bool
-    df: Any | None
 
 
 class MatchAnalyser:
-    def __init__(self,
-                 path: str | pathlib.Path,
-                 match_id: Optional[int] = None,
-                 ):
+    def __init__(
+            self,
+            path: str | pathlib.Path,
+            match_id: Optional[int] = None,
+    ):
         self.path = path
         self.match_id = match_id
 
@@ -260,32 +243,7 @@ class MatchAnalyser:
 
         self._is_match_windows_set = False
 
-        windows = AllWindows.VALUES_REAL
-
-        self._match_windows = [MatchWindow(
-            name=window.name,
-            window_type=window.window_type,
-            index=window.index,
-            order=window.order,
-
-            start_time=None,
-            end_time=None,
-
-            window_start=window.start_time,
-            window_end=window.end_time,
-            window_length=window.length,
-
-            length=0,
-            minutes=0,
-
-            exists=False,
-            empty=None,
-            incomplete=False,
-            df=None,
-        ) for window in windows]
-
-        self._windows_types = WindowType.VALUES
-
+        self.windows_handler = MatchWindowsHandler()
 
     def get_players(self) -> list[dict]:
         return self.players.get_all()
@@ -319,7 +277,7 @@ class MatchAnalyser:
 
 
     def _combine_names(self, names: list):
-        cdata_by_name = {x['hero_name_cdota']: x['slot'] for x in self.players.get_all()}
+        cdata_by_name = { x['hero_name_cdota']: x['slot'] for x in self.players.get_all() }
         most_fitting_word = None
 
         for npc_name in names:
@@ -358,34 +316,6 @@ class MatchAnalyser:
         return None
 
 
-    def _update_game_time_data(self,
-                               current_window_index: int | None,
-                               time: int) -> int:
-        self._game_total_length = time
-
-        if current_window_index is None or time < self._match_windows[0]['window_start']:
-            return 0
-
-        current_window = self._match_windows[current_window_index]
-        window_start = current_window['window_start']
-        window_end = current_window['window_end']
-
-        if window_start <= time < window_end:
-            if not current_window['start_time']:
-                current_window['start_time']: int = time
-                current_window['exists'] = True
-
-            current_window['end_time']: int = time
-
-            # one second offset to ensure that a one second window exists
-            current_window['length'] = current_window['end_time'] - current_window['start_time'] + 1
-            current_window['minutes'] = math.ceil(current_window['length'] / 60)
-
-            return current_window_index
-        else:
-            return self._update_game_time_data(current_window_index + 1, time)
-
-
     @property
     def game_length(self) -> int:
         if self._is_match_windows_set:
@@ -396,25 +326,11 @@ class MatchAnalyser:
     @property
     def match_windows(self) -> list[dict[str, Any]]:
         if self._is_match_windows_set:
-            return copy.deepcopy(self._match_windows)
+            return copy.deepcopy(self.windows_handler.match_windows)
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
 
 
-    def _set_incomplete_status(self, ) -> None:
-        for window_type in self._windows_types:
-            for window in self._match_windows:
-                if not window['window_type'] == window_type:
-                    pass
-
-                is_complete_window = (window['window_length'] + 2 > window['length'] > window['window_length'] - 2)
-                if window['length'] > 0 and not is_complete_window:
-                    window['incomplete'] = True
-                    break
-
-
     def get_match_data(self) -> dict[str, pd.DataFrame]:
-        current_window_index = None
-
         interval = []  # interval
         pings = []  # pings
         wards = []  # obs / sen / sen_left / obs_left
@@ -463,15 +379,18 @@ class MatchAnalyser:
 
         wards_ehandle = dict()
 
+        total_game_length = float("-inf")
+
         with open(self.path, 'r') as file:
             for line in file.readlines():
-                for pattern in ['"epilogue"',  #
-                                '"dotaplus"',  # dota plus info
-                                '"cosmetics"',  # items id's
-                                '"actions"',  # button press
-                                '"DOTA_COMBATLOG_MODIFIER_ADD"',  # add buff
-                                '"DOTA_COMBATLOG_MODIFIER_REMOVE"', ]:  # remove buff
-
+                for pattern in [
+                    'epilogue',  #
+                    'dotaplus',  # dota plus info
+                    'cosmetics',  # items id's
+                    'actions',  # button press
+                    'DOTA_COMBATLOG_MODIFIER_ADD',  # add buff
+                    'DOTA_COMBATLOG_MODIFIER_REMOVE',  # remove buff
+                ]:
                     if re.search(pattern, line, re.IGNORECASE):
                         continue
 
@@ -479,14 +398,17 @@ class MatchAnalyser:
                 line_type: str = p_line['type']
                 line_time: int = p_line['time']
 
+                # in new games the end games sets time to -855
+                total_game_length = max(total_game_length, line_time)
+
+                # the game hasn't started yet
                 if line_time <= -90:
                     continue
 
                 if line_type == 'interval':
                     interval.append(p_line)
 
-                    current_window_index = self._update_game_time_data(current_window_index=current_window_index,
-                                                                       time=line_time, )
+                    self.windows_handler.update_windows_time(line_time)
 
                 if line_type == 'DOTA_COMBATLOG_GOLD' and p_line['gold_reason'] == 5:
                     break
@@ -499,19 +421,23 @@ class MatchAnalyser:
                         p_line['slot'] = wards_ehandle[p_line['ehandle']]
 
                     if line_type.endswith('_left'):
-                        deward.append({x: p_line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ]})
+                        deward.append(
+                            { x: p_line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ] }
+                        )
                     else:
-                        wards.append({x: p_line[x] for x in ['time', 'type', 'slot', ]})
+                        wards.append({ x: p_line[x] for x in ['time', 'type', 'slot', ] })
 
                     wards_ehandle[p_line['ehandle']] = p_line['slot']
 
 
                 # deprecated
-                elif line_type in ['CHAT_MESSAGE_ITEM_PURCHASE',
-                                   'CHAT_MESSAGE_RUNE_PICKUP',
-                                   'CHAT_MESSAGE_SCAN_USED',
-                                   'CHAT_MESSAGE_TOWER_KILL',
-                                   'CHAT_MESSAGE_COURIER_LOST', ]:
+                elif line_type in [
+                    'CHAT_MESSAGE_ITEM_PURCHASE',
+                    'CHAT_MESSAGE_RUNE_PICKUP',
+                    'CHAT_MESSAGE_SCAN_USED',
+                    'CHAT_MESSAGE_TOWER_KILL',
+                    'CHAT_MESSAGE_COURIER_LOST',
+                ]:
                     # chat_messages.append(p_line)
                     continue
 
@@ -519,25 +445,34 @@ class MatchAnalyser:
                     damage.append(p_line)
 
                 elif line_type in ['DOTA_COMBATLOG_GOLD', ]:
-                    gold.append({x: p_line[x] for x in
-                                 ['time', 'value', 'targetname', 'gold_reason']})
+                    gold.append(
+                        { x: p_line[x] for x in
+                          ['time', 'value', 'targetname', 'gold_reason'] }
+                    )
 
                 elif line_type in ['DOTA_COMBATLOG_XP', ]:
-                    xp.append({x: p_line[x] for x in
-                               ['time', 'value', 'targetname', 'xp_reason']})
+                    xp.append(
+                        { x: p_line[x] for x in
+                          ['time', 'value', 'targetname', 'xp_reason'] }
+                    )
 
                 elif line_type in ['DOTA_COMBATLOG_TEAM_BUILDING_KILL', ]:
-                    building_kill.append({x: p_line[x] for x in
-                                          ['time', 'value', 'targetname']})
+                    building_kill.append(
+                        { x: p_line[x] for x in
+                          ['time', 'value', 'targetname'] }
+                    )
 
                 elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targethero']:
-                    hero_deaths.append({x: p_line[x] for x in ['time', 'sourcename', 'targetname', ]})
+                    hero_deaths.append({ x: p_line[x] for x in ['time', 'sourcename', 'targetname', ] })
 
                 elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targetname'] == 'npc_dota_roshan':
-                    roshan_deaths.append({x: p_line[x] for x in ['time', 'sourcename', ]})
+                    roshan_deaths.append({ x: p_line[x] for x in ['time', 'sourcename', ] })
+
 
         self._is_match_windows_set = True
-        self._set_incomplete_status()
+        self._game_total_length = total_game_length
+        self.windows_handler.set_window_status()
+
 
         return {
             'interval': pd.DataFrame(interval),

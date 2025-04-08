@@ -16,7 +16,6 @@ class WindowsPerformanceProcessor:
     def get_pwd_from_iterable(
             data_iterable: np.ndarray | dict,
             calculation_id: int,
-            to_decimal: bool = False,
     ) -> PerformanceWindowData:
         PWT_data = dict()
         PWD_obj = PerformanceWindowData(calc_type_id=calculation_id)
@@ -25,13 +24,11 @@ class WindowsPerformanceProcessor:
             calculation_window_data = dict()
             for window_field in windows_fields:
                 if isinstance(data_iterable, dict):
-                    value =  data_iterable[window_field.name]
+                    value = data_iterable[window_field.name]
                 else:
                     value = data_iterable[window_field.index - OFFSET]
 
-                if to_decimal:
-                    value = to_dec(value)
-
+                value = to_dec(value)
                 calculation_window_data[window_field.name] = value
 
             empty_mask = EmptyMaskConverter.iter_to_mask(calculation_window_data.values())
@@ -52,13 +49,16 @@ class WindowsPerformanceProcessor:
         Transforms saved windows_data into windows one line at a time
         """
         for window in WindowCalculations.VALUES:
-            window_idx = window.index - OFFSET
-            calculation_slice = player_data_matrix[window_idx, :]
-            yield WindowsPerformanceProcessor.get_pwd_from_iterable(calculation_slice, window.index)
+            calculation_slice = player_data_matrix[window.value, :]
+            yield WindowsPerformanceProcessor.get_pwd_from_iterable(calculation_slice, window.value_db)
 
 
     @staticmethod
-    def comparison_data_to_pwds(cmd_data: np.ndarray, cms_data: np.ndarray, flat: bool) -> Generator[PerformanceWindowData]:
+    def comparison_data_to_pwds(
+            cmd_data: np.ndarray,
+            cms_data: np.ndarray,
+            flat: bool,
+    ) -> Generator[PerformanceWindowData]:
 
         if flat:
             data = np.subtract(cmd_data, cms_data)

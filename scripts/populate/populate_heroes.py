@@ -1,5 +1,3 @@
-import json
-
 import requests
 from sqlmodel import Session
 
@@ -20,17 +18,18 @@ def create_heroes(db_session: Session) -> list[Hero]:
         heroes_dict[hero_id] = new_hero
     del heroes
 
-    with open('./../../dotaconstants/build/heroes.json') as const_file:
-        json_data = json.load(const_file)
-        for key, hero_data in json_data.items():
-            hero_id = hero_data.get('id', None)
-            if hero_id is None:
-                raise Exception('No data in constant file')
+    r = requests.get('https://api.opendota.com/api/constants/heroes')
+    heroes_additional_data = r.json()
+    for key, hero_data in heroes_additional_data.items():
+        hero_id = hero_data.get('id', None)
+        if hero_id is None:
+            raise Exception('No data in constant file')
 
-            hero_obj = heroes_dict[hero_id]
-            hero_obj.img_url = hero_data['img']
-            hero_obj.icon_url = hero_data['icon']
-            db_session.add(hero_obj)
+        # url start https://cdn.cloudflare.steamstatic.com/
+        hero_obj = heroes_dict[hero_id]
+        hero_obj.img_url = hero_data['img']
+        hero_obj.icon_url = hero_data['icon']
+        db_session.add(hero_obj)
 
     print("Adding heroes...")
     return [hero for hero in heroes_dict.values()]

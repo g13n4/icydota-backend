@@ -1,14 +1,13 @@
 from constants.calculation.game.calculation_type.damage import DamageCalculations
 from constants.calculation.game.calculation_type.deward import DewardCalculations
 from constants.calculation.game.calculation_type.gold import GoldCalculations
-from constants.calculation.game.calculation_type.helpers import add_values, CalculationItem
+from constants.calculation.game.calculation_type.helpers import CalculationItem
 from constants.calculation.game.calculation_type.interval import IntervalCalculations
 from constants.calculation.game.calculation_type.pings import PingsCalculations
 from constants.calculation.game.calculation_type.wards import WardsCalculations
 from constants.calculation.game.calculation_type.xp import XPCalculations
 
 
-@add_values
 class WindowCalculations(
     IntervalCalculations,
     PingsCalculations,
@@ -18,5 +17,28 @@ class WindowCalculations(
     XPCalculations,
     GoldCalculations
 ):
-    VALUES: list[CalculationItem]
-    VALUES_NAMES: list[str]
+    VALUES: list[CalculationItem] = (
+            IntervalCalculations.VALUES +
+            PingsCalculations.VALUES +
+            DamageCalculations.VALUES +
+            WardsCalculations.VALUES +
+            DewardCalculations.VALUES +
+            XPCalculations.VALUES +
+            GoldCalculations.VALUES
+    )
+    VALUES_NAMES: list[str] = (
+            IntervalCalculations.VALUES_NAMES +
+            PingsCalculations.VALUES_NAMES +
+            DamageCalculations.VALUES_NAMES +
+            WardsCalculations.VALUES_NAMES +
+            DewardCalculations.VALUES_NAMES +
+            XPCalculations.VALUES_NAMES +
+            GoldCalculations.VALUES_NAMES
+    )
+
+    DB_INDEX_MAP: dict[int, int]
+
+
+WindowCalculations.DB_INDEX_MAP = {
+    item.value: item.value_db for item in WindowCalculations.VALUES
+}

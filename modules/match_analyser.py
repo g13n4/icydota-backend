@@ -408,7 +408,7 @@ class MatchAnalyser:
                 if line_type == 'interval':
                     interval.append(p_line)
 
-                    self.windows_handler.update_windows_time(line_time)
+                    self.windows_handler.update_time(line_time)
 
                 if line_type == 'DOTA_COMBATLOG_GOLD' and p_line['gold_reason'] == 5:
                     break

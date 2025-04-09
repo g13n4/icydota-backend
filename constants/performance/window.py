@@ -29,7 +29,7 @@ class GameWindow(BaseModel):
             self.is_total = True
 
         if self.start_time is not None and self.end_time is not None:
-            self.length = self.end_time - self.start_time
+            self.length = abs(self.end_time - self.start_time)
 
         return None
 

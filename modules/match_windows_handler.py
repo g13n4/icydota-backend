@@ -1,9 +1,10 @@
 import bisect
 import math
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import TypedDict, Any
 
-from constants.performance.window import AllWindows
+from constants.performance.window import AllWindows, GameWindow
 
 
 class MatchWindow(TypedDict):
@@ -34,7 +35,7 @@ class MatchWindowsHandler:
     """
 
 
-    def __init__(self, windows: None):
+    def __init__(self, windows: Iterable[GameWindow] | None = None):
         if windows is None:
             windows = AllWindows.VALUES_REAL
 
@@ -70,10 +71,11 @@ class MatchWindowsHandler:
 
     def __getitem__(self, value: int):
         range_key = bisect.bisect_left(self.windows_unique_values, value)
-        if range_key == value:
-            return self.grouped_windows[range_key]
-        # if the value is not equal to the key range_key will be bigger than window that we want
-        return self.grouped_windows[range_key - 1]
+        dict_key = self.windows_unique_values[range_key]
+        if dict_key != value:
+            dict_key = self.windows_unique_values[range_key - 1]
+
+        return self.grouped_windows[dict_key]
 
 
     def _group_windows(self):
@@ -93,7 +95,7 @@ class MatchWindowsHandler:
         self.windows_unique_values = sorted(list(ranges_set))
 
 
-    def update_windows_time(self, in_game_time: int):
+    def update_time(self, in_game_time: int):
         windows = self[in_game_time]
         for this_window in windows:
             if not this_window['start_time']:
@@ -106,10 +108,10 @@ class MatchWindowsHandler:
     def set_window_status(self) -> None:
         for window in self.match_windows:
             if window['exists']:
-                window['length'] = window['end_time'] - window['start_time'] + 1
+                window['length'] = abs(window['end_time'] - window['start_time']) + 1
                 window['minutes'] = math.ceil(window['length'] / 60)
 
-            if window['window_length'] is not None and window['window_length'] is not None:
+            if window['window_length'] is not None and window['length'] is not None:
                 is_complete_window = (window['window_length'] + 2 > window['length'] > window['window_length'] - 2)
                 if window['length'] > 0 and not is_complete_window:
                     window['incomplete'] = True

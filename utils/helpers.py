@@ -47,6 +47,8 @@ def combine_slot_dicts(*args) -> dict:
 
 
 def is_invalid_value(value: Any) -> bool:
+    if isinstance(value, Decimal):
+        return value.is_nan()
     return value in [-np.inf, np.inf, np.nan, None]
 
 

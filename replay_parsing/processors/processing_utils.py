@@ -1,8 +1,8 @@
-import numpy as np
+from utils.helpers import is_invalid_value
 
 
 def process_output(output, allow_none: bool = False):
-    if output is None or output is np.inf or output is np.nan:
+    if is_invalid_value(output):
         return None if allow_none else 0
 
     if isinstance(output, float) or isinstance(output, int):

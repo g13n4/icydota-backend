@@ -330,7 +330,7 @@ class PerformanceDataProcessor:
 
     def set_value(self, slot: int, calculation: int | CalculationItem, window_index: int, value):
         if isinstance(calculation, CalculationItem):
-            calculation = CalculationItem.value
+            calculation = calculation.value
         elif calculation is None:
             raise ValueError(
                 f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}, "

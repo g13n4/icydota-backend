@@ -3,8 +3,11 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from constants.calculation.game.calculation_type.interval import IntervalCalculationAggregationMethod as AGG_METHOD
-from constants.calculation.game.calculation_type.interval import IntervalCalculationColumn as COLUMN
+from constants.calculation.game.calculation_type.interval import (
+    IntervalCalculationAggregationMethod as AGG_METHOD,
+    IntervalCalculationColumn as COLUMN,
+)
+from replay_parsing.processors.processing_utils import process_output
 
 
 def normalise_output_type_wrapper(allow_none: bool = False):
@@ -13,7 +16,11 @@ def normalise_output_type_wrapper(allow_none: bool = False):
             output = func(*args, **kwargs)
 
             return process_output(output, allow_none=allow_none)
+
+
         return wrapper_inner
+
+
     return wrapper_outer
 
 
@@ -38,10 +45,12 @@ def _find_distance(axis_x: pd.Series, axis_y: pd.Series) -> pd.Series:
 
 
 @normalise_output_type_wrapper(allow_none=True)
-def execute_window_aggregation(df: pd.DataFrame,
-                               column: COLUMN,
-                               agg_method: AGG_METHOD,
-                               df_agg: pd.DataFrame):
+def execute_window_aggregation(
+        df: pd.DataFrame,
+        column: COLUMN,
+        agg_method: AGG_METHOD,
+        df_agg: pd.DataFrame
+):
     match column:
         case COLUMN.MOVEMENT:
             if not len(df['x']) or not len(df['y']):

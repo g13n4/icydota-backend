@@ -1,5 +1,6 @@
-from itertools import zip_longest
 from collections.abc import Iterable
+from decimal import Decimal
+from itertools import zip_longest
 
 from utils.helpers import is_invalid_value, to_bin_list
 
@@ -12,6 +13,7 @@ class EmptyMaskConverter:
         0: 0,
     }
 
+
     @staticmethod
     def iter_to_mask(data: Iterable) -> int | None:
         """
@@ -21,7 +23,7 @@ class EmptyMaskConverter:
         for value in data:
             if is_invalid_value(value):
                 value_map.append(EmptyMaskConverter.NONE_VALUE)
-            elif value == 0:
+            elif isinstance(value, float | int | Decimal) and not value:
                 value_map.append(EmptyMaskConverter.ZERO_VALUE)
             else:
                 return None

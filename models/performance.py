@@ -54,9 +54,11 @@ class Performance(SQLModel, table=True):
     # PERFORMANCE DATA
     window_data: List["PerformanceWindowData"] = Relationship(
         back_populates="performance",
+        cascade_delete=True,
     )
     total_data: Optional["PerformanceTotalData"] = Relationship(
         back_populates="performance",
+        cascade_delete=True,
     )
     ability_data: Optional["AbilityTotalData"] = Relationship(
         back_populates="performance",
@@ -107,8 +109,6 @@ class PerformanceWindowCalculationType(SQLModel, table=True):
     calc_category: Optional["PerformanceWindowCalculationCategory"] = Relationship(
         back_populates="calc_type",
     )
-
-
 
 
 class PerformanceWindowData(SQLModel, table=True):

@@ -50,7 +50,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.MAX),
     )
     gold__gained_pm_median: CalculationItem = CalculationItem(
@@ -62,7 +62,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.GAINED_PM_MEDIAN),
     )
     gold__gained_pw: CalculationItem = CalculationItem(
@@ -74,7 +74,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     gold__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -86,7 +86,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     gold__max_global_perc: CalculationItem = CalculationItem(
@@ -98,7 +98,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
     )
     xp__max: CalculationItem = CalculationItem(
@@ -110,7 +110,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.MAX),
     )
     xp__gained_pm_median: CalculationItem = CalculationItem(
@@ -122,7 +122,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.GAINED_PM_MEDIAN),
     )
     xp__gained_pw: CalculationItem = CalculationItem(
@@ -134,7 +134,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     xp__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -146,7 +146,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     xp__max_global_perc: CalculationItem = CalculationItem(
@@ -158,7 +158,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
     )
     lh__max: CalculationItem = CalculationItem(
@@ -170,7 +170,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.MAX),
     )
     lh__gained_pw: CalculationItem = CalculationItem(
@@ -182,7 +182,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     lh__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -194,7 +194,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     movement__sum: CalculationItem = CalculationItem(
@@ -206,7 +206,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.SUM
-            ),
+        ),
         processing=(IntervalCalculationColumn.MOVEMENT, IntervalCalculationAggregationMethod.SUM),
     )
     movement__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -218,7 +218,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.MOVEMENT, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     level__max: CalculationItem = CalculationItem(
@@ -230,7 +230,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.LEVEL, IntervalCalculationAggregationMethod.MAX),
     )
     level__gained_pw: CalculationItem = CalculationItem(
@@ -242,7 +242,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.LEVEL, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     kills__max: CalculationItem = CalculationItem(
@@ -254,7 +254,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.MAX),
     )
     kills__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -266,7 +266,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     kills__max_global_perc: CalculationItem = CalculationItem(
@@ -278,7 +278,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
     )
     deaths__max: CalculationItem = CalculationItem(
@@ -290,7 +290,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.MAX),
     )
     deaths__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -302,7 +302,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     deaths__max_global_perc: CalculationItem = CalculationItem(
@@ -314,7 +314,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
     )
     kda__max: CalculationItem = CalculationItem(
@@ -326,7 +326,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.MAX),
     )
     kda__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -338,7 +338,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     kda__gained_pw: CalculationItem = CalculationItem(
@@ -350,7 +350,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     obs_placed__max: CalculationItem = CalculationItem(
@@ -362,7 +362,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.OBS_PLACED, IntervalCalculationAggregationMethod.MAX),
     )
     obs_placed__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -374,7 +374,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.OBS_PLACED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     sen_placed__max: CalculationItem = CalculationItem(
@@ -386,7 +386,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.SEN_PLACED, IntervalCalculationAggregationMethod.MAX),
     )
     sen_placed__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -398,7 +398,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.SEN_PLACED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     stacked__max: CalculationItem = CalculationItem(
@@ -410,7 +410,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.STACKED, IntervalCalculationAggregationMethod.MAX),
     )
     stacked__avg_by_length_pm: CalculationItem = CalculationItem(
@@ -422,7 +422,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.STACKED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
     )
     rune_pickups__max: CalculationItem = CalculationItem(
@@ -434,7 +434,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.SUM
-            ),
+        ),
         processing=(IntervalCalculationColumn.RUNE_PICKUPS, IntervalCalculationAggregationMethod.MAX),
     )
     teamfight_participation__avg: CalculationItem = CalculationItem(
@@ -446,7 +446,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.AVG),
     )
     teamfight_participation__max: CalculationItem = CalculationItem(
@@ -458,7 +458,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.MAX),
     )
     teamfight_participation__min: CalculationItem = CalculationItem(
@@ -470,7 +470,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.MIN),
     )
     towers_killed__max: CalculationItem = CalculationItem(
@@ -482,7 +482,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.TOWERS_KILLED, IntervalCalculationAggregationMethod.MAX),
     )
     towers_killed__gained_pw: CalculationItem = CalculationItem(
@@ -494,7 +494,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.TOWERS_KILLED, IntervalCalculationAggregationMethod.GAINED_PW),
     )
     roshans_killed__max: CalculationItem = CalculationItem(
@@ -506,7 +506,7 @@ class IntervalCalculations:
             support_comparison=False,
             percentage=False,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.ROSHANS_KILLED, IntervalCalculationAggregationMethod.MAX),
     )
     networth__max: CalculationItem = CalculationItem(
@@ -518,7 +518,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.MAX
-            ),
+        ),
         processing=(IntervalCalculationColumn.NETWORTH, IntervalCalculationAggregationMethod.MAX),
     )
     networth__gained_pw: CalculationItem = CalculationItem(
@@ -530,7 +530,7 @@ class IntervalCalculations:
             support_comparison=True,
             percentage=True,
             total_format=TotalAggregationMethod.AVG
-            ),
+        ),
         processing=(IntervalCalculationColumn.NETWORTH, IntervalCalculationAggregationMethod.GAINED_PW),
     )
 

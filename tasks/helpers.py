@@ -26,7 +26,7 @@ def unpack_row(row: Iterable, names: list[str]) -> dict[str, Any]:
     output = { }
 
     for name, value in zip(names, row):
-        if name in [WindowEmptyMask.l_empty_masWindowEmptyMask.g_empty_mask]:
+        if name in [WindowEmptyMask.l_empty_mask, WindowEmptyMask.g_empty_mask]:
             mask_data = process_mask(name, value)
             output_mask.update(mask_data)
         elif name in ['window_table', 'total_data']:

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from models.performance import PerformanceTotalData
 from modules.processors.helpers import decimal_division
 
@@ -9,7 +11,7 @@ class TotalPerformanceProcessor:
             cmd_obj: PerformanceTotalData,
             cms_obj: PerformanceTotalData,
             flat: bool,
-            ) -> PerformanceTotalData:
+    ) -> PerformanceTotalData:
         PTD_obj = PerformanceTotalData()
 
         for field in PerformanceTotalData.const.VALUES:
@@ -19,9 +21,9 @@ class TotalPerformanceProcessor:
                 pass
             else:
                 if flat:
-                    value = comparandum_value - comparans_value
+                    value = Decimal(comparandum_value) - Decimal(comparans_value)
                 else:
-                    value = decimal_division(comparandum_value, comparans_value)
+                    value = decimal_division(comparandum_value, comparans_value, bool_normalize=field.pseudo_bool)
                 setattr(PTD_obj, field.name, value)
 
         return PTD_obj
@@ -35,25 +37,27 @@ class TotalPerformanceProcessor:
     ) -> PerformanceTotalData:
         PTD_obj = PerformanceTotalData()
 
-        for field in PerformanceTotalData.const.VALUES:
+        for field_item in PerformanceTotalData.const.VALUES:
             field_value = 0
             field_counter = 0
             for total_obj in total_objects:
-                this_obj_value = getattr(total_obj, field.name)
+                this_obj_value = getattr(total_obj, field_item.name)
                 if this_obj_value is None:
-                    pass
+                    continue
                 else:
                     field_value += this_obj_value
                     field_counter += 1
 
             if field_counter:
-                match mode:
-                    case "avg":
-                        setattr(PTD_obj, field.name, decimal_division(field_value, field_counter))
-                    case "sum":
-                        setattr(PTD_obj, field.name, field_value)
-                    case _:
-                        raise ValueError(f"{mode} mode does not exist for totals reducing!")
+                if field_item.pseudo_bool:
+                    # normalize it
+                    setattr(PTD_obj, field_item.name, decimal_division(field_value, field_counter, bool_normalize=True))
+                elif mode == "avg":
+                    setattr(PTD_obj, field_item.name, decimal_division(field_value, field_counter))
+                elif mode == "sum":
+                    setattr(PTD_obj, field_item.name, field_value)
+                else:
+                    raise ValueError(f"{mode} mode does not exist for totals reducing!")
 
         return PTD_obj
 

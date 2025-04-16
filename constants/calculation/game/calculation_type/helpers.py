@@ -22,7 +22,7 @@ class CalculationItem(BaseModel):
     name: str
     description: str
     value: int | None = None
-    value_db: int | None = None
+    db_id: int | None = None
 
     is_active: bool = True
     index: int
@@ -41,7 +41,7 @@ def set_category_and_value(category: Item) -> Callable:
             if type_ is CalculationItem:
                 item = getattr(klass, name)
                 item.category = category
-                item.value_db = category.value * 100 + item.index
+                item.db_id = category.value * 100 + item.index
 
                 global GLOBAL_VALUE_COUNTER
                 item.value = GLOBAL_VALUE_COUNTER

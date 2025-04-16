@@ -10,7 +10,12 @@ from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 from tasks.aggregation.helpers import team_aggregation_league_participants_query_creator
-from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data, get_query_data
+from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
+# import logging
+
+# logging.basicConfig()
+# logger = logging.getLogger('sqlalchemy.engine')
+# logger.setLevel(logging.DEBUG)
 
 
 def _get_key(data: dict, is_flat: bool | None) -> tuple[int, bool | None]:
@@ -28,7 +33,7 @@ def create_performance_objs(
     patch_id = 0
 
     for row in league_participants:
-        row_data = { name: value for name, value in zip(row, names) }
+        row_data = { name: value for name, value in zip(names, row) }
 
         for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
             row_key = _get_key(row_data, is_flat)
@@ -57,7 +62,6 @@ def create_performance_objs(
     return output
 
 
-
 @shared_task(name="aggregate_league_team", ignore_result=True)
 def aggregate_league_team(league_id: int):
     db_session: Session = get_sync_db_session(expire=False)
@@ -74,7 +78,7 @@ def aggregate_league_team(league_id: int):
         for calculation in WindowCalculations.VALUES:
             query, names = team_aggregation_query_creator(
                 league_id=league_id,
-                calculation_type_id=calculation.value,
+                calculation_type_id=calculation.db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat,
             )
@@ -82,7 +86,7 @@ def aggregate_league_team(league_id: int):
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):
                 key = _get_key(window_data, is_flat)
-                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.value)
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
                 PWD_obj.game_performance = performance_dict[key]
                 db_session.add(PWD_obj)
 

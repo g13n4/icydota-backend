@@ -50,7 +50,7 @@ class WindowsPerformanceProcessor:
         """
         for window in WindowCalculations.VALUES:
             calculation_slice = player_data_matrix[window.value, :]
-            yield WindowsPerformanceProcessor.get_pwd_from_iterable(calculation_slice, window.value_db)
+            yield WindowsPerformanceProcessor.get_pwd_from_iterable(calculation_slice, window.db_id)
 
 
     @staticmethod

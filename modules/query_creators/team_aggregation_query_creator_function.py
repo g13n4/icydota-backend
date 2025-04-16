@@ -1,4 +1,3 @@
-from models import Game, PlayerGameData, ComparisonType
 from models.performance import PerformanceWindowTable, PerformanceWindowData, PerformanceTotalData, Performance
 from models.performance_data_type import ByTeamType
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
@@ -17,7 +16,7 @@ def team_aggregation_query_creator(
     models.add(ByTeamType.team_id, 'team_id', True)
     models.add(ByTeamType.team_cpd_id, 'team_cpd_id', True)
 
-    joins.add(Performance, PlayerGameData.id == Performance.player_game_data_id)
+    joins.insert(Performance, ByTeamType.performance_id == Performance.id)
 
     where.append(ByTeamType.is_flat == is_flat)
     if is_comparison:
@@ -30,14 +29,12 @@ def team_aggregation_query_creator(
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
 
-        joins.insert(Performance, PerformanceWindowData.game_performance_id == Performance.id)
-
-        joins.insert(
+        joins.add(PerformanceWindowData, PerformanceWindowData.performance_id == Performance.id)
+        joins.add(
             PerformanceWindowTable,
             PerformanceWindowData.performance_table_id == PerformanceWindowTable.id,
             True,
-            index=1,
-            )
+        )
 
         where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:

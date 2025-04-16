@@ -29,13 +29,13 @@ def _is_empty(path: Path) -> bool:
 
 def clean_up_file(func: Callable) -> Callable:
     def wrapper(*args, **kwargs) -> bool:
-        output: bool = func(*args, **kwargs)  # add try / except
-        if not output:
+        parsed_successfully: bool = func(*args, **kwargs)  # add try / except
+        if not parsed_successfully:
             file: Path = kwargs.get('file_path', None) or args[0]
 
             if file.is_file():
                 os.remove(file)
-        return output
+        return parsed_successfully
 
 
     return wrapper
@@ -71,6 +71,10 @@ def _jsonl_exists_and_valid(file_path: Path) -> bool:
                     if re.search(word, line):
                         matched_words.add(word)
 
+                    # gg was called
+                    if re.search('"chat","key":"gg"', line):
+                        return True
+
                 if len(required_words) == len(matched_words):
                     return True
 
@@ -83,8 +87,10 @@ def extract_url_from_json(file_path: Path) -> str:
 
     replay_url = game_data.get('replay_url', None)
     if not game_data['replay_url']:
-        replay_url = f"http://replay{game_data['cluster']}.valve.net/" + \
-                     f"570/{game_data['match_id']}_{game_data['replay_salt']}.dem.bz2"
+        replay_url = (
+            f"http://replay{game_data['cluster']}.valve.net/"
+            f"570/{game_data['match_id']}_{game_data['replay_salt']}.dem.bz2"
+        )
 
     return replay_url
 

@@ -253,8 +253,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
             lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None), nullify=False),
             lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None), nullify=False),
             # use in aggregation
-            win=player_info['win'],
-            picked=1,
+            win=int(player_info['win']) * 100,
+            picked=100,
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field

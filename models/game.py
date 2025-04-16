@@ -99,6 +99,8 @@ class Game(SQLModel, table=True):
 
 class PlayerGameData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    invalid: Optional[bool]
+
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     player_id: Optional[int] = Field(default=None, foreign_key="players.account_id")
 
@@ -121,13 +123,15 @@ class PlayerGameData(SQLModel, table=True):
     apm: int
     pings: int
 
-    game_id: Optional[int] = _fk("games", col_type="bigint", index=True)
+    game_id: Optional[int] = _fk("games", col_type="bigint", index=True, cascade=True)
     game: Optional["Game"] = Relationship(back_populates="players_game_data")
 
     performance: List["Performance"] = Relationship(
         back_populates="player_game_data",
         cascade_delete=True,
     )
+
+    invalid: Optional[bool]
 
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={

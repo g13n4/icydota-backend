@@ -41,10 +41,10 @@ def process_xp_windows(
 
                 else:
                     calc, calc_pm = XP_REASONS[reason]
-                    PDP.set_value(slot=slot, calculation=calc.index, window_index=window['index'], value=value)
+                    PDP.set_value(slot=slot, calculation=calc.value, window_index=window['index'], value=value)
 
                     if calc_pm is not None and value:
-                        PDP.set_value(slot=slot, calculation=calc_pm.index, window_index=window['index'], value=value)
+                        PDP.set_value(slot=slot, calculation=calc_pm.value, window_index=window['index'], value=value)
 
             for slot, value in other_reason_dict.items():
                 PDP.set_value(

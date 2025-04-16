@@ -192,7 +192,7 @@ class PerformanceDataProcessor:
 
         # Aggregated comparison
         windows_data_aggregation = reduce(operator.add, windows_data) / opponents_size
-        totals_data_aggregation = TotalPerformanceProcessor.reduce_total_objs(totals_data)
+        totals_data_aggregation = TotalPerformanceProcessor.reduce_total_objs(totals_data, mode="avg")
 
         for is_flat in [True, False]:
 
@@ -243,7 +243,7 @@ class PerformanceDataProcessor:
             (self.SENT, 5),  # dire_offset
         ]:
 
-            TT_obj = ByTeamType(
+            BTT_obj = ByTeamType(
                 league_id=match_data["league_id"],
                 match_id=match_data["game_obj"].id,
                 patch_id=match_data["patch_id"],
@@ -252,7 +252,7 @@ class PerformanceDataProcessor:
 
             GP_obj = Performance(
                 type_id=Performance.const.team.TEAM_MATCH,
-                by_team_type=TT_obj,
+                by_team_type=BTT_obj,
             )
 
             side_indexes = [slot for slot in range(side_offset, 5 + side_offset)]
@@ -260,7 +260,7 @@ class PerformanceDataProcessor:
             windows_df: np.ndarray = reduce(operator.add, total_windows)
 
             total_objs = [self.players_data[idx]["performance_total_data"] for idx in side_indexes]
-            total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs)
+            total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs, mode="sum")
 
             GP_obj.total_data = total_obj
 
@@ -279,7 +279,7 @@ class PerformanceDataProcessor:
             for is_flat in [True, False]:
 
                 opponents_side = self.SIDE_OPPOSITE[side]
-                TT_obj = ByTeamType(
+                BTT_obj = ByTeamType(
                     league_id=match_data["league_id"],
                     match_id=match_data["game_obj"].id,
                     patch_id=match_data["patch_id"],
@@ -292,7 +292,7 @@ class PerformanceDataProcessor:
 
                 P_obj = Performance(
                     type_id=Performance.const.team.TEAM_MATCH_COMPARISON,
-                    by_team_type=TT_obj,
+                    by_team_type=BTT_obj,
                 )
 
                 self._fill_performance_with_comparison_data(
@@ -334,11 +334,11 @@ class PerformanceDataProcessor:
         elif calculation is None:
             raise ValueError(
                 f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}, "
-                )
+            )
 
         if calculation > self.ROWS_SIZE:
             raise KeyError(
                 f"The value for calculation is too big! The value will be used in a matrix slicing and can't be bigger than the matrix itself ({self.ROWS_SIZE})"
-                )
+            )
 
         self.windows_data[slot][calculation][window_index - OFFSET] = value

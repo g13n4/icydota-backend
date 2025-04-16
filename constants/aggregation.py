@@ -10,3 +10,15 @@ class AggregationConstant:
     BY_HERO_FACET_PLAYER: int = 7
     BY_PLAYER_HERO_FACET: int = 8
 
+    VALUES: list[int] = [
+        BY_HERO,
+        BY_HERO_FACET,
+        BY_PLAYER,
+        BY_POSITION,
+
+        BY_HERO_PLAYER,
+        BY_PLAYER_HERO,
+
+        BY_HERO_FACET_PLAYER,
+        BY_PLAYER_HERO_FACET,
+    ]

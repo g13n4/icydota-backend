@@ -4,7 +4,6 @@ from typing import Any
 from constants.calculation.cross_comparison import CrossComparisonPositionConstant
 from constants.position import PositionConstant, POSITION_OPPONENTS
 from modules.query_creators.const_map import CCOMPARISON_MODELS
-from modules.query_creators.helpers import ModelList, JoinList
 from utils.helpers import unique_list
 
 

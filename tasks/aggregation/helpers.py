@@ -63,7 +63,7 @@ def match_aggregation_league_participants_query_creator(league_id: int) -> tuple
     models.add(PlayerGameData.position_id, 'position_id', True)
     models.add(PlayerGameData.facet_id, 'facet_id', True)
 
-    joins.add(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
+    joins.add(Performance, Performance.player_game_data_id == PlayerGameData.id)
     joins.add(Game, Game.id == PlayerGameData.game_id)
 
     return combine_select(models.get_models(), joins.data, where).distinct(), models.get_names()
@@ -76,6 +76,5 @@ def team_aggregation_league_participants_query_creator(league_id: int) -> tuple:
 
     models.add(ByTeamType.team_id, 'team_id', True)
     models.add(ByTeamType.patch_id, 'patch_id', True)
-    joins.add(Performance, PlayerGameData.id == Performance.player_game_data_id)
 
     return combine_select(models.get_models(), joins.data, where).distinct(), models.get_names()

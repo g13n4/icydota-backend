@@ -32,4 +32,4 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: Performan
                         df_agg=agg_window['df']
                     )
 
-                PDP.set_value(slot=slot, calculation=calc_item.index, window_index=player_window['index'], value=value)
+                PDP.set_value(slot=slot, calculation=calc_item.value, window_index=player_window['index'], value=value)

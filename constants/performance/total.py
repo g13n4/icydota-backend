@@ -5,6 +5,7 @@ from pydantic import condecimal, BaseModel
 from constants.helpers import get_only_names
 from helpers import to_proper_name
 
+
 MINUTE = 60
 
 
@@ -40,7 +41,7 @@ def set_total_name(klass: object):
 class GameTotals:
     gold: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=1)
     xp: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=2)
-    kills_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=7), index=3)
+    kills_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=3), index=3)
     kda: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=4)
     neutral_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=5)
     tower_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=6)
@@ -48,7 +49,11 @@ class GameTotals:
     lane_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=8)
     hero_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=9)
     observer_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=10)
-    sentry_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=11, description="Sentries killed")
+    sentry_kills: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=11,
+        description="Sentries killed"
+        )
     roshan_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=12)
     runes_picked_up: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=13)
     ancient_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=14)
@@ -58,22 +63,39 @@ class GameTotals:
     lane_efficiency: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=18)
     lane_efficiency_pct: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=19)
 
-    first_blood_claimed: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=20, description="FB")
+    first_blood_claimed: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=5, decimal_places=2),
+        index=20,
+        description="FB",
+        pseudo_bool=True
+        )
     first_kill_time: GameTotal = GameTotal(value_type=Optional[int], index=24)
 
-    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21)
+    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21, pseudo_bool=True)
     first_death_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
 
-    lost_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=22)
+    lost_tower_first: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=5, decimal_places=2),
+        index=22,
+        pseudo_bool=True
+        )
     lost_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=27)
-    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26, pseudo_bool=True)
+    lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26)
 
-    destroyed_tower_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=23)
-    destroyed_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=28, pseudo_bool=True)
+    destroyed_tower_first: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=5, decimal_places=2),
+        index=23,
+        pseudo_bool=True
+        )
+    destroyed_tower_lane: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=28,
+        pseudo_bool=True
+        )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
-    win: GameTotal = GameTotal(value_type=Optional[int], index=30, aggregation_only=True)
-    picked: GameTotal = GameTotal(value_type=Optional[int], index=31, aggregation_only=True)
+    win: GameTotal = GameTotal(value_type=Optional[int], index=30, aggregation_only=True, pseudo_bool=True)
+    picked: GameTotal = GameTotal(value_type=Optional[int], index=31, aggregation_only=True, pseudo_bool=True)
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

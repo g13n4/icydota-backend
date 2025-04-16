@@ -13,7 +13,7 @@ def create_performance_data(db_session: Session, ) -> None:
 
     for calculation in PerformanceWindowCalculationType.const.VALUES:
         calculation_obj = PerformanceWindowCalculationType(
-            id=calculation.value_db,
+            id=calculation.db_id,
             name=calculation.name,
             description=calculation.description,
             calc_category_id=calculation.category.value,

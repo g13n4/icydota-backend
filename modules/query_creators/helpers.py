@@ -27,6 +27,11 @@ class JoinList:
         self.data.append(create_join_dict(target=target, onclause=onclause, isouter=isouter))
 
 
+    def ladd(self, target, onclause, isouter: bool = False):
+        """Adds a join clause the start of the end JoinList"""
+        self.insert(target=target, onclause=onclause, isouter=isouter, index=0)
+
+
     def insert(self, target, onclause, isouter: bool = False, *, index: int = 0):
         """Adds a join clause the end of the beginning of JoinList"""
         self.data.insert(index, create_join_dict(target=target, onclause=onclause, isouter=isouter))

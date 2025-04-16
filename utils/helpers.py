@@ -137,7 +137,7 @@ def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) 
 
 
 def to_dec(number: float | int | None, rounding: int = 2):
-    if number in [-np.inf, np.inf, np.nan, None]:
+    if is_invalid_value(number):
         return None
 
     return round(Decimal(float(number)), rounding)

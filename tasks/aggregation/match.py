@@ -22,7 +22,7 @@ def create_performance_objs(
     league_participants = db_session.exec(query)
 
     for row in league_participants:
-        row_data = { name: value for name, value in zip(row, names) }
+        row_data = { name: value for name, value in zip(names, row) }
         required_row_data = AGC.create_dict(row_data)
 
         for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
@@ -75,7 +75,7 @@ def aggregate_league_match(league_id: int, aggregation_type: int):
         for calculation in WindowCalculations.VALUES:
             query, names = match_aggregation_query_creator(
                 league_id=league_id,
-                calculation_type_id=calculation.value_db,
+                calculation_type_id=calculation.db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat
                 )

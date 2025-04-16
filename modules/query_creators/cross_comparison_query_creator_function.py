@@ -19,7 +19,7 @@ def match_ccomparison_query_creator(
         Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON,
         ComparisonType.basic == True,
         ComparisonType.is_flat == is_flat,
-        col(ComparisonType.pos_cpd_id).in_(positions)
+        col(ComparisonType.pos_cpd_id).in_(positions),
     ]
 
     if calculation_type_id:

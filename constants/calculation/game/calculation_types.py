@@ -40,5 +40,5 @@ class WindowCalculations(
 
 
 WindowCalculations.DB_INDEX_MAP = {
-    item.value: item.value_db for item in WindowCalculations.VALUES
+    item.value: item.db_id for item in WindowCalculations.VALUES
 }

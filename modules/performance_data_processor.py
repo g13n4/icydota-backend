@@ -248,6 +248,7 @@ class PerformanceDataProcessor:
                 match_id=match_data["game_obj"].id,
                 patch_id=match_data["patch_id"],
                 team_id=match_data[side],
+
             )
 
             GP_obj = Performance(
@@ -275,35 +276,36 @@ class PerformanceDataProcessor:
 
             self.session.add(GP_obj)
 
-        for side, data in sides_data.items():
-            for is_flat in [True, False]:
+            for side, data in sides_data.items():
+                for is_flat in [True, False]:
 
-                opponents_side = self.SIDE_OPPOSITE[side]
-                BTT_obj = ByTeamType(
-                    league_id=match_data["league_id"],
-                    match_id=match_data["game_obj"].id,
-                    patch_id=match_data["patch_id"],
-                    team_id=match_data[side],
+                    opponents_side = self.SIDE_OPPOSITE[side]
+                    BTT_obj = ByTeamType(
+                        league_id=match_data["league_id"],
+                        match_id=match_data["game_obj"].id,
+                        patch_id=match_data["patch_id"],
+                        team_id=match_data[side],
 
-                    is_flat=is_flat,
-                    team_cpd_id=match_data[side],
-                    team_cps_id=match_data[opponents_side],
-                )
+                        is_flat=is_flat,
+                        team_cpd_id=match_data[side],
+                        team_cps_id=match_data[opponents_side],
+                    )
 
-                P_obj = Performance(
-                    type_id=Performance.const.team.TEAM_MATCH_COMPARISON,
-                    by_team_type=BTT_obj,
-                )
+                    P_obj = Performance(
+                        type_id=Performance.const.team.TEAM_MATCH_COMPARISON,
+                        by_team_type=BTT_obj,
+                    )
 
-                self._fill_performance_with_comparison_data(
-                    P_obj=P_obj,
-                    windows_ndarray_cpd=sides_data[side]["ndarray"],
-                    windows_ndarray_cps=sides_data[opponents_side]["ndarray"],
-                    total_obj_cpd=sides_data[side]["total"],
-                    total_obj_cps=sides_data[opponents_side]["total"],
-                    is_flat=is_flat,
-                    add_to_session=True
-                )
+                    self._fill_performance_with_comparison_data(
+                        P_obj=P_obj,
+                        windows_ndarray_cpd=sides_data[side]["ndarray"],
+                        windows_ndarray_cps=sides_data[opponents_side]["ndarray"],
+                        total_obj_cpd=sides_data[side]["total"],
+                        total_obj_cps=sides_data[opponents_side]["total"],
+                        is_flat=is_flat,
+                        add_to_session=True
+                    )
+
 
 
     def process_game_data(self):

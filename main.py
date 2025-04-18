@@ -284,7 +284,7 @@ if not LIGHT_MODE:
         aggregate_league_task_helper(league_id=league_id, )
 
 
-    @icydota_api.post(API_PREFIX + '/aggregate/cross_comparison/{league_id}', status_code=202)
+    @icydota_api.post(API_PREFIX + '/cross_comparison/league/{league_id}', status_code=202)
     async def create_cross_comparison_api(league_id: int):
         cross_compare_league_task_helper(league_id=league_id, )
 

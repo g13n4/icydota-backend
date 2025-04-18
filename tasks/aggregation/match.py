@@ -83,8 +83,8 @@ def aggregate_league_match(league_id: int, aggregation_type: int):
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):
                 key = AGC.create_key(window_data, append=is_flat)
-                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.value)
-                PWD_obj.game_performance = performance_dict[key]
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
+                PWD_obj.performance = performance_dict[key]
                 db_session.add(PWD_obj)
 
             db_session.commit()
@@ -100,7 +100,7 @@ def aggregate_league_match(league_id: int, aggregation_type: int):
         for total_data in process_data(data=data, group_by=columns, is_window=False):
             key = AGC.create_key(total_data, append=is_flat)
             PTD_obj = TotalPerformanceProcessor.create_object_from_dict(total_data)
-            PTD_obj.game_performance = performance_dict[key]
+            PTD_obj.performance = performance_dict[key]
             db_session.add(PTD_obj)
 
         db_session.commit()

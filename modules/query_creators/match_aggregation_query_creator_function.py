@@ -18,13 +18,12 @@ def match_aggregation_query_creator(
     models.add(PlayerGameData.position_id, 'position_id', True)
     models.add(PlayerGameData.facet_id, 'facet_id', True)
 
-    joins.add(PlayerGameData, PlayerGameData.id == Performance.player_game_data_id)
+    joins.add(Performance, PlayerGameData.id == Performance.player_game_data_id)
     joins.add(Game, Game.id == PlayerGameData.game_id)
 
     if is_comparison:
         models.add(ComparisonType.is_flat, 'is_flat', True)
 
-        joins.add(Game, Game.id == PlayerGameData.game_id)
         joins.add(ComparisonType, ComparisonType.performance_id == Performance.id)
 
         where.append(Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON)
@@ -38,18 +37,16 @@ def match_aggregation_query_creator(
         models.add(PerformanceWindowData.g_empty_mask, 'g_empty_mask', True)
         models.add(PerformanceWindowTable, 'window_table', True)
 
-        joins.insert(Performance, PerformanceWindowData.game_performance_id == Performance.id)
-
-        joins.insert(
+        joins.add(PerformanceWindowData, PerformanceWindowData.performance_id == Performance.id)
+        joins.add(
             PerformanceWindowTable,
             PerformanceWindowData.performance_table_id == PerformanceWindowTable.id,
             True,
-            index=1,
         )
 
         where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
-        joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)
+        joins.add(PerformanceTotalData, PerformanceTotalData.performance_id == Performance.id)
 
     return combine_select(models.get_models(), joins.data, where), models.get_names()

@@ -1,4 +1,5 @@
 import enum
+import math
 import re
 from collections.abc import Iterable
 from datetime import datetime
@@ -49,14 +50,10 @@ def combine_slot_dicts(*args) -> dict:
 def is_invalid_value(value: Any) -> bool:
     if isinstance(value, Decimal):
         return value.is_nan()
+    elif isinstance(value, float):
+        return math.isnan(value)
+
     return value in [-np.inf, np.inf, np.nan, None]
-
-
-def to_bin_list(value: int, size: int) -> list[int]:
-    binary_string = bin(value)[1:]
-    binary_list = list(map(int, list(binary_string[::-1])))
-    pad = [0] * (size - len(binary_list))
-    return pad + binary_list
 
 
 def get_obj_from_list(objs_list: list, **kwargs):

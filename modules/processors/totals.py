@@ -1,7 +1,10 @@
+import typing
 from decimal import Decimal
 
 from models.performance import PerformanceTotalData
 from modules.processors.helpers import decimal_division
+from utils import to_dec
+from utils.helpers import is_invalid_value
 
 
 class TotalPerformanceProcessor:
@@ -68,6 +71,15 @@ class TotalPerformanceProcessor:
 
         for field in PerformanceTotalData.const.VALUES:
             value = data[field.name]
+            if is_invalid_value(value):
+                value = None
+            elif isinstance(field.value_type, typing._AnnotatedAlias):
+                value = to_dec(value)
+            elif field.value_type is typing.Optional[int]:
+                value = int(value)
+            else:
+                raise TypeError("Value has an unknown type!")
+
             setattr(PTD_obj, field.name, value)
 
         return PTD_obj

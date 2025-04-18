@@ -19,10 +19,11 @@ def team_aggregation_query_creator(
     joins.insert(Performance, ByTeamType.performance_id == Performance.id)
 
     where.append(ByTeamType.is_flat == is_flat)
+
     if is_comparison:
-        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH)
-    else:
         where.append(Performance.type_id == Performance.const.team.TEAM_MATCH_COMPARISON)
+    else:
+        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH)
 
     if calculation_type_id:
         models.add(PerformanceWindowData.l_empty_mask, 'l_empty_mask', True)
@@ -39,6 +40,6 @@ def team_aggregation_query_creator(
         where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
     else:
         models.add(PerformanceTotalData, 'total_data', True)
-        joins.add(PerformanceTotalData, PerformanceTotalData.game_performance_id == Performance.id)
+        joins.add(PerformanceTotalData, PerformanceTotalData.performance_id == Performance.id)
 
     return combine_select(models.get_models(), joins.data, where), models.get_names()

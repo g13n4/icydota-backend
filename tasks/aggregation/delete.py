@@ -16,9 +16,11 @@ def delete_aggregation_league_match(league_id: int):
         .join(AggregationType, AggregationType.performance_id == Performance.id)
         .where(
             AggregationType.league_id == league_id,
-            Performance.type_id.in_(
-                Performance.const.game.AGGREGATION,
-                Performance.const.game.AGGREGATION_COMPARISON,
+            col(Performance.type_id).in_(
+                [
+                    Performance.const.game.AGGREGATION,
+                    Performance.const.game.AGGREGATION_COMPARISON,
+                ]
             )
         ))
 

@@ -9,9 +9,6 @@ from constants.calculation.game.category import WindowCategories
 from constants.game_performance import PerformanceTypeConstant
 from constants.performance.total import GameTotals
 from constants.performance.window import AllWindows
-from .helpers import (
-    _fk,
-)
 from .mixins.abilities import AbilityTotalDataMixin
 from .mixins.helpers import inherit_annotations
 from .mixins.totals import PerformanceTotalDataMixin

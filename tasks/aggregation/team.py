@@ -1,3 +1,5 @@
+import logging
+
 from celery import shared_task
 from sqlmodel import Session
 
@@ -10,8 +12,8 @@ from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 from tasks.aggregation.helpers import team_aggregation_league_participants_query_creator
-from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
-# import logging
+from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data, none_max
+
 
 # logging.basicConfig()
 # logger = logging.getLogger('sqlalchemy.engine')
@@ -37,8 +39,7 @@ def create_performance_objs(
 
         for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
             row_key = _get_key(row_data, is_flat)
-
-            patch_id = max(patch_id, row_data['patch_id'])
+            patch_id = none_max(patch_id, row_data['patch_id'])
 
             type_obj = ByTeamType(
                 patch_id=None,  # either aggregate or choose one
@@ -87,7 +88,7 @@ def aggregate_league_team(league_id: int):
             for window_data in process_data(data=data, group_by=columns, is_window=True):
                 key = _get_key(window_data, is_flat)
                 PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
-                PWD_obj.game_performance = performance_dict[key]
+                PWD_obj.performance = performance_dict[key]
                 db_session.add(PWD_obj)
 
             db_session.commit()
@@ -103,7 +104,7 @@ def aggregate_league_team(league_id: int):
         for total_data in process_data(data=data, group_by=columns, is_window=False):
             key = _get_key(total_data, is_flat)
             PTD_obj = TotalPerformanceProcessor.create_object_from_dict(total_data)
-            PTD_obj.game_performance = performance_dict[key]
+            PTD_obj.performance = performance_dict[key]
             db_session.add(PTD_obj)
 
         db_session.commit()

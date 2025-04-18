@@ -1,19 +1,17 @@
 from collections import namedtuple
 
 from constants.aggregation import AggregationConstant
-from constants.calculation.cross_comparison import CrossComparisonTypeConstant, CrossComparisonPositionConstant
-from models import Hero, Player, Position, Facet, AggregationType, CrossComparisonType, ComparisonType
+from constants.calculation.cross_comparison import CrossComparisonTypeConstant
+from models import Hero, Player, Position, Facet, AggregationType, ComparisonType
 
 
 # Use the value from the from_model model instead of the actual model if it's set
 AggItem = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
 
-
 HERO = AggItem(Hero, 'hero_id', AggregationType)
 PLAYER = AggItem(Player, 'player_id', None)
-POSITION = AggItem(Position, 'hero_id', AggregationType)
+POSITION = AggItem(Position, 'position_id', AggregationType)
 FACET = AggItem(Facet, 'facet_id', None)
-
 
 AGGREGATION_MODELS = {
     AggregationConstant.BY_HERO: [HERO, ],
@@ -39,7 +37,6 @@ AGGREGATION_MODELS = {
 
 CComItem = namedtuple('CComItem', ['field', 'field_name', 'auxiliary'], defaults=[False])
 
-
 CCOMPARISON_MODELS = {
     CrossComparisonTypeConstant.POSITION_HERO: [
         CComItem(ComparisonType.hero_cpd_id, 'hero_cpd_id', False),
@@ -59,10 +56,9 @@ CCOMPARISON_MODELS = {
 }
 
 CCOMPARISON_JOIN = {
-    CrossComparisonTypeConstant.POSITION_HERO: [ ],
+    CrossComparisonTypeConstant.POSITION_HERO: [],
     CrossComparisonTypeConstant.POSITION_PLAYER: [
         (Player, AggregationType.player_id == Player.account_id)
     ],
-    CrossComparisonTypeConstant.POSITION_HERO_FACET: [ ],
+    CrossComparisonTypeConstant.POSITION_HERO_FACET: [],
 }
-

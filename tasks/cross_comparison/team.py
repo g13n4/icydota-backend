@@ -59,52 +59,50 @@ def cross_comparison_league_team(league_id: int):
     if not league_obj:
         raise ValueError("No such league in the database")
 
-    columns = ['team_id']
+    columns = ['team_cpd_id', 'team_cps_id']
     performance_dict = None
     patch_id = None
 
-    for ccomp_pos_id, enemies in COMPARISON_TYPE_POSITION_MAP.items():
-        for is_comparison, is_flat in PROCESSING_ONLY_COMPARISON:
-            for calculation in WindowCalculations.VALUES:
-                query, names = team_ccomparison_query_creator(
-                    league_id=league_id,
-                    calculation_type_id=calculation.value,
-                    positions=enemies,
-                    is_flat=is_flat
-                    )
-                data = get_query_data(db_session=db_session, query=query, names=names)
-
-                if performance_dict is None:
-                    patch_id, performance_dict = create_performance_dict(
-                        league_id=league_id,
-                        data=data,
-                        is_flat=is_flat,
-                    )
-
-                for window_data in process_data(data=data, group_by=columns, is_window=True):
-                    PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.value)
-                    key = _get_key(window_data, is_flat)
-                    performance_obj = performance_dict[key]
-                    performance_obj.patch_id = patch_id
-
-                    PWD_obj.game_performance = performance_obj
-                    db_session.add(PWD_obj)
-
-                db_session.commit()
-
-            query, names = match_ccomparison_query_creator(
+    for is_comparison, is_flat in PROCESSING_ONLY_COMPARISON:
+        for calculation in WindowCalculations.VALUES:
+            query, names = team_ccomparison_query_creator(
                 league_id=league_id,
-                calculation_type_id=None,
-                positions=[],
+                calculation_type_id=calculation.value,
                 is_flat=is_flat
                 )
             data = get_query_data(db_session=db_session, query=query, names=names)
 
-            for total_data in process_data(data=data, group_by=columns, is_window=False):
-                PTD_obj = TotalPerformanceProcessor.create_object_from_dict(total_data)
-                key = _get_key(total_data, is_flat)
+            if performance_dict is None:
+                patch_id, performance_dict = create_performance_dict(
+                    league_id=league_id,
+                    data=data,
+                    is_flat=is_flat,
+                )
+
+            for window_data in process_data(data=data, group_by=columns, is_window=True):
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.value)
+                key = _get_key(window_data, is_flat)
                 performance_obj = performance_dict[key]
-                PTD_obj.game_performance = performance_obj
-                db_session.add(PTD_obj)
+                performance_obj.patch_id = patch_id
+
+                PWD_obj.game_performance = performance_obj
+                db_session.add(PWD_obj)
 
             db_session.commit()
+
+        query, names = match_ccomparison_query_creator(
+            league_id=league_id,
+            calculation_type_id=None,
+            positions=[],
+            is_flat=is_flat
+            )
+        data = get_query_data(db_session=db_session, query=query, names=names)
+
+        for total_data in process_data(data=data, group_by=columns, is_window=False):
+            PTD_obj = TotalPerformanceProcessor.create_object_from_dict(total_data)
+            key = _get_key(total_data, is_flat)
+            performance_obj = performance_dict[key]
+            PTD_obj.game_performance = performance_obj
+            db_session.add(PTD_obj)
+
+        db_session.commit()

@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from decimal import Decimal
 from itertools import zip_longest
 
-from utils.helpers import is_invalid_value, to_bin_list
+from utils.helpers import is_invalid_value
 
 
 class EmptyMaskConverter:
@@ -11,6 +11,9 @@ class EmptyMaskConverter:
     MAP = {
         1: None,
         0: 0,
+
+        "1": None,
+        "0": 0,
     }
 
 
@@ -32,8 +35,16 @@ class EmptyMaskConverter:
 
 
     @staticmethod
+    def value_to_bin_list(value: int, size: int) -> str:
+        full_binary_string = bin(value)
+        _, binary_string = full_binary_string.split('b')  # remove 0b prefix
+        pad = "0" * (size - len(binary_string))
+        return pad + binary_string
+
+
+    @staticmethod
     def mask_to_dict(mask: int, windows: list[str]) -> dict:
         output = dict()
-        for value, field in zip_longest(to_bin_list(mask, len(windows)), windows[::-1]):
-            output[field] = EmptyMaskConverter.MAP.get(value, None)
+        for value, field in zip_longest(EmptyMaskConverter.value_to_bin_list(mask, len(windows)), windows):
+            output[field] = EmptyMaskConverter.MAP[value]
         return output

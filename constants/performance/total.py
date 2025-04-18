@@ -53,7 +53,7 @@ class GameTotals:
         value_type=condecimal(max_digits=10, decimal_places=2),
         index=11,
         description="Sentries killed"
-        )
+    )
     roshan_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=12)
     runes_picked_up: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=13)
     ancient_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=14)
@@ -68,7 +68,7 @@ class GameTotals:
         index=20,
         description="FB",
         pseudo_bool=True
-        )
+    )
     first_kill_time: GameTotal = GameTotal(value_type=Optional[int], index=24)
 
     died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21, pseudo_bool=True)
@@ -78,7 +78,7 @@ class GameTotals:
         value_type=condecimal(max_digits=5, decimal_places=2),
         index=22,
         pseudo_bool=True
-        )
+    )
     lost_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=27)
     lost_tower_lane: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=26)
 
@@ -86,16 +86,27 @@ class GameTotals:
         value_type=condecimal(max_digits=5, decimal_places=2),
         index=23,
         pseudo_bool=True
-        )
+    )
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=28,
         pseudo_bool=True
-        )
+    )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
     win: GameTotal = GameTotal(value_type=Optional[int], index=30, aggregation_only=True, pseudo_bool=True)
     picked: GameTotal = GameTotal(value_type=Optional[int], index=31, aggregation_only=True, pseudo_bool=True)
+
+    first_kill_chance: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=32, aggregation_only=True, pseudo_bool=True
+    )
+    first_death_chance: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=33,
+        aggregation_only=True,
+        pseudo_bool=True
+    )
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

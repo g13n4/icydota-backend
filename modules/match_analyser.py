@@ -1,6 +1,5 @@
 import copy
 import json
-import math
 import pathlib
 import re
 from typing import Any, Optional, TypedDict
@@ -225,8 +224,6 @@ def _compare_name_complex(cdota_name, npc_name) -> int:
     return fuzz.ratio(cdota_name_processed, npc_name_processed)
 
 
-
-
 class MatchAnalyser:
     def __init__(
             self,
@@ -244,6 +241,7 @@ class MatchAnalyser:
         self._is_match_windows_set = False
 
         self.windows_handler = MatchWindowsHandler()
+
 
     def get_players(self) -> list[dict]:
         return self.players.get_all()
@@ -468,11 +466,9 @@ class MatchAnalyser:
                 elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targetname'] == 'npc_dota_roshan':
                     roshan_deaths.append({ x: p_line[x] for x in ['time', 'sourcename', ] })
 
-
         self._is_match_windows_set = True
         self._game_total_length = total_game_length
         self.windows_handler.set_window_status()
-
 
         return {
             'interval': pd.DataFrame(interval),

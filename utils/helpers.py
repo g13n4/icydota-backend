@@ -168,9 +168,6 @@ def to_str_time(unix_timestamp: int) -> str:
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y/%m/%d')
 
 
-def unique_list(*args) -> list:
-    output = []
-    for arg in args:
-        output += arg
-
-    return output
+def unique_list(*args: Iterable[list]) -> list:
+    output = set(value for sub_list in args for value in sub_list)
+    return list(output)

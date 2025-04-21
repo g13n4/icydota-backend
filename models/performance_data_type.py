@@ -55,9 +55,7 @@ class ComparisonType(SQLModel, table=True):
 class AggregationType(SQLModel, table=True):
     __tablename__ = "data_aggregation_types"
 
-    id: int = Field(
-        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
-    )
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
@@ -89,9 +87,7 @@ class AggregationType(SQLModel, table=True):
 class CrossComparisonType(SQLModel, table=True):
     __tablename__ = "cross_comparison_types"
 
-    id: int = Field(
-        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
-    )
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     created_at: Optional[datetime] = Field(
@@ -114,9 +110,7 @@ class CrossComparisonType(SQLModel, table=True):
 class ByTeamType(SQLModel, table=True):
     __tablename__ = "by_team_types"
 
-    id: Optional[int] = Field(
-        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
-    )
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)

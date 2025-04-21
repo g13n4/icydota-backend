@@ -73,6 +73,17 @@ def set_window_data(window_type: str, window_empty_mask: str) -> Callable:
     return set_window_name
 
 
+def set_value_names(klass: object):
+    VALUES_REAL = getattr(klass, 'VALUES_REAL')
+    setattr(klass, 'VALUES_REAL_NAMES', get_only_names(VALUES_REAL))
+
+    VALUES = getattr(klass, 'VALUES')
+    setattr(klass, 'VALUES_NAMES', get_only_names(VALUES))
+
+    return klass
+
+
+@set_value_names
 @set_window_data(WindowType.lane, WindowEmptyMask.l_empty_mask)
 class LaneStageWindows:
     # first 2 minutes
@@ -96,12 +107,13 @@ class LaneStageWindows:
     empty_mask: str = 'l_empty_mask'
 
     VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10, l12, l15]
-    VALUES_REAL_NAME: list[GameWindow] = get_only_names(VALUES_REAL)
+    VALUES_REAL_NAMES: list[GameWindow]
 
     VALUES: list[GameWindow] = VALUES_REAL + [ltotal]
-    VALUES_NAMES: list[GameWindow] = get_only_names(VALUES)
+    VALUES_NAMES: list[GameWindow]
 
 
+@set_value_names
 @set_window_data(WindowType.game, WindowEmptyMask.g_empty_mask)
 class GameStageWindows:
     # first 5 minutes
@@ -125,20 +137,21 @@ class GameStageWindows:
     empty_mask: str = 'g_empty_mask'
 
     VALUES_REAL: list[GameWindow] = [g5, g15, g25, g35, g47, g60, g60plus]
-    VALUES_REAL_NAMES: list[GameWindow] = get_only_names(VALUES_REAL)
+    VALUES_REAL_NAMES: list[GameWindow]
 
     VALUES: list[GameWindow] = VALUES_REAL + [gtotal]
-    VALUES_NAMES: list[GameWindow] = get_only_names(VALUES)
+    VALUES_NAMES: list[GameWindow]
 
 
+@set_value_names
 class AllWindows(LaneStageWindows, GameStageWindows):
     WINDOW_TYPES = [WindowType.lane, WindowType.game]
 
     VALUES: list[GameWindow] = LaneStageWindows.VALUES + GameStageWindows.VALUES
-    VALUES_NAMES: list[GameWindow] = get_only_names(VALUES)
+    VALUES_NAMES: list[GameWindow]
 
     VALUES_REAL: list[GameWindow] = LaneStageWindows.VALUES_REAL + GameStageWindows.VALUES_REAL
-    VALUES_REAL_NAMES: list[GameWindow] = get_only_names(VALUES_REAL)
+    VALUES_REAL_NAMES: list[GameWindow]
 
     WINDOWS_PROCESSING: list[tuple[list[GameWindow], GameWindow]] = [
         (LaneStageWindows.VALUES_REAL, LaneStageWindows.ltotal),

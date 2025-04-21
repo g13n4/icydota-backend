@@ -14,7 +14,7 @@ class CrossComparisonKeyCreator:
     def __init__(self, type_id: int):
         self.type_id = type_id
         self.models = CCOMPARISON_MODELS[type_id]
-        self.fields = [item.field for item in self.models if not item.auxiliary]
+        self.fields = [item.field_name for item in self.models if not item.auxiliary]
 
 
     def get_fields(self):

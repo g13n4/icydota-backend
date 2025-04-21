@@ -1,8 +1,8 @@
 """innit
 
-Revision ID: 7ffa267a851b
+Revision ID: cc3d8fc4bdb0
 Revises: 
-Create Date: 2025-04-06 23:27:20.436619
+Create Date: 2025-04-20 23:56:51.387206
 
 """
 from typing import Sequence, Union
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7ffa267a851b'
+revision: str = 'cc3d8fc4bdb0'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -278,6 +278,7 @@ def upgrade() -> None:
     )
     op.create_table('players_game_data',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('invalid', sa.Boolean(), nullable=True),
     sa.Column('team_id', sa.Integer(), nullable=True),
     sa.Column('player_id', sa.Integer(), nullable=True),
     sa.Column('position_id', sa.Integer(), nullable=True),
@@ -296,7 +297,7 @@ def upgrade() -> None:
     sa.Column('game_id', sa.BIGINT(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.ForeignKeyConstraint(['facet_id'], ['facets.id'], ),
-    sa.ForeignKeyConstraint(['game_id'], ['games.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['game_id'], ['games.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['hero_id'], ['heroes.id'], ),
     sa.ForeignKeyConstraint(['player_id'], ['players.account_id'], ),
     sa.ForeignKeyConstraint(['position_id'], ['positions.id'], ),
@@ -327,7 +328,7 @@ def upgrade() -> None:
     sa.Column('sentry_uses', sa.Integer(), nullable=True),
     sa.Column('first_blood_claimed', sa.Boolean(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('game_id', sa.BIGINT(), nullable=False),
+    sa.Column('game_id', sa.BIGINT(), nullable=True),
     sa.Column('dire', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['game_id'], ['games.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
@@ -353,7 +354,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('by_team_types',
-    sa.Column('id', sa.SMALLINT(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('patch_id', sa.Integer(), nullable=True),
     sa.Column('league_id', sa.Integer(), nullable=True),
     sa.Column('match_id', sa.BIGINT(), nullable=True),
@@ -372,7 +373,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_by_team_types_id'), 'by_team_types', ['id'], unique=False)
     op.create_index(op.f('ix_by_team_types_is_flat'), 'by_team_types', ['is_flat'], unique=False)
     op.create_index(op.f('ix_by_team_types_league_id'), 'by_team_types', ['league_id'], unique=False)
     op.create_table('comparison_types',
@@ -407,7 +407,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_comparison_types_id'), 'comparison_types', ['id'], unique=False)
     op.create_index(op.f('ix_comparison_types_is_flat'), 'comparison_types', ['is_flat'], unique=False)
     op.create_table('cross_comparison_types',
-    sa.Column('id', sa.SMALLINT(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('league_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.Column('type_id', sa.Integer(), nullable=False),
@@ -417,10 +417,9 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['performance_id'], ['performances.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_cross_comparison_types_id'), 'cross_comparison_types', ['id'], unique=False)
     op.create_index(op.f('ix_cross_comparison_types_league_id'), 'cross_comparison_types', ['league_id'], unique=False)
     op.create_table('data_aggregation_types',
-    sa.Column('id', sa.SMALLINT(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('league_id', sa.Integer(), nullable=True),
     sa.Column('patch_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
@@ -439,13 +438,12 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['position_id'], ['positions.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_data_aggregation_types_id'), 'data_aggregation_types', ['id'], unique=False)
     op.create_index(op.f('ix_data_aggregation_types_league_id'), 'data_aggregation_types', ['league_id'], unique=False)
     op.create_index(op.f('ix_data_aggregation_types_patch_id'), 'data_aggregation_types', ['patch_id'], unique=False)
     op.create_table('performance_totals_data',
     sa.Column('gold', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('xp', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('kills_per_min', sa.Numeric(precision=8, scale=7), nullable=True),
+    sa.Column('kills_per_min', sa.Numeric(precision=10, scale=3), nullable=True),
     sa.Column('kda', sa.Numeric(precision=5, scale=2), nullable=True),
     sa.Column('neutral_kills', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('tower_kills', sa.Numeric(precision=10, scale=2), nullable=True),
@@ -474,6 +472,8 @@ def upgrade() -> None:
     sa.Column('destroyed_tower_time', sa.Integer(), nullable=True),
     sa.Column('win', sa.Integer(), nullable=True),
     sa.Column('picked', sa.Integer(), nullable=True),
+    sa.Column('first_kill_chance', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('first_death_chance', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('performance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['performance_id'], ['performances.id'], ondelete='CASCADE'),
@@ -524,10 +524,8 @@ def downgrade() -> None:
     op.drop_table('performance_totals_data')
     op.drop_index(op.f('ix_data_aggregation_types_patch_id'), table_name='data_aggregation_types')
     op.drop_index(op.f('ix_data_aggregation_types_league_id'), table_name='data_aggregation_types')
-    op.drop_index(op.f('ix_data_aggregation_types_id'), table_name='data_aggregation_types')
     op.drop_table('data_aggregation_types')
     op.drop_index(op.f('ix_cross_comparison_types_league_id'), table_name='cross_comparison_types')
-    op.drop_index(op.f('ix_cross_comparison_types_id'), table_name='cross_comparison_types')
     op.drop_table('cross_comparison_types')
     op.drop_index(op.f('ix_comparison_types_is_flat'), table_name='comparison_types')
     op.drop_index(op.f('ix_comparison_types_id'), table_name='comparison_types')
@@ -535,7 +533,6 @@ def downgrade() -> None:
     op.drop_table('comparison_types')
     op.drop_index(op.f('ix_by_team_types_league_id'), table_name='by_team_types')
     op.drop_index(op.f('ix_by_team_types_is_flat'), table_name='by_team_types')
-    op.drop_index(op.f('ix_by_team_types_id'), table_name='by_team_types')
     op.drop_table('by_team_types')
     op.drop_table('ability_performance_data')
     op.drop_table('performances')

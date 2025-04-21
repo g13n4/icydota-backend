@@ -30,7 +30,7 @@ def unpack_row(row: Iterable, names: list[str]) -> dict[str, Any]:
         if name in [WindowEmptyMask.l_empty_mask, WindowEmptyMask.g_empty_mask]:
             mask_data = process_mask(name, value)
             output_mask.update(mask_data)
-        elif name in ['window_table', 'total_data'] and value is not None:
+        elif name in ['window_table', 'total_data'] and  value is not None:
             model_dump = value.model_dump(exclude=set(DATA_MODEL_IGNORE_FIELDS))
             output.update(model_dump)
         else:
@@ -63,7 +63,13 @@ def get_query_data(db_session, query: Select, names: list[str]) -> list[dict]:
 
 
 def none_max(*values: int | float) -> int | float | None:
-    not_none_values = [value for value in values if value is not None]
-    if not_none_values:
-        return max(not_none_values)
-    return None
+    output_value = None
+    for value in values:
+        if value is not None:
+            # first ever not none value
+            if output_value is None:
+                output_value = value
+            elif output_value is not None:
+                output_value = max(value, output_value)
+
+    return output_value

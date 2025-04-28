@@ -16,14 +16,14 @@ class APIPerformanceQueryCreator:
         self.where = []
 
 
-    def _set_model(self, calculation_type_id: int):
-        if calculation_type_id == 0:
+    def _set_model(self, calculation_type_id: int | None):
+        if calculation_type_id:
+            self.data_model = PerformanceWindowData
+            self.data_model_name = 'window_data'
+        else:
             self.data_model = PerformanceTotalData
             self.data_model_name = 'total_data'
             self.is_header = True
-        else:
-            self.data_model = PerformanceWindowData
-            self.data_model_name = 'window_data'
 
 
     def _set_data_model(self, calculation_type_id: int, field: str | None = None):

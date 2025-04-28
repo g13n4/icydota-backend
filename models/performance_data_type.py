@@ -55,6 +55,8 @@ class ComparisonType(SQLModel, table=True):
 class AggregationType(SQLModel, table=True):
     __tablename__ = "data_aggregation_types"
 
+    const: ClassVar[AggregationConstant] = AggregationConstant
+
     id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
@@ -80,7 +82,6 @@ class AggregationType(SQLModel, table=True):
         back_populates="aggregation_type",
     )
 
-    const: ClassVar[AggregationConstant] = AggregationConstant
 
 
 # CROSS COMPARISON

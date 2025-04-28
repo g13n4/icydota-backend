@@ -132,8 +132,8 @@ async def get_performance_data_api(
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(
             db_session=db,
             match_id=match_id,
-            data_type=data_type,
-            game_stage=game_stage.value,
+            calculation_type_id=data_type,
+            game_stage=game_stage,
             basic=comparison == "player",
             flat=flat,
         )
@@ -183,8 +183,8 @@ async def get_performance_aggregated_data_api(
 @icydota_api.get(API_PREFIX + '/performance_cross_comparison/{league_id}/{data_type}/{aggregation_type}/{position}')
 async def get_performance_cross_comparison_data_api(
         league_id: int,
-        aggregation_type: CrossAggregationTypes,
-        position: CrossAggregationPositions,
+        aggregation_type: int,
+        position: int,
         data_field: str,
         data_type: int,
         flat: bool = True,
@@ -195,8 +195,8 @@ async def get_performance_cross_comparison_data_api(
     data_dict, values_info = await get_cross_comparison_performance_data(
         db_session=db,
         league_id=league_id,
-        aggregation_type=aggregation_type.value,
-        position=position.value,
+        aggregation_type=aggregation_type,
+        position=position,
         data_field=data_field,
         calculation_type_id=data_type,
         flat=flat
@@ -208,7 +208,7 @@ async def get_performance_cross_comparison_data_api(
     output = to_table_format_cross_comparison(
         data=data_dict,
         values_info=values_info,
-        aggregation_type=aggregation_type.value,
+        aggregation_type=aggregation_type,
     )
 
     return output

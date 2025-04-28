@@ -1,3 +1,4 @@
+from collections import abc
 from typing import Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -7,11 +8,12 @@ from modules.query_creators.performance_query_creator import APIPerformanceQuery
 from utils import is_na_decimal, TableMinMaxFinder
 
 
-async def get_performance_data(db_session: AsyncSession,
-                               match_id: int,
-                               data_type: int,
-                               game_stage: str,
-                               ):
+async def get_performance_data(
+        db_session: AsyncSession,
+        match_id: int,
+        data_type: int,
+        game_stage: str,
+):
 
     PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_match_query(match_id=match_id, data_type=data_type)
@@ -28,15 +30,21 @@ async def get_performance_data(db_session: AsyncSession,
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
 
 
-async def get_performance_data_comparison(db_session: AsyncSession,
-                                          match_id: int,
-                                          data_type: int,
-                                          game_stage: str,
-                                          basic: bool,
-                                          flat: Optional[bool]
-                                          ):
+async def get_performance_data_comparison(
+        db_session: AsyncSession,
+        match_id: int,
+        calculation_type_id: int,
+        game_stage: str,
+        basic: bool,
+        flat: Optional[bool]
+):
     PQC = APIPerformanceQueryCreator()
-    select_query = PQC.get_match_comparison_query(match_id=match_id, data_type=data_type, basic=basic, flat=flat)
+    select_query = PQC.get_match_comparison_query(
+        match_id=match_id,
+        calculation_type_id=calculation_type_id,
+        basic=basic,
+        is_flat=flat
+    )
     model_names = PQC.get_model_names()
 
     query_output = await db_session.exec(select_query)
@@ -50,21 +58,22 @@ async def get_performance_data_comparison(db_session: AsyncSession,
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
 
 
-async def get_aggregated_performance_data(db_session: AsyncSession,
-                                          league_id: int,
-                                          aggregation_type: int,
-                                          calculation_type_id: int,
-                                          game_stage: str,
-                                          is_comparison: bool,
-                                          flat: Optional[bool],
-                                          ):
+async def get_aggregated_performance_data(
+        db_session: AsyncSession,
+        league_id: int,
+        aggregation_type: int,
+        calculation_type_id: int,
+        game_stage: str,
+        is_comparison: bool,
+        flat: Optional[bool],
+):
     PQC = APIPerformanceQueryCreator()
     if is_comparison:
         select_query = PQC.get_aggregation_comparison_query(
             league_id=league_id,
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
-            flat=flat,
+            is_flat=flat,
         )
     else:
         select_query = PQC.get_aggregation_query(
@@ -86,12 +95,12 @@ async def get_aggregated_performance_data(db_session: AsyncSession,
 
 
 def _update_variable(dict_: dict, key_: int | str, new_var: int | str):
-    dict_.update({key_: new_var})
+    dict_.update({ key_: new_var })
     return dict_
 
 
-def _order_ccomp_dict(dict_: dict, field: str) -> dict:
-    return {k: v for k, v in sorted(dict_.items(), key=lambda item: str(item[1][field]).lower(), )}
+def _order_ccomp_dict(dict_: dict, field: abc.Hashable) -> dict:
+    return { k: v for k, v in sorted(dict_.items(), key=lambda item: str(item[1][field]).lower(), ) }
 
 
 def _extract_ccomp_value(*values, field_name: str, is_total_data: bool) -> float | None:
@@ -100,28 +109,28 @@ def _extract_ccomp_value(*values, field_name: str, is_total_data: bool) -> float
     return extract_window_data_for_field(values[1], values[0], field_name)
 
 
-async def get_cross_comparison_performance_data(db_session: AsyncSession,
-                                                league_id: int,
-                                                aggregation_type: str,
-                                                position: str,
-                                                data_field: str,
-                                                calculation_type_id: int,
-                                                flat: bool,
-                                                ):
+async def get_cross_comparison_performance_data(
+        db_session: AsyncSession,
+        league_id: int,
+        aggregation_type: int,
+        position: int,
+        data_field: str,
+        calculation_type_id: int,
+        flat: bool,
+):
     is_total_data = calculation_type_id == 0
 
     PQC = APIPerformanceQueryCreator()
     select_query = PQC.get_cross_comparison_query(
         league_id=league_id,
-    aggregation_type=aggregation_type,
-    position=position,
-    data_field=data_field,
-    calculation_type_id=calculation_type_id,
-    flat=flat,
+        aggregation_type_id=aggregation_type,
+        position_id=position,
+        data_field=data_field,
+        calculation_type_id=calculation_type_id,
+        is_flat=flat,
     )
 
     query_output = await db_session.exec(select_query)
-
 
     # REFORMATTED _processing_db_output
     TMMF = TableMinMaxFinder()
@@ -162,10 +171,15 @@ async def get_cross_comparison_performance_data(db_session: AsyncSession,
 
             temp_dict[cps_name] = value
 
-        new_output[item_name] = {(o_name if o_name != item_name else aggregation_type):
-                                     (temp_dict.get(o_name, None) if o_name != item_name else
-                                      temp_dict[aggregation_type])
-                                 for o_name in ordered_names}
+        new_output[item_name] = {
+            (o_name if o_name != item_name else aggregation_type):
+                (
+                    temp_dict.get(o_name, None)
+                    if o_name != item_name else
+                    temp_dict[aggregation_type]
+                )
+            for o_name in ordered_names
+        }
 
     new_output = _order_ccomp_dict(new_output, aggregation_type)
 

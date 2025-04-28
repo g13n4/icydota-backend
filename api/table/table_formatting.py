@@ -37,28 +37,29 @@ def to_table_format(
 ) -> dict:
 
     if not data:
-        return {}
-
+        return { }
 
     item = data[0]
     if columns is None:
         columns = []
 
-    values = sorted([key_name for key_name in item.keys() if key_name not in rows],
-                    key=performance_data_sort_rating)
+    values = sorted(
+        [key_name for key_name in item.keys() if key_name not in rows],
+        key=performance_data_sort_rating
+        )
 
     fields = {
         'rows': rows,
-              'columns': columns,
-              'values': values,
-              'valueInCols': True,
+        'columns': columns,
+        'values': values,
+        'valueInCols': True,
     }
 
     meta = [
         {
-        'field': x,
-        'name': get_field_name(x, sum_total),
-    } for x in item.keys()
+            'field': x,
+            'name': get_field_name(x, sum_total),
+        } for x in item.keys()
     ]
 
     return {
@@ -69,24 +70,27 @@ def to_table_format(
         },
         "table_options": {
             "style": {
-                "layoutWidthType": 'colAdaptive', },
+                "layoutWidthType": 'colAdaptive',
+            },
         },
         "value_mapping": value_mapping,
-        "loading": False,
     }
 
 
-def to_table_format_cross_comparison(data: Dict[int, list],
-                                     values_info: list,
-                                     aggregation_type: str) -> dict:
+def to_table_format_cross_comparison(
+        data: Dict[int, list],
+        values_info: list,
+        aggregation_type: str
+        ) -> dict:
     if not data:
-        return {}
+        return { }
 
-
-    fields = {'rows': [aggregation_type],  # hero/pos/player | l2/g2/etc
-              'columns': [],
-              'values': sorted(data.keys(), key=lambda x: str(x).lower()),  # classic windows/ total_values
-              'valueInCols': True, }
+    fields = {
+        'rows': [aggregation_type],  # hero/pos/player | l2/g2/etc
+        'columns': [],
+        'values': sorted(data.keys(), key=lambda x: str(x).lower()),  # classic windows/ total_values
+        'valueInCols': True,
+    }
 
     return {
         "table_data": {
@@ -94,5 +98,4 @@ def to_table_format_cross_comparison(data: Dict[int, list],
             'windows_data': [x for x in data.values()],
         },
         "value_mapping": values_info,
-        "loading": False,
     }

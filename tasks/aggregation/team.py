@@ -26,23 +26,21 @@ def _get_key(data: dict, is_flat: bool | None) -> tuple[int, bool | None]:
 
 def create_performance_objs(
         db_session,
-        league_id: int,
+        league_id: int | None,
+        patch_id: int | None,
 ) -> dict[tuple, Performance]:
     output = dict()
     query, names = team_aggregation_league_participants_query_creator(league_id=league_id)
     league_participants = db_session.exec(query)
-
-    patch_id = 0
 
     for row in league_participants:
         row_data = { name: value for name, value in zip(names, row) }
 
         for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
             row_key = _get_key(row_data, is_flat)
-            patch_id = none_max(patch_id, row_data['patch_id'])
 
             type_obj = ByTeamType(
-                patch_id=None,  # either aggregate or choose one
+                patch_id=patch_id,  # either aggregate or choose one
                 league_id=league_id,
                 team_id=row_data['team_id'],
                 is_flat=is_flat,
@@ -62,18 +60,18 @@ def create_performance_objs(
 
     return output
 
-
+# TODO: add patch_id functionality
 @shared_task(name="aggregate_league_team", ignore_result=True)
-def aggregate_league_team(league_id: int):
+def aggregate_league_team(league_id: int | None, patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)
-    if not league_obj:
+    if not league_obj or not (league_id or patch_id):
         raise ValueError("No such league in the database")
 
     columns = ['team_id']
 
-    performance_dict = create_performance_objs(db_session=db_session, league_id=league_id)
+    performance_dict = create_performance_objs(db_session=db_session, league_id=league_id, patch_id=patch_id)
 
     for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
         for calculation in WindowCalculations.VALUES:

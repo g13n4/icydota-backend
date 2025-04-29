@@ -23,6 +23,7 @@ def create_performance_dict(
         is_flat: bool,
         ccomparison_type: int,
         position_type: int,
+        patch_id: int | None,
 ) -> dict[tuple, Performance]:
     performance_dict = dict()
     for item in data:
@@ -38,6 +39,7 @@ def create_performance_dict(
         ccomparison_obj = CrossComparisonType(
             league_id=league_id,
             type_id=ccomparison_type,
+            patch_id=patch_id,
             position_aggregation_id=position_type,
         )
 
@@ -52,12 +54,13 @@ def create_performance_dict(
     return performance_dict
 
 
+# TODO: add patch_id functionality
 @shared_task(name="cross_comparison_league_match", ignore_result=True)
-def cross_comparison_league_match(league_id: int, ccomparison_type: int):
+def cross_comparison_league_match(league_id: int, ccomparison_type: int, patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)
-    if not league_obj:
+    if not league_obj or not (league_id or patch_id):
         raise ValueError("No such league in the database")
 
     CCKC = CrossComparisonKeyCreator(ccomparison_type)
@@ -84,6 +87,7 @@ def cross_comparison_league_match(league_id: int, ccomparison_type: int):
                         is_flat=is_flat,
                         ccomparison_type=ccomparison_type,
                         position_type=ccomp_pos_id,
+                        patch_id=patch_id,
                     )
 
                 for window_data in process_data(data=data, group_by=columns, is_window=True):

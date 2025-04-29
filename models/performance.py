@@ -25,7 +25,7 @@ class Performance(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    type_id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=False))
+    type_id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=False, index=True))
 
     # TYPE INFORMATION DATA
     cross_comparison_type: Optional["CrossComparisonType"] = Relationship(

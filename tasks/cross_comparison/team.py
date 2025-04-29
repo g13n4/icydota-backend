@@ -11,7 +11,7 @@ from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.cross_comparison_query_creator_function import (
     team_ccomparison_query_creator,
 )
-from tasks.helpers import process_data, get_query_data, none_max
+from tasks.helpers import process_data, get_query_data
 
 
 def _get_key(data: dict, is_flat: bool | None) -> tuple[int, int, bool | None]:
@@ -19,15 +19,14 @@ def _get_key(data: dict, is_flat: bool | None) -> tuple[int, int, bool | None]:
 
 
 def create_performance_dict(
-        league_id: int,
+        league_id: int | None,
         data,
         is_flat: bool,
+        patch_id: int | None,
 ) -> dict[tuple, Performance]:
-    patch_id = None
     output = dict()
     for item in data:
         key = _get_key(item, is_flat)
-        patch_id = none_max(item["patch_id"], patch_id)
 
         type_obj = ByTeamType(
             patch_id=patch_id,
@@ -48,7 +47,7 @@ def create_performance_dict(
 
 
 @shared_task(name="cross_comparison_league_team", ignore_result=True)
-def cross_comparison_league_team(league_id: int):
+def cross_comparison_league_team(league_id: int, patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)
@@ -72,6 +71,7 @@ def cross_comparison_league_team(league_id: int):
                     league_id=league_id,
                     data=data,
                     is_flat=is_flat,
+                    patch_id=patch_id,
                 )
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):

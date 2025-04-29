@@ -20,11 +20,11 @@ class ComparisonType(SQLModel, table=True):
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     # can be none if it's a basic cross-comparison
-    is_flat: Optional[bool] = Field(index=True)  # percent or is_flat
+    is_flat: Optional[bool]  # percent or is_flat
 
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
-    basic: Optional[bool] = Field(default=True, index=True)
+    basic: Optional[bool] = Field(default=True)
 
     # position/hero
     cpd_name_short: Optional[str]
@@ -59,8 +59,8 @@ class AggregationType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
-    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
 
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
@@ -83,14 +83,14 @@ class AggregationType(SQLModel, table=True):
     )
 
 
-
 # CROSS COMPARISON
 class CrossComparisonType(SQLModel, table=True):
     __tablename__ = "cross_comparison_types"
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
@@ -114,7 +114,7 @@ class ByTeamType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
     match_id: Optional[int] = _fk('games', col_type='bigint')
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 

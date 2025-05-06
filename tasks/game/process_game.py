@@ -18,6 +18,7 @@ from tasks.game.helpers import fix_odota_data
 from tasks.game.proces_game_replay import process_game_replay
 from tasks.league.create_league import get_or_create_league
 from utils import none_to_zero, get_or_create, get_positions_approximations
+from utils.helpers import is_equals_to_zero
 
 
 CURRENT_DIR = Path.cwd().absolute()
@@ -225,12 +226,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         db_session.add(PGD_obj)
 
+        hero_kills = none_to_zero(player_info['hero_kills']),
+        deaths = none_to_zero(player_info['deaths']),
+        assists = none_to_zero(player_info['assists']),
         PTD_obj = PerformanceTotalData(
             gold=none_to_zero(player_info['total_gold']),
             xp=none_to_zero(player_info['total_xp']),
             kills_per_min=none_to_zero(player_info.get('kills_per_min', None)),
 
-            first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0)),
+            first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0), nullify=True),
 
             kda=none_to_zero(player_info['kda']),
 
@@ -239,7 +243,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
             courier_kills=none_to_zero(player_info['courier_kills']),
 
             lane_kills=none_to_zero(player_info['lane_kills']),
-            hero_kills=none_to_zero(player_info['hero_kills']),
+            hero_kills=hero_kills,
+            deaths=deaths,
+            assists=assists,
             observer_kills=none_to_zero(player_info['observer_kills']),
             sentry_kills=none_to_zero(player_info['sentry_kills']),
             roshan_kills=none_to_zero(player_info['roshan_kills']),
@@ -250,11 +256,29 @@ def process_game_data(match_id: int, league_id: int | None = None):
             observer_uses=none_to_zero(player_info['observer_uses']),
             sentry_uses=none_to_zero(player_info['sentry_uses']),
 
-            lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None), nullify=False),
-            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None), nullify=False),
+            lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None), nullify=True),
+            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None), nullify=True),
+
+            no_death=is_equals_to_zero(deaths),
+            no_kill=is_equals_to_zero(hero_kills),
+            no_assists=is_equals_to_zero(assists),
+
+            gold_per_min=none_to_zero(player_info['gold_per_min']),
+            xp_per_min=none_to_zero(player_info['xp_per_min']),
+            level=none_to_zero(player_info['level']),
+            net_worth=none_to_zero(player_info['net_worth']),
+
+            aghanims_scepter=none_to_zero(player_info['aghanims_scepter']),
+            aghanims_shard=none_to_zero(player_info['aghanims_shard']),
+            moonshard=none_to_zero(player_info['moonshard']),
+
+            hero_damage=none_to_zero(player_info['hero_damage']),
+            tower_damage=none_to_zero(player_info['tower_damage']),
+            hero_healing=none_to_zero(player_info['hero_healing']),
+
             # use in aggregation
-            win=int(player_info['win']) * 100,
-            picked=100,
+            win=int(player_info['win']),
+            picked=1,
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field

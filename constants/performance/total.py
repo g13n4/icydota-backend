@@ -3,7 +3,7 @@ from typing import Any, ClassVar, Optional
 from pydantic import condecimal, BaseModel
 
 from constants.helpers import get_only_names
-from helpers import to_proper_name
+from helpers import to_proper_name, UniqueIndexChecker
 
 
 MINUTE = 60
@@ -22,6 +22,7 @@ class GameTotal(BaseModel):
 
 def set_total_name(klass: object):
     values = []
+    checker = UniqueIndexChecker()
     for name, type_ in klass.__annotations__.items():
         if type_ is GameTotal:
             value = getattr(klass, name)
@@ -30,6 +31,8 @@ def set_total_name(klass: object):
                 value.description = to_proper_name(name)
 
             values.append(value)
+
+            checker.add(value.index)
 
     setattr(klass, 'VALUES', values)
     setattr(klass, 'VALUES_NAMES', get_only_names(values))
@@ -64,15 +67,15 @@ class GameTotals:
     lane_efficiency_pct: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=19)
 
     first_blood_claimed: GameTotal = GameTotal(
-        value_type=condecimal(max_digits=5, decimal_places=2),
+        value_type=condecimal(max_digits=3, decimal_places=2),
         index=20,
         description="FB",
         pseudo_bool=True
     )
     first_kill_time: GameTotal = GameTotal(value_type=Optional[int], index=24)
 
-    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=21, pseudo_bool=True)
-    first_death_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
+    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=21, pseudo_bool=True)
+    died_first_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
 
     lost_tower_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=5, decimal_places=2),
@@ -94,19 +97,32 @@ class GameTotals:
     )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
-    win: GameTotal = GameTotal(value_type=Optional[int], index=30, aggregation_only=True, pseudo_bool=True)
-    picked: GameTotal = GameTotal(value_type=Optional[int], index=31, aggregation_only=True, pseudo_bool=True)
+    win: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=30, aggregation_only=True, pseudo_bool=True)
+    picked: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=31, aggregation_only=True, pseudo_bool=True)
 
-    first_kill_chance: GameTotal = GameTotal(
-        value_type=condecimal(max_digits=10, decimal_places=2),
-        index=32, aggregation_only=True, pseudo_bool=True
-    )
-    first_death_chance: GameTotal = GameTotal(
-        value_type=condecimal(max_digits=10, decimal_places=2),
-        index=33,
-        aggregation_only=True,
-        pseudo_bool=True
-    )
+    no_death: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=32, aggregation_only=False, pseudo_bool=True)
+    no_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=33, aggregation_only=False, pseudo_bool=True)
+
+    deaths: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=34)
+    assists: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=35)
+
+    last_hits: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=36)
+    denies: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=37)
+
+    gold_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=4, decimal_places=2), index=38)
+    xp_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=4, decimal_places=2), index=39)
+    level: GameTotal = GameTotal(value_type=condecimal(max_digits=2, decimal_places=2), index=40)
+    net_worth: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=41)
+
+    aghanims_scepter: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=42, aggregation_only=False, pseudo_bool=True)
+    aghanims_shard: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=43, aggregation_only=False, pseudo_bool=True)
+    moonshard: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=44, aggregation_only=False, pseudo_bool=True)
+
+    hero_damage: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=45)
+    tower_damage: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=46)
+    hero_healing: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=47)
+
+    no_assists: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=48, aggregation_only=False, pseudo_bool=True)
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

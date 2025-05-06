@@ -14,6 +14,8 @@ from sqlmodel import select, Session
 
 T = TypeVar('T')
 
+T_numeric = TypeVar('T_numeric', int, float)
+
 
 def is_numeric_type(value, none_is_true: bool = True) -> bool:
     if none_is_true and value is None:
@@ -69,7 +71,7 @@ def get_obj_from_list(objs_list: list, **kwargs):
     return None
 
 
-def none_to_zero(value: Any, nullify: bool = True) -> Optional[Decimal]:
+def none_to_zero(value: Any, nullify: bool = False) -> Optional[Decimal]:
     if value:
         return Decimal(value)
 
@@ -171,3 +173,9 @@ def to_str_time(unix_timestamp: int) -> str:
 def unique_list(*args: Iterable[list]) -> list:
     output = set(value for sub_list in args for value in sub_list)
     return list(output)
+
+
+def is_equals_to_zero(value: Optional[T_numeric]) -> Optional[T_numeric]:
+    if value is not None:
+        return value == 0
+    return None

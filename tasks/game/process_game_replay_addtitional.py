@@ -198,7 +198,7 @@ def process_additional_replay_data(
         this_total_perf_obj.first_blood_claimed = hero_death_player_data['first_blood_claimed']
         this_total_perf_obj.first_kill_time = hero_death_player_data['first_kill_time']
         this_total_perf_obj.died_first = hero_death_player_data['died_first']
-        this_total_perf_obj.first_death_time = hero_death_player_data['first_death_time']
+        this_total_perf_obj.died_first_time = hero_death_player_data['died_first_time']
 
         hero_building_data = player_building[player_slot]
 

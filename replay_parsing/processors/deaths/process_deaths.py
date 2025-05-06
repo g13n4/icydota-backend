@@ -31,7 +31,7 @@ def process_hero_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> tu
         'first_kill_time': None,
 
         'died_first': 0.0,
-        'first_death_time': None,
+        'died_first_time': None,
     } for x in range(10)}
 
     hero_death_base = {
@@ -69,7 +69,7 @@ def process_hero_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> tu
                 player_data[killer_slot]['first_kill_time'] = time_time
 
             player_data[victim_slot]['died_first'] = 100.0
-            player_data[victim_slot]['first_death_time'] = time_time
+            player_data[victim_slot]['died_first_time'] = time_time
 
         # DEATH DATA
         hero_death['death_number'] = index

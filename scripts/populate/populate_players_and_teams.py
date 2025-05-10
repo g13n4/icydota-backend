@@ -1,11 +1,17 @@
 import requests
 from sqlmodel import Session
 
+from helpers import get_id_dict
 from models import Player, Team
 
 
 def create_players_and_teams(db_session: Session, ) -> None:
     print('Adding players and teams...')
+    player_dict = get_id_dict(db_session, Player, 'account_id')
+    if player_dict:
+        print(f'Players and Teams are already created')
+        return
+
     r = requests.get('https://api.opendota.com/api/proPlayers')
     if r.status_code != 200:
         raise requests.ConnectionError

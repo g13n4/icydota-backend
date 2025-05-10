@@ -52,7 +52,7 @@ def execute_window_aggregation(
         df_agg: pd.DataFrame
 ):
     match column:
-        case COLUMN.MOVEMENT:
+        case COLUMN.MOVEMENT | COLUMN.MOVEMENT_UNIQUE:
             if not len(df['x']) or not len(df['y']):
                 return 0
 
@@ -73,7 +73,7 @@ def execute_window_aggregation(
         ser_agg = None
 
     # CASES
-    match (agg_method, agg_method):
+    match (agg_method, column):
         case (AGG_METHOD.MAX, _):
             return np.max(ser)
 
@@ -87,6 +87,10 @@ def execute_window_aggregation(
 
         case (AGG_METHOD.AVG_BY_LENGTH_PM, _):
             return (np.max(ser) - np.min(ser)) / (len(ser) / 60)
+
+        case (AGG_METHOD.SUM, COLUMN.MOVEMENT_UNIQUE):
+            tiles_unique = np.int32(df['x']) + (np.int32(df['x']) * 1000)
+            return len(np.unique(tiles_unique))
 
         case (AGG_METHOD.GAINED_PW, _):
             return (np.max(ser) - np.min(ser))

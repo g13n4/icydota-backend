@@ -23,6 +23,8 @@ class IntervalCalculationColumn(StrEnum):
     OBS_PLACED = auto()
     KILLS = auto()
     LEVEL = auto()
+    MOVEMENT_UNIQUE = auto()
+
 
 
 class IntervalCalculationAggregationMethod(Enum):
@@ -533,6 +535,19 @@ class IntervalCalculations:
         ),
         processing=(IntervalCalculationColumn.NETWORTH, IntervalCalculationAggregationMethod.GAINED_PW),
     )
+    movement__unique__sum: CalculationItem = CalculationItem(
+        name="movement__unique__sum",
+        description="Distance traveled (unique tiles only)",
+        index=42,
+        postprocessing=PostprocessingItem(
+            carry_comparison=True,
+            support_comparison=True,
+            percentage=True,
+            total_format=TotalAggregationMethod.SUM
+        ),
+        processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.SUM),
+    )
+
 
     VALUES: list[CalculationItem]
     VALUES_NAMES: list[str]

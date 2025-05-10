@@ -1,9 +1,15 @@
 from sqlmodel import Session
 
 from models import Building
+from sqlmodel import Session, select
 
 
 def create_buildings(db_session: Session) -> None:
+    buildings_objs = db_session.exec(select(Building))
+    if buildings_objs:
+        print("Buildings are already created")
+        return
+
     for lane in Building.const.LANES:
         if lane.value == 0:
             db_session.add(
@@ -38,8 +44,6 @@ def create_buildings(db_session: Session) -> None:
                 )
                 db_session.add(building_obj)
 
-
-
     for lane in Building.const.REAL_LANES:
         for rax, rax_name in [[False, 'range barracks'], [True, 'melee barracks'], ]:
             building_obj = Building(
@@ -54,3 +58,4 @@ def create_buildings(db_session: Session) -> None:
             db_session.add(building_obj)
 
     print("Create buildings...")
+    return

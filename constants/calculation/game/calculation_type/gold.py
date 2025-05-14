@@ -12,9 +12,6 @@ class GoldCalculations:
         description="Gold removed for death",
         index=1,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -23,9 +20,6 @@ class GoldCalculations:
         description="Gold removed for death (per minute)",
         index=2,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -34,9 +28,6 @@ class GoldCalculations:
         description="Gold for assists",
         index=3,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -45,9 +36,6 @@ class GoldCalculations:
         description="Gold for assists (per minute)",
         index=4,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -56,9 +44,6 @@ class GoldCalculations:
         description="Gold for killing buildings",
         index=5,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -67,9 +52,6 @@ class GoldCalculations:
         description="Gold for killing buildings (per minute)",
         index=6,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -78,9 +60,6 @@ class GoldCalculations:
         description="Gold for killing heroes",
         index=7,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -89,9 +68,6 @@ class GoldCalculations:
         description="Gold for killing heroes (per minute)",
         index=8,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -100,9 +76,6 @@ class GoldCalculations:
         description="Gold for killing creeps",
         index=9,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -111,9 +84,6 @@ class GoldCalculations:
         description="Gold for killing creeps (per minute)",
         index=10,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -122,9 +92,6 @@ class GoldCalculations:
         description="Gold for killing neutrals",
         index=11,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -133,9 +100,6 @@ class GoldCalculations:
         description="Gold for killing neutrals (per minute)",
         index=12,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -144,9 +108,6 @@ class GoldCalculations:
         description="Gold for killing roshan",
         index=13,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -155,9 +116,6 @@ class GoldCalculations:
         description="Gold for killing roshan (per minute)",
         index=14,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -166,9 +124,6 @@ class GoldCalculations:
         description="Gold for courier assists",
         index=15,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -177,9 +132,6 @@ class GoldCalculations:
         description="Gold for courier assists (per minute)",
         index=16,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -188,9 +140,6 @@ class GoldCalculations:
         description="Gold for runes",
         index=17,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -199,9 +148,6 @@ class GoldCalculations:
         description="Gold for runes (per minute)",
         index=18,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -210,9 +156,6 @@ class GoldCalculations:
         description="Gold for flag bearers, devour, etc",
         index=19,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -221,9 +164,6 @@ class GoldCalculations:
         description="Gold for flag bearers, devour, etc (per minute)",
         index=20,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -232,9 +172,6 @@ class GoldCalculations:
         description="Gold for wards",
         index=21,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -243,9 +180,6 @@ class GoldCalculations:
         description="Gold for wards (per minute)",
         index=22,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -254,9 +188,6 @@ class GoldCalculations:
         description="Gold for couriers",
         index=23,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -265,9 +196,6 @@ class GoldCalculations:
         description="Gold for couriers (per minute)",
         index=24,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )

@@ -89,7 +89,7 @@ def execute_window_aggregation(
             return (np.max(ser) - np.min(ser)) / (len(ser) / 60)
 
         case (AGG_METHOD.SUM, COLUMN.MOVEMENT_UNIQUE):
-            tiles_unique = np.int32(df['x']) + (np.int32(df['x']) * 1000)
+            tiles_unique = np.int32(df['x'] * 10) + (np.int32(df['x'] * 10) * 10000)
             return len(np.unique(tiles_unique))
 
         case (AGG_METHOD.GAINED_PW, _):

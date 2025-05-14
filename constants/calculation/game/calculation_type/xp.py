@@ -12,9 +12,6 @@ class XPCalculations:
         description="Other XP",
         index=1,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -23,9 +20,6 @@ class XPCalculations:
         description="XP for heroes",
         index=2,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -34,9 +28,6 @@ class XPCalculations:
         description="XP for heroes (per minute)",
         index=3,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -45,9 +36,6 @@ class XPCalculations:
         description="XP for creeps",
         index=4,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -56,9 +44,6 @@ class XPCalculations:
         description="XP for creeps (per minute)",
         index=5,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
             ),
     )
@@ -67,9 +52,6 @@ class XPCalculations:
         description="XP for roshan",
         index=6,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )

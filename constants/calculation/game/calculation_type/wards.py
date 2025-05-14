@@ -12,9 +12,6 @@ class WardsCalculations:
         description="Placed sentries",
         index=1,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )
@@ -23,9 +20,6 @@ class WardsCalculations:
         description="Placed observers",
         index=2,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.SUM
             ),
     )

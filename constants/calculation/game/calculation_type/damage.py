@@ -41,9 +41,6 @@ class DamageCalculations:
         index=1,
         processing=(IntervalCalculationCategory.with_summons, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -53,9 +50,6 @@ class DamageCalculations:
         index=2,
         processing=(IntervalCalculationCategory.with_summons, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -66,9 +60,6 @@ class DamageCalculations:
         processing=(IntervalCalculationCategory.with_summons, IntervalCalculationMethod.median),
 
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -78,9 +69,6 @@ class DamageCalculations:
         index=4,
         processing=(IntervalCalculationCategory.with_summons, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -90,9 +78,6 @@ class DamageCalculations:
         index=5,
         processing=(IntervalCalculationCategory.to_heroes, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -102,9 +87,6 @@ class DamageCalculations:
         index=6,
         processing=(IntervalCalculationCategory.to_heroes, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -114,9 +96,6 @@ class DamageCalculations:
         index=7,
         processing=(IntervalCalculationCategory.to_heroes, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -126,9 +105,6 @@ class DamageCalculations:
         index=8,
         processing=(IntervalCalculationCategory.to_heroes, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -138,9 +114,6 @@ class DamageCalculations:
         index=9,
         processing=(IntervalCalculationCategory.to_buildings, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -150,9 +123,6 @@ class DamageCalculations:
         index=10,
         processing=(IntervalCalculationCategory.to_buildings, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -162,9 +132,6 @@ class DamageCalculations:
         index=11,
         processing=(IntervalCalculationCategory.to_buildings, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -174,9 +141,6 @@ class DamageCalculations:
         index=12,
         processing=(IntervalCalculationCategory.to_buildings, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -186,9 +150,6 @@ class DamageCalculations:
         index=13,
         processing=(IntervalCalculationCategory.to_creatures, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -198,9 +159,6 @@ class DamageCalculations:
         index=14,
         processing=(IntervalCalculationCategory.to_creatures, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -210,9 +168,6 @@ class DamageCalculations:
         index=15,
         processing=(IntervalCalculationCategory.to_creatures, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -222,9 +177,6 @@ class DamageCalculations:
         index=16,
         processing=(IntervalCalculationCategory.to_creatures, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -234,9 +186,6 @@ class DamageCalculations:
         index=17,
         processing=(IntervalCalculationCategory.to_illusions, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -246,9 +195,6 @@ class DamageCalculations:
         index=18,
         processing=(IntervalCalculationCategory.to_illusions, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -258,9 +204,6 @@ class DamageCalculations:
         index=19,
         processing=(IntervalCalculationCategory.to_illusions, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -270,9 +213,6 @@ class DamageCalculations:
         index=20,
         processing=(IntervalCalculationCategory.to_illusions, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -282,9 +222,6 @@ class DamageCalculations:
         index=21,
         processing=(IntervalCalculationCategory.to_all, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -294,9 +231,6 @@ class DamageCalculations:
         index=22,
         processing=(IntervalCalculationCategory.to_all, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -306,9 +240,6 @@ class DamageCalculations:
         index=23,
         processing=(IntervalCalculationCategory.to_all, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -318,9 +249,6 @@ class DamageCalculations:
         index=24,
         processing=(IntervalCalculationCategory.to_all, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -330,9 +258,6 @@ class DamageCalculations:
         index=25,
         processing=(IntervalCalculationCategory.from_heroes, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -342,9 +267,6 @@ class DamageCalculations:
         index=26,
         processing=(IntervalCalculationCategory.from_heroes, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -354,9 +276,6 @@ class DamageCalculations:
         index=27,
         processing=(IntervalCalculationCategory.from_heroes, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -366,9 +285,6 @@ class DamageCalculations:
         index=28,
         processing=(IntervalCalculationCategory.from_heroes, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -378,9 +294,6 @@ class DamageCalculations:
         index=29,
         processing=(IntervalCalculationCategory.from_buildings, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -390,9 +303,6 @@ class DamageCalculations:
         index=30,
         processing=(IntervalCalculationCategory.from_buildings, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -402,9 +312,6 @@ class DamageCalculations:
         index=31,
         processing=(IntervalCalculationCategory.from_buildings, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -414,9 +321,6 @@ class DamageCalculations:
         index=32,
         processing=(IntervalCalculationCategory.from_buildings, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -426,9 +330,6 @@ class DamageCalculations:
         index=33,
         processing=(IntervalCalculationCategory.from_creatures, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -438,9 +339,6 @@ class DamageCalculations:
         index=34,
         processing=(IntervalCalculationCategory.from_creatures, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -450,9 +348,6 @@ class DamageCalculations:
         index=35,
         processing=(IntervalCalculationCategory.from_creatures, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -462,9 +357,6 @@ class DamageCalculations:
         index=36,
         processing=(IntervalCalculationCategory.from_creatures, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -474,9 +366,6 @@ class DamageCalculations:
         index=37,
         processing=(IntervalCalculationCategory.from_illusions, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -486,9 +375,6 @@ class DamageCalculations:
         index=38,
         processing=(IntervalCalculationCategory.from_illusions, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -498,9 +384,6 @@ class DamageCalculations:
         index=39,
         processing=(IntervalCalculationCategory.from_illusions, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -510,9 +393,6 @@ class DamageCalculations:
         index=40,
         processing=(IntervalCalculationCategory.from_illusions, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -522,9 +402,6 @@ class DamageCalculations:
         index=41,
         processing=(IntervalCalculationCategory.from_all, IntervalCalculationMethod.sum),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )
@@ -534,9 +411,6 @@ class DamageCalculations:
         index=42,
         processing=(IntervalCalculationCategory.from_all, IntervalCalculationMethod.mean),
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -546,9 +420,6 @@ class DamageCalculations:
         index=43,
         processing=(IntervalCalculationCategory.from_all, IntervalCalculationMethod.median),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
     )
@@ -558,9 +429,6 @@ class DamageCalculations:
         index=44,
         processing=(IntervalCalculationCategory.from_all, IntervalCalculationMethod.dmg_inst),
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
     )

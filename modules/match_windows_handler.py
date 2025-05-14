@@ -1,10 +1,10 @@
-import bisect
 import math
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import TypedDict, Any
 
 from constants.performance.window import AllWindows, GameWindow
+from modules.smallest_fit_finder import SmallestFitFinter
 
 
 class MatchWindow(TypedDict):
@@ -64,18 +64,15 @@ class MatchWindowsHandler:
         ]
 
         self.grouped_windows = defaultdict(list)
-        self.windows_unique_values = []
+        self.fit_finder = None
 
         self._group_windows()
 
 
     def __getitem__(self, value: int):
-        range_key = bisect.bisect_left(self.windows_unique_values, value)
-        dict_key = self.windows_unique_values[range_key]
-        if dict_key != value:
-            dict_key = self.windows_unique_values[range_key - 1]
+        index = self.fit_finder.find(value)
 
-        return self.grouped_windows[dict_key]
+        return self.grouped_windows[index]
 
 
     def _group_windows(self):
@@ -92,7 +89,7 @@ class MatchWindowsHandler:
                 if window_start <= value < window_end:
                     self.grouped_windows[value].append(window)
 
-        self.windows_unique_values = sorted(list(ranges_set))
+        self.fit_finder = SmallestFitFinter(ranges_set)
 
 
     def update_time(self, in_game_time: int):

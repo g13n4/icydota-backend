@@ -39,6 +39,9 @@ class IntervalCalculationAggregationMethod(Enum):
     MAX_GLOBAL_PERC = 7
     AVG_BY_LENGTH_PM = 8
 
+    COEFF = 9
+    CONVERT = 10
+
 
 @add_values
 @set_category_and_value(WindowCategories.INTERVAL)
@@ -48,9 +51,6 @@ class IntervalCalculations:
         description="Gold",
         index=1,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.MAX),
@@ -60,9 +60,6 @@ class IntervalCalculations:
         description="Gold median (per minute)",
         index=2,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.GAINED_PM_MEDIAN),
@@ -72,9 +69,6 @@ class IntervalCalculations:
         description="Gold gained",
         index=3,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -84,9 +78,6 @@ class IntervalCalculations:
         description="GPM",
         index=4,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -96,9 +87,6 @@ class IntervalCalculations:
         description="Gold control (total%)",
         index=5,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.GOLD, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
@@ -108,9 +96,6 @@ class IntervalCalculations:
         description="XP",
         index=6,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.MAX),
@@ -120,9 +105,6 @@ class IntervalCalculations:
         description="XP median (per minute)",
         index=7,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.GAINED_PM_MEDIAN),
@@ -132,9 +114,6 @@ class IntervalCalculations:
         description="XP gained",
         index=8,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -144,9 +123,6 @@ class IntervalCalculations:
         description="XPM",
         index=9,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -156,9 +132,6 @@ class IntervalCalculations:
         description="XP control (total%)",
         index=10,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
@@ -168,9 +141,6 @@ class IntervalCalculations:
         description="Last hits",
         index=11,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.MAX),
@@ -180,9 +150,6 @@ class IntervalCalculations:
         description="Last hits gained",
         index=12,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -192,9 +159,6 @@ class IntervalCalculations:
         description="Last hits average (per minute)",
         index=13,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.LH, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -204,9 +168,6 @@ class IntervalCalculations:
         description="Distance traveled",
         index=14,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
         processing=(IntervalCalculationColumn.MOVEMENT, IntervalCalculationAggregationMethod.SUM),
@@ -216,9 +177,6 @@ class IntervalCalculations:
         description="Distance traveled (per minute)",
         index=15,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.MOVEMENT, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -228,9 +186,6 @@ class IntervalCalculations:
         description="Level",
         index=16,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.LEVEL, IntervalCalculationAggregationMethod.MAX),
@@ -240,9 +195,6 @@ class IntervalCalculations:
         description="Levels gained",
         index=17,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.LEVEL, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -252,9 +204,6 @@ class IntervalCalculations:
         description="Kills",
         index=18,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.MAX),
@@ -264,9 +213,6 @@ class IntervalCalculations:
         description="Kills average (per minute)",
         index=19,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -276,9 +222,6 @@ class IntervalCalculations:
         description="Kills control (total%)",
         index=20,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.KILLS, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
@@ -288,9 +231,6 @@ class IntervalCalculations:
         description="Deaths",
         index=21,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.MAX),
@@ -300,9 +240,6 @@ class IntervalCalculations:
         description="Deaths average (per minute)",
         index=22,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -312,9 +249,6 @@ class IntervalCalculations:
         description="Deaths control (total%)",
         index=23,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.DEATHS, IntervalCalculationAggregationMethod.MAX_GLOBAL_PERC),
@@ -324,9 +258,6 @@ class IntervalCalculations:
         description="KDA",
         index=24,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.MAX),
@@ -336,9 +267,6 @@ class IntervalCalculations:
         description="KDA average (per minute)",
         index=25,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -348,9 +276,6 @@ class IntervalCalculations:
         description="KDA gained",
         index=26,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.KDA, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -360,9 +285,6 @@ class IntervalCalculations:
         description="Observer wards placed",
         index=27,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.OBS_PLACED, IntervalCalculationAggregationMethod.MAX),
@@ -372,9 +294,6 @@ class IntervalCalculations:
         description="Observer wards placed (per minute)",
         index=28,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.OBS_PLACED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -384,9 +303,6 @@ class IntervalCalculations:
         description="Sentry wards placed",
         index=29,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.SEN_PLACED, IntervalCalculationAggregationMethod.MAX),
@@ -396,9 +312,6 @@ class IntervalCalculations:
         description="Sentry wards placed (per minute)",
         index=30,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.SEN_PLACED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -408,9 +321,6 @@ class IntervalCalculations:
         description="Stacked",
         index=31,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.STACKED, IntervalCalculationAggregationMethod.MAX),
@@ -420,9 +330,6 @@ class IntervalCalculations:
         description="Stacked average (per minute)",
         index=32,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.STACKED, IntervalCalculationAggregationMethod.AVG_BY_LENGTH_PM),
@@ -432,9 +339,6 @@ class IntervalCalculations:
         description="Runes picked up",
         index=33,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
         processing=(IntervalCalculationColumn.RUNE_PICKUPS, IntervalCalculationAggregationMethod.MAX),
@@ -444,9 +348,6 @@ class IntervalCalculations:
         description="Team fight participation average",
         index=34,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.AVG),
@@ -456,9 +357,6 @@ class IntervalCalculations:
         description="Team fight participation max",
         index=35,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.MAX),
@@ -468,9 +366,6 @@ class IntervalCalculations:
         description="Team fight participation min",
         index=36,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.TEAMFIGHT_PARTICIPATION, IntervalCalculationAggregationMethod.MIN),
@@ -480,9 +375,6 @@ class IntervalCalculations:
         description="Towers kills",
         index=37,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.TOWERS_KILLED, IntervalCalculationAggregationMethod.MAX),
@@ -492,9 +384,6 @@ class IntervalCalculations:
         description="Towers kills gained (per minute)",
         index=38,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.TOWERS_KILLED, IntervalCalculationAggregationMethod.GAINED_PW),
@@ -504,9 +393,6 @@ class IntervalCalculations:
         description="Roshan kills",
         index=39,
         postprocessing=PostprocessingItem(
-            carry_comparison=False,
-            support_comparison=False,
-            percentage=False,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.ROSHANS_KILLED, IntervalCalculationAggregationMethod.MAX),
@@ -516,9 +402,6 @@ class IntervalCalculations:
         description="Networth",
         index=40,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.MAX
         ),
         processing=(IntervalCalculationColumn.NETWORTH, IntervalCalculationAggregationMethod.MAX),
@@ -528,26 +411,41 @@ class IntervalCalculations:
         description="Networth gained",
         index=41,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.AVG
         ),
         processing=(IntervalCalculationColumn.NETWORTH, IntervalCalculationAggregationMethod.GAINED_PW),
     )
-    movement__unique__sum: CalculationItem = CalculationItem(
-        name="movement__unique__sum",
+    movement__unique__tiles__sum: CalculationItem = CalculationItem(
+        name="movement__unique__tiles__sum",
         description="Distance traveled (unique tiles only)",
         index=42,
         postprocessing=PostprocessingItem(
-            carry_comparison=True,
-            support_comparison=True,
-            percentage=True,
             total_format=TotalAggregationMethod.SUM
         ),
         processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.SUM),
     )
-
+    movement__unique__coeff: CalculationItem = CalculationItem(
+        name="movement__coefficient",
+        description="Unique travel distance coefficient",
+        index=43,
+        postprocessing=PostprocessingItem(
+            total_format=TotalAggregationMethod.SUM,
+            calculated_later=True,
+        ),
+        processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.COEFF),
+        # numbers unique / total movement = 5 / 10 = 1/2
+        # numbers unique / total movement = 1 / 10 = 1/10
+    )
+    xp__lvl: CalculationItem = CalculationItem(
+        name="xp__lvl",
+        description="XP (LVL)",
+        index=44,
+        postprocessing=PostprocessingItem(
+            total_format=TotalAggregationMethod.MAX,
+            calculated_later=True,
+        ),
+        processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.CONVERT),
+    )
 
     VALUES: list[CalculationItem]
     VALUES_NAMES: list[str]

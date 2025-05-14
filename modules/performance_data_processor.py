@@ -1,6 +1,7 @@
 import copy
 import operator
 from collections import defaultdict
+from collections.abc import Iterable
 from functools import reduce
 from typing import Any
 
@@ -65,6 +66,7 @@ class PerformanceDataProcessor:
             self.opponents[slot] = this_player['opponents']
 
         self.PROCESSED_GAME_DATA = False
+        self.PREPROCESSED_GAME_DATA = False
 
 
     def calculate_windows_totals_by_type(self):
@@ -338,12 +340,29 @@ class PerformanceDataProcessor:
             calculation = calculation.value
         elif calculation is None:
             raise ValueError(
-                f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}, "
+                f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, window_index: {window_index}, value: {value}"
             )
 
         if calculation > self.ROWS_SIZE:
             raise KeyError(
-                f"The value for calculation is too big! The value will be used in a matrix slicing and can't be bigger than the matrix itself ({self.ROWS_SIZE})"
+                "The value for calculation is too big! The value will be used in a matrix slicing"
+                f" and can't be bigger than the matrix itself ({self.ROWS_SIZE})"
             )
 
         self.windows_data[slot][calculation][window_index - OFFSET] = value
+
+    def set_slice(self, slot: int, calculation: int | CalculationItem, slice_: Iterable):
+        if isinstance(calculation, CalculationItem):
+            calculation = calculation.value
+        elif calculation is None:
+            raise ValueError(
+                f"Calculation can't be None!\nslot: {slot}, calculation: {calculation}, slice_: {slice_}"
+            )
+
+        if calculation > self.ROWS_SIZE:
+            raise KeyError(
+                "The value for calculation is too big! The value will be used in a matrix slicing"
+                f" and can't be bigger than the matrix itself ({self.ROWS_SIZE})"
+            )
+
+        self.windows_data[slot][calculation] = slice_

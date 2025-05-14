@@ -10,6 +10,7 @@ from replay_parsing.processors.interval.process_interval_windows import process_
 from replay_parsing.processors.pings import process_pings_windows
 from replay_parsing.processors.wards import process_wards_windows
 from replay_parsing.processors.xp import process_xp_windows
+from replay_parsing.processors.postprocessing import postprocess_windows
 
 
 def set_processor_data(match: MatchAnalyser,
@@ -32,5 +33,7 @@ def set_processor_data(match: MatchAnalyser,
     process_damage_windows(match_data['damage'], MS, PDP=PDP, players=match.get_players(), )
     process_xp_windows(match_data['xp'], MS, PDP, players_to_slot=match.players.get_name_slot_dict(), )
     process_gold_windows(match_data['gold'], MS, PDP, players_to_slot=match.players.get_name_slot_dict(), )
+
+    postprocess_windows(PDP=PDP)
 
     return None

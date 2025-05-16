@@ -29,8 +29,8 @@ def _check_slots(*args) -> None:
             raise IncorrectSlotValueError(f"Slot value can't be {arg}")
 
 
-def _get_fields(object) -> Set[str]:
-    fields = [x for x in object.schema()['properties'].keys() if not re.search(r'(^|_)id$', x)]
+def _get_fields(object_) -> Set[str]:
+    fields = [x for x in object_.schema()['properties'].keys() if not re.search(r'(^|_)id$', x)]
     return set(fields)
 
 

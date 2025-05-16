@@ -145,6 +145,7 @@ class PlayerGameData(SQLModel, table=True):
 class Patch(SQLModel, table=True):
     __tablename__ = "patches"
 
-    id: int = Field(default=None, primary_key=True)  # open_dota id
+    id: int = Field(default=None, primary_key=True)
     name: Optional[str]
     date: Optional[datetime] = Field(default=None, nullable=True)
+    aggregation_allowed: bool = Field(default=False, nullable=False)

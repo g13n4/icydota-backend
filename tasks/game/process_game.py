@@ -152,10 +152,14 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     patch_id = game_data['patch']
     patch_obj = db_session.get(Patch, patch_id)
+
     if patch_obj is None:
         patch_obj = Patch(
             id=patch_id,
+            aggregation_allowed=True,
         )
+    elif not patch_obj.aggregation_allowed:
+        patch_obj.aggregation_allowed = True
 
     if not league_id:
         league_id = game_data['league']['leagueid']

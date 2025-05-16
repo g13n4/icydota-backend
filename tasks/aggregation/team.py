@@ -44,7 +44,6 @@ def create_performance_objs(
                 league_id=league_id,
                 team_id=row_data['team_id'],
                 is_flat=is_flat,
-
             )
 
             performance_type = Performance.const.team.TEAM_MATCH_AGGREGATION_COMPARISON if is_comparison \

@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-
+from sqlmodel.ext.asyncio.session import AsyncSession
+from api.crud.initial_data import get_initial_data
 from api.table.table_data import get_performance_data, get_performance_data_comparison, get_aggregated_performance_data, \
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
@@ -19,6 +20,9 @@ __all__ = ['celery_app']
 load_dotenv()
 
 API_PREFIX = os.getenv('API_PREFIX', default='')
+if API_PREFIX:
+    API_PREFIX = '/' + API_PREFIX
+
 CORS_ADDRESS = os.getenv('CORS_ADDRESS', default="*")
 LIGHT_MODE = os.getenv('LIGHT_MODE', default='off')
 
@@ -68,6 +72,13 @@ async def get_index():
 # async def get_league_header_api(db=Depends(get_async_db_session)):
 #     items = await get_league_header(db)
 #     return items
+
+
+@icydota_api.get(API_PREFIX + '/initial')
+async def get_league_header_api(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
+    items = await get_initial_data(db_session)
+    print(items)
+    return items
 
 
 # DATA

@@ -354,7 +354,7 @@ class IntervalCalculations:
     )
     teamfight_participation__max: CalculationItem = CalculationItem(
         name="teamfight_participation__max",
-        description="Team fight participation max",
+        description="Team fight participation (max)",
         index=35,
         postprocessing=PostprocessingItem(
             total_format=TotalAggregationMethod.AVG
@@ -363,7 +363,7 @@ class IntervalCalculations:
     )
     teamfight_participation__min: CalculationItem = CalculationItem(
         name="teamfight_participation__min",
-        description="Team fight participation min",
+        description="Team fight participation (min)",
         index=36,
         postprocessing=PostprocessingItem(
             total_format=TotalAggregationMethod.AVG

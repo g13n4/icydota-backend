@@ -5,7 +5,7 @@ from constants.calculation.game.calculation_type.interval import IntervalCalcula
 from constants.in_game.xp_level import HERO_LEVELS_MILESTONES, HERO_LEVELS_MILESTONES_DICT
 from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
-from modules.smallest_fit_finder import SmallestFitFinter
+from modules.smallest_fit_finder import SmallestFitFinder
 from replay_parsing.processors.interval.aggregation_executer import execute_window_aggregation
 
 
@@ -23,7 +23,7 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: Performan
         )
     )
 
-    SFF = SmallestFitFinter(HERO_LEVELS_MILESTONES)
+    SFF = SmallestFitFinder(HERO_LEVELS_MILESTONES)
     agg_player_windows = MS.split_into_windows(agg_by_time_df, use_index=True)
     dfs_by_player = MS.split_by_player(df)
     for slot, player_df in dfs_by_player:

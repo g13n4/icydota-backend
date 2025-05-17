@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from typing import TypedDict, Any
 
 from constants.performance.window import AllWindows, GameWindow
-from modules.smallest_fit_finder import SmallestFitFinter
+from modules.smallest_fit_finder import SmallestFitFinder
 
 
 class MatchWindow(TypedDict):
@@ -89,7 +89,7 @@ class MatchWindowsHandler:
                 if window_start <= value < window_end:
                     self.grouped_windows[value].append(window)
 
-        self.fit_finder = SmallestFitFinter(ranges_set)
+        self.fit_finder = SmallestFitFinder(ranges_set)
 
 
     def update_time(self, in_game_time: int):

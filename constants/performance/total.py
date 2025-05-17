@@ -123,7 +123,7 @@ class GameTotals:
     gold_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=38)
     xp_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=39)
     level: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=40)
-    net_worth: GameTotal = GameTotal(value_type=condecimal(max_digits=7, decimal_places=2), index=41)
+    net_worth: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=41)
 
     aghanims_scepter: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),

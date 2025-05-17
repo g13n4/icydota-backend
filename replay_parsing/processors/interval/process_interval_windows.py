@@ -10,16 +10,18 @@ from replay_parsing.processors.interval.aggregation_executer import execute_wind
 
 
 def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: PerformanceDataProcessor, ) -> None:
-    agg_by_time_df = (df.groupby('time')
-                      .agg(
-        {
-            'gold': 'sum',
-            'xp': 'sum',
-            'kills': 'sum',
-            'deaths': 'sum',
-            'rune_pickups': 'sum',
-        }
-        ))
+    agg_by_time_df = (
+        df.groupby('time')
+        .agg(
+            {
+                'gold': 'sum',
+                'xp': 'sum',
+                'kills': 'sum',
+                'deaths': 'sum',
+                'rune_pickups': 'sum',
+            }
+        )
+    )
 
     SFF = SmallestFitFinter(HERO_LEVELS_MILESTONES)
     agg_player_windows = MS.split_into_windows(agg_by_time_df, use_index=True)
@@ -27,6 +29,9 @@ def process_interval_windows(df: pd.DataFrame, MS: MatchSplitter, PDP: Performan
     for slot, player_df in dfs_by_player:
         player_windows = MS.split_into_windows(player_df)
         for calc_item in IntervalCalculations.VALUES:
+            if calc_item.postprocessing and calc_item.postprocessing.calculated_later:
+                continue
+
             for player_window, agg_window in zip(player_windows, agg_player_windows):
                 if not player_window['exists']:
                     continue

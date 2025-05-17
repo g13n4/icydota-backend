@@ -8,6 +8,30 @@ from constants.calculation.game.calculation_type.wards import WardsCalculations
 from constants.calculation.game.calculation_type.xp import XPCalculations
 
 
+# class ValuesGetter:
+#     VALUES: list[CalculationItem] = (
+#             IntervalCalculations.VALUES +
+#             PingsCalculations.VALUES +
+#             DamageCalculations.VALUES +
+#             WardsCalculations.VALUES +
+#             DewardCalculations.VALUES +
+#             XPCalculations.VALUES +
+#             GoldCalculations.VALUES
+#     )
+#
+#
+#     def __iter__(self):
+#         yield iter(ValuesGetter.VALUES)
+#
+#     def __call__(self, no_match: bool = False, no_agg: bool = False):
+#         for item in self:
+#             if no_match and item.no_match:
+#                 continue
+#             if no_agg and item.no_agg:
+#                 continue
+#             yield item
+
+
 class WindowCalculations(
     IntervalCalculations,
     PingsCalculations,

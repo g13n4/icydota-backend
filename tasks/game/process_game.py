@@ -41,7 +41,7 @@ def create_game_data_objs(
     }
 
     for slot, PTD_item in totals.items():
-        PTD_item_dict = PTD_item.model_dump()
+        PTD_item_dict: dict = PTD_item.model_dump()
         this_side_name = 'sent' if slot < 5 else 'dire'
         this_side_dict = dict_sides[this_side_name]
 
@@ -230,15 +230,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         db_session.add(PGD_obj)
 
-        hero_kills = none_to_zero(player_info['hero_kills']),
-        deaths = none_to_zero(player_info['deaths']),
-        assists = none_to_zero(player_info['assists']),
+        hero_kills = none_to_zero(player_info['hero_kills'])
+        deaths = none_to_zero(player_info['deaths'])
+        assists = none_to_zero(player_info['assists'])
         PTD_obj = PerformanceTotalData(
             gold=none_to_zero(player_info['total_gold']),
             xp=none_to_zero(player_info['total_xp']),
             kills_per_min=none_to_zero(player_info.get('kills_per_min', None)),
 
-            first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0), nullify=True),
+            first_blood_claimed=none_to_zero(player_info.get('firstblood_claimed', 0)),
 
             kda=none_to_zero(player_info['kda']),
 
@@ -260,12 +260,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
             observer_uses=none_to_zero(player_info['observer_uses']),
             sentry_uses=none_to_zero(player_info['sentry_uses']),
 
-            lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None), nullify=True),
-            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None), nullify=True),
+            lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None)),
+            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None)),
 
-            no_death=is_equals_to_zero(deaths),
-            no_kill=is_equals_to_zero(hero_kills),
-            no_assists=is_equals_to_zero(assists),
+            no_death=is_equals_to_zero(deaths, pseudo=True),
+            no_kill=is_equals_to_zero(hero_kills, pseudo=True),
+            no_assists=is_equals_to_zero(assists, pseudo=True),
+
+            last_hits=none_to_zero(player_info['last_hits']),
+            denies=none_to_zero(player_info['denies']),
 
             gold_per_min=none_to_zero(player_info['gold_per_min']),
             xp_per_min=none_to_zero(player_info['xp_per_min']),
@@ -279,6 +282,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
             hero_damage=none_to_zero(player_info['hero_damage']),
             tower_damage=none_to_zero(player_info['tower_damage']),
             hero_healing=none_to_zero(player_info['hero_healing']),
+
 
             # use in aggregation
             win=int(player_info['win']),

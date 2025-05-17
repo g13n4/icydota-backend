@@ -70,6 +70,18 @@ left_towers_to_vars = {
     0: 'rax_left_total',
 }
 
+first_destroyed_dict = {
+    1: 'first_destroyed_bot',
+    2: 'first_destroyed_mid',
+    3: 'first_destroyed_top',
+}
+
+first_lost_dict = {
+    1: 'first_lost_top',
+    2: 'first_lost_mid',
+    3: 'first_lost_bot',
+}
+
 
 def _find_left_towers(killed_buildings: List[dict]) -> dict:
     left_towers = {
@@ -93,7 +105,7 @@ def _find_left_towers(killed_buildings: List[dict]) -> dict:
         left_towers[(is_tower, lane)] -= 1
         left_towers[is_tower] -= 1
 
-    return {left_towers_to_vars[k]: v for k, v in left_towers.items()}
+    return { left_towers_to_vars[k]: v for k, v in left_towers.items() }
 
 
 def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
@@ -161,7 +173,7 @@ def process_building_kill_df(df: pd.DataFrame) -> pd.DataFrame:
 def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
     new_df = process_building_kill_df(df)
 
-    position_towers_status = {x: {
+    position_towers_status = { x: {
         'lost_tower_first': 0.0,
         'lost_tower_lane': None,
         'lost_tower_time': None,
@@ -169,7 +181,15 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
         'destroyed_tower_first': 0.0,
         'destroyed_tower_lane': None,
         'destroyed_tower_time': None,
-    } for x in range(10)}
+
+        "first_destroyed_mid": 0.0,
+        "first_destroyed_top": 0.0,
+        "first_destroyed_bot": 0.0,
+
+        "first_lost_mid": 0.0,
+        "first_lost_top": 0.0,
+        "first_lost_bot": 0.0,
+    } for x in range(10) }
 
     dire_t_died = []
     sent_t_died = []
@@ -216,16 +236,22 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
             for pos in lost_t_pos:
                 slot = pos_to_slot[lost_t][pos]
 
-                position_towers_status[slot]['lost_tower_first'] = 100.0
+                position_towers_status[slot]['lost_tower_first'] = 1.0
                 position_towers_status[slot]['lost_tower_lane'] = values['lane']
                 position_towers_status[slot]['lost_tower_time'] = values['time']
+
+                lane_name = first_lost_dict[values['lane']]
+                position_towers_status[slot][lane_name] = 1.0
 
             for pos in killed_t_pos:
                 slot = pos_to_slot[killed_t][pos]
 
-                position_towers_status[slot]['destroyed_tower_first'] = 100.0
+                position_towers_status[slot]['destroyed_tower_first'] = 1.0
                 position_towers_status[slot]['destroyed_tower_lane'] = values['lane']
                 position_towers_status[slot]['destroyed_tower_time'] = values['time']
+
+                lane_name = first_destroyed_dict[values['lane']]
+                position_towers_status[slot][lane_name] = 1.0
 
             first_tower = False
 
@@ -242,4 +268,6 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
                 'sentinel_died': sent_t_died,
 
                 'dire_left': dire_left,
-                'sentinel_left': sentinel_left, })
+                'sentinel_left': sentinel_left,
+            }
+            )

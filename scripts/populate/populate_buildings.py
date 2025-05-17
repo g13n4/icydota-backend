@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 def create_buildings(db_session: Session) -> None:
     buildings_objs = db_session.exec(select(Building))
-    if buildings_objs:
+    if len(list(buildings_objs)):
         print("Buildings are already created")
         return
 

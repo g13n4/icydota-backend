@@ -65,10 +65,10 @@ def process_hero_deaths(df: pd.DataFrame, players_to_slot: Dict[str, int]) -> tu
         # FIRST BLOOD
         if index == 1:
             if killer_slot is not None:
-                player_data[killer_slot]['first_blood_claimed'] = 100.0
+                player_data[killer_slot]['first_blood_claimed'] = 1.0
                 player_data[killer_slot]['first_kill_time'] = time_time
 
-            player_data[victim_slot]['died_first'] = 100.0
+            player_data[victim_slot]['died_first'] = 1.0
             player_data[victim_slot]['died_first_time'] = time_time
 
         # DEATH DATA

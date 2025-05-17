@@ -71,7 +71,7 @@ def get_obj_from_list(objs_list: list, **kwargs):
     return None
 
 
-def none_to_zero(value: Any, nullify: bool = False) -> Optional[Decimal]:
+def none_to_zero(value: Any, nullify: bool = True) -> Optional[Decimal]:
     if value:
         return Decimal(value)
 
@@ -175,7 +175,12 @@ def unique_list(*args: Iterable[list]) -> list:
     return list(output)
 
 
-def is_equals_to_zero(value: Optional[T_numeric]) -> Optional[T_numeric]:
+def is_equals_to_zero(value: Optional[T_numeric], pseudo: bool = False) -> Optional[T_numeric]:
     if value is not None:
-        return value == 0
+        output = (value == 0)
+        if not pseudo:
+            return output
+        else:
+            return int(output)
+
     return None

@@ -210,6 +210,14 @@ def process_additional_replay_data(
         this_total_perf_obj.destroyed_tower_lane = hero_building_data['destroyed_tower_lane']
         this_total_perf_obj.destroyed_tower_time = hero_building_data['destroyed_tower_time']
 
+        this_total_perf_obj.first_destroyed_mid = hero_building_data['first_destroyed_mid']
+        this_total_perf_obj.first_destroyed_top = hero_building_data['first_destroyed_top']
+        this_total_perf_obj.first_destroyed_bot = hero_building_data['first_destroyed_bot']
+
+        this_total_perf_obj.first_lost_mid = hero_building_data['first_lost_mid']
+        this_total_perf_obj.first_lost_top = hero_building_data['first_lost_top']
+        this_total_perf_obj.first_lost_bot = hero_building_data['first_lost_bot']
+
         db_session.add(this_total_perf_obj)
 
     return dict(

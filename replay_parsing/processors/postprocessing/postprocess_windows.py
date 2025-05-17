@@ -17,7 +17,7 @@ def postprocess_windows(
             col, method = window.processing
             match (col, method):
                 case (IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.COEFF):
-                    movement_slice = window_data[WindowCalculations.movement__sum, :]
-                    unique_slice = window_data[WindowCalculations.movement__unique__tiles__sum, :]
+                    movement_slice = window_data[WindowCalculations.movement__sum.index, :]
+                    unique_slice = window_data[WindowCalculations.movement__unique__tiles__sum.index, :]
 
                     PDP.set_slice(slot, WindowCalculations.movement__unique__coeff, unique_slice / movement_slice)

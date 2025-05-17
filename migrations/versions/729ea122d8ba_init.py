@@ -1,8 +1,8 @@
-"""innit
+"""init
 
-Revision ID: cc3d8fc4bdb0
+Revision ID: 729ea122d8ba
 Revises: 
-Create Date: 2025-04-20 23:56:51.387206
+Create Date: 2025-05-17 02:13:04.586022
 
 """
 from typing import Sequence, Union
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'cc3d8fc4bdb0'
+revision: str = '729ea122d8ba'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -80,6 +80,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('date', sa.DateTime(), nullable=True),
+    sa.Column('aggregation_allowed', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('performance_ranking_types',
@@ -341,6 +342,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['player_game_data_id'], ['players_game_data.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_performances_type_id'), 'performances', ['type_id'], unique=False)
     op.create_table('ability_performance_data',
     sa.Column('to_heroes', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('inst_heroes', sa.Numeric(precision=10, scale=2), nullable=True),
@@ -374,7 +376,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_by_team_types_is_flat'), 'by_team_types', ['is_flat'], unique=False)
-    op.create_index(op.f('ix_by_team_types_league_id'), 'by_team_types', ['league_id'], unique=False)
     op.create_table('comparison_types',
     sa.Column('id', sa.SMALLINT(), nullable=False),
     sa.Column('is_flat', sa.Boolean(), nullable=True),
@@ -403,21 +404,20 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['pos_cps_id'], ['positions.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_comparison_types_basic'), 'comparison_types', ['basic'], unique=False)
     op.create_index(op.f('ix_comparison_types_id'), 'comparison_types', ['id'], unique=False)
-    op.create_index(op.f('ix_comparison_types_is_flat'), 'comparison_types', ['is_flat'], unique=False)
     op.create_table('cross_comparison_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('league_id', sa.Integer(), nullable=True),
+    sa.Column('patch_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.Column('type_id', sa.Integer(), nullable=False),
     sa.Column('position_aggregation_id', sa.Integer(), nullable=False),
     sa.Column('performance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['league_id'], ['leagues.id'], ),
+    sa.ForeignKeyConstraint(['patch_id'], ['patches.id'], ),
     sa.ForeignKeyConstraint(['performance_id'], ['performances.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_cross_comparison_types_league_id'), 'cross_comparison_types', ['league_id'], unique=False)
     op.create_table('data_aggregation_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('league_id', sa.Integer(), nullable=True),
@@ -438,42 +438,61 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['position_id'], ['positions.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_data_aggregation_types_league_id'), 'data_aggregation_types', ['league_id'], unique=False)
-    op.create_index(op.f('ix_data_aggregation_types_patch_id'), 'data_aggregation_types', ['patch_id'], unique=False)
     op.create_table('performance_totals_data',
     sa.Column('gold', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('xp', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('kills_per_min', sa.Numeric(precision=10, scale=3), nullable=True),
+    sa.Column('xp', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('kills_per_min', sa.Numeric(precision=5, scale=2), nullable=True),
     sa.Column('kda', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('neutral_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('tower_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('courier_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('lane_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('hero_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('observer_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('sentry_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('roshan_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('runes_picked_up', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('ancient_kills', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('buyback_count', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('observer_uses', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('sentry_uses', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('lane_efficiency', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('lane_efficiency_pct', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('first_blood_claimed', sa.Numeric(precision=5, scale=2), nullable=True),
+    sa.Column('neutral_kills', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('tower_kills', sa.Numeric(precision=5, scale=2), nullable=True),
+    sa.Column('courier_kills', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('lane_kills', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('hero_kills', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('observer_kills', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('sentry_kills', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('roshan_kills', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('runes_picked_up', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('ancient_kills', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('buyback_count', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('observer_uses', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('sentry_uses', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('lane_efficiency', sa.Numeric(precision=6, scale=4), nullable=True),
+    sa.Column('lane_efficiency_pct', sa.Numeric(precision=6, scale=4), nullable=True),
+    sa.Column('first_blood_claimed', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('first_kill_time', sa.Integer(), nullable=True),
-    sa.Column('died_first', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('first_death_time', sa.Integer(), nullable=True),
-    sa.Column('lost_tower_first', sa.Numeric(precision=5, scale=2), nullable=True),
+    sa.Column('died_first', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('died_first_time', sa.Integer(), nullable=True),
+    sa.Column('lost_tower_first', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('lost_tower_time', sa.Integer(), nullable=True),
-    sa.Column('lost_tower_lane', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('destroyed_tower_first', sa.Numeric(precision=5, scale=2), nullable=True),
-    sa.Column('destroyed_tower_lane', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('lost_tower_lane', sa.Integer(), nullable=True),
+    sa.Column('destroyed_tower_first', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('destroyed_tower_lane', sa.Integer(), nullable=True),
     sa.Column('destroyed_tower_time', sa.Integer(), nullable=True),
-    sa.Column('win', sa.Integer(), nullable=True),
-    sa.Column('picked', sa.Integer(), nullable=True),
-    sa.Column('first_kill_chance', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('first_death_chance', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('win', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('picked', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('no_death', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('no_kills', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('deaths', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('assists', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('last_hits', sa.Numeric(precision=7, scale=2), nullable=True),
+    sa.Column('denies', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('gold_per_min', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('xp_per_min', sa.Numeric(precision=6, scale=2), nullable=True),
+    sa.Column('level', sa.Numeric(precision=4, scale=2), nullable=True),
+    sa.Column('net_worth', sa.Numeric(precision=7, scale=2), nullable=True),
+    sa.Column('aghanims_scepter', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('aghanims_shard', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('moonshard', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('hero_damage', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('tower_damage', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('hero_healing', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('no_assists', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_destroyed_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_destroyed_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_destroyed_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_lost_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_lost_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_lost_bot', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('performance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['performance_id'], ['performances.id'], ondelete='CASCADE'),
@@ -522,19 +541,14 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_performance_windows_data_calc_type_id'), table_name='performance_windows_data')
     op.drop_table('performance_windows_data')
     op.drop_table('performance_totals_data')
-    op.drop_index(op.f('ix_data_aggregation_types_patch_id'), table_name='data_aggregation_types')
-    op.drop_index(op.f('ix_data_aggregation_types_league_id'), table_name='data_aggregation_types')
     op.drop_table('data_aggregation_types')
-    op.drop_index(op.f('ix_cross_comparison_types_league_id'), table_name='cross_comparison_types')
     op.drop_table('cross_comparison_types')
-    op.drop_index(op.f('ix_comparison_types_is_flat'), table_name='comparison_types')
     op.drop_index(op.f('ix_comparison_types_id'), table_name='comparison_types')
-    op.drop_index(op.f('ix_comparison_types_basic'), table_name='comparison_types')
     op.drop_table('comparison_types')
-    op.drop_index(op.f('ix_by_team_types_league_id'), table_name='by_team_types')
     op.drop_index(op.f('ix_by_team_types_is_flat'), table_name='by_team_types')
     op.drop_table('by_team_types')
     op.drop_table('ability_performance_data')
+    op.drop_index(op.f('ix_performances_type_id'), table_name='performances')
     op.drop_table('performances')
     op.drop_index(op.f('ix_sides_performance_data_id'), table_name='sides_performance_data')
     op.drop_table('sides_performance_data')

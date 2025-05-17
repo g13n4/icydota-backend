@@ -433,8 +433,6 @@ class IntervalCalculations:
             calculated_later=True,
         ),
         processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.COEFF),
-        # numbers unique / total movement = 5 / 10 = 1/2
-        # numbers unique / total movement = 1 / 10 = 1/10
     )
     xp__lvl: CalculationItem = CalculationItem(
         name="xp__lvl",

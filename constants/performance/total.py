@@ -17,6 +17,18 @@ class FieldAvailability(BaseModel):
     cross_comparison: bool = False
 
 
+    def required(self, match: bool = False, aggregation: bool = False, cross_comparison: bool = False):
+        """If a value is required it should present during output. If it's not it should be removed"""
+        for availability, required_var in [
+            (self.match, match),
+            (self.aggregation, aggregation),
+            (self.cross_comparison, cross_comparison)
+        ]:
+            if availability == required_var:
+                return True
+        return False
+
+
 class GameTotal(BaseModel):
     value_type: Any
 
@@ -24,8 +36,7 @@ class GameTotal(BaseModel):
     name: str | None = None
     description: str | None = None
     pseudo_bool: bool = False
-    aggregation_only: bool = False
-    available_in: None | FieldAvailability = None
+    availability: None | FieldAvailability = None
 
 
 def set_total_name(klass: object):
@@ -94,7 +105,7 @@ class GameTotals:
     lost_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=26,
-        available_in=FieldAvailability(match=True),
+        availability=FieldAvailability(match=True),
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -105,20 +116,20 @@ class GameTotals:
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
-        available_in=FieldAvailability(match=True),
+        availability=FieldAvailability(match=True),
     )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
     win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
 
@@ -155,45 +166,45 @@ class GameTotals:
     no_assists: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
 
     first_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
     first_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
     first_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
 
     first_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
     first_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
     first_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
-        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
     )
 

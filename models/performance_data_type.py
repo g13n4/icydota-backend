@@ -14,9 +14,7 @@ from .helpers import _fk
 class ComparisonType(SQLModel, table=True):
     __tablename__ = "comparison_types"
 
-    id: int = Field(
-        sa_column=db.Column(db.SMALLINT, nullable=False, primary_key=True, index=True),
-    )
+    id: Optional[int] = Field(default=None, primary_key=True)
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     # can be none if it's a basic cross-comparison

@@ -1,7 +1,6 @@
 from typing import Callable, TypeVar, Any
 
 from pydantic import BaseModel
-from sqlmodel import Field
 
 from constants.helpers import Item
 from helpers import UniqueIndexChecker
@@ -26,8 +25,7 @@ class CalculationItem(BaseModel):
     category: Item | None = None
     active: bool = True
     processing: tuple[Any, Any] | None = None
-    postprocessing: PostprocessingItem = Field(default_factory=PostprocessingItem)
-
+    postprocessing: PostprocessingItem | None = None
 
 
 GLOBAL_VALUE_COUNTER = 0

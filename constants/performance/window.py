@@ -1,6 +1,8 @@
 from typing import Any, Callable
 
+import numpy as np
 from pydantic import BaseModel
+
 from constants.helpers import get_only_names, to_range
 
 
@@ -20,8 +22,10 @@ class GameWindow(BaseModel):
     description: str | None = None
     window_type: str | None = None
     length: int | None = None
+
     is_total: bool = False
     empty_mask: str | None = None
+    agg_func: Callable | None = None
 
 
     def model_post_init(self, __context: Any) -> None:
@@ -70,6 +74,8 @@ def set_window_data(window_type: str, window_empty_mask: str) -> Callable:
                 local_counter += 1
 
         return klass
+
+
     return set_window_name
 
 
@@ -101,7 +107,9 @@ class LaneStageWindows:
     # 12-15
     l15: GameWindow = GameWindow(start_time=12 * M, end_time=15 * M)
     # total calc
-    ltotal: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m')
+    ltotal_max: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (max)', agg_func=np.max)
+    ltotal_min: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (min)', agg_func=np.min)
+    ltotal_sum: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (sum)', agg_func=np.sum)
 
     l_empty_mask: str = 'l_empty_mask'
     empty_mask: str = 'l_empty_mask'
@@ -109,7 +117,7 @@ class LaneStageWindows:
     VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10, l12, l15]
     VALUES_REAL_NAMES: list[GameWindow]
 
-    VALUES: list[GameWindow] = VALUES_REAL + [ltotal]
+    VALUES: list[GameWindow] = VALUES_REAL + [ltotal_max, ltotal_min]
     VALUES_NAMES: list[GameWindow]
 
 
@@ -131,7 +139,24 @@ class GameStageWindows:
     # 60 - inf
     g60plus: GameWindow = GameWindow(start_time=H, end_time=H * 60, description='60m - the game\'s end')
     # total calc
-    gtotal: GameWindow = GameWindow(start_time=None, end_time=None, description='by the game\'s end')
+    gtotal_max: GameWindow = GameWindow(
+        start_time=None,
+        end_time=None,
+        description='by the game\'s end (max)',
+        agg_func=np.max,
+    )
+    gtotal_min: GameWindow = GameWindow(
+        start_time=None,
+        end_time=None,
+        description='by the game\'s end (min)',
+        agg_func=np.min,
+    )
+    gtotal_sum: GameWindow = GameWindow(
+        start_time=None,
+        end_time=None,
+        description='by the game\'s end (sum)',
+        agg_func=np.min,
+    )
 
     g_empty_mask: str = 'g_empty_mask'
     empty_mask: str = 'g_empty_mask'
@@ -139,7 +164,7 @@ class GameStageWindows:
     VALUES_REAL: list[GameWindow] = [g5, g15, g25, g35, g47, g60, g60plus]
     VALUES_REAL_NAMES: list[GameWindow]
 
-    VALUES: list[GameWindow] = VALUES_REAL + [gtotal]
+    VALUES: list[GameWindow] = VALUES_REAL + [gtotal_max, gtotal_min]
     VALUES_NAMES: list[GameWindow]
 
 
@@ -153,9 +178,9 @@ class AllWindows(LaneStageWindows, GameStageWindows):
     VALUES_REAL: list[GameWindow] = LaneStageWindows.VALUES_REAL + GameStageWindows.VALUES_REAL
     VALUES_REAL_NAMES: list[GameWindow]
 
-    WINDOWS_PROCESSING: list[tuple[list[GameWindow], GameWindow]] = [
-        (LaneStageWindows.VALUES_REAL, LaneStageWindows.ltotal),
-        (GameStageWindows.VALUES_REAL, GameStageWindows.gtotal),
+    WINDOWS_PROCESSING: list[tuple[list[GameWindow], tuple[GameWindow]]] = [
+        (LaneStageWindows.VALUES_REAL, (LaneStageWindows.ltotal_max, LaneStageWindows.ltotal_min,)),
+        (GameStageWindows.VALUES_REAL, (GameStageWindows.gtotal_max, GameStageWindows.gtotal_min,)),
     ]
 
     EMPTY_MASK_WINDOWS_MAP: list[tuple[list[GameWindow], str]] = [
@@ -169,7 +194,6 @@ WINDOWS_BY_TYPE = {
     WindowType.game: GameStageWindows,
     'all': AllWindows,
 }
-
 
 WINDOWS_BY_MASK = {
     LaneStageWindows.empty_mask: LaneStageWindows,

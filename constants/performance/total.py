@@ -9,16 +9,23 @@ from helpers import to_proper_name, UniqueIndexChecker
 MINUTE = 60
 
 
+class FieldAvailability(BaseModel):
+    __match_args__ = ("match", "aggregation", "cross_comparison")
+
+    match: bool = False
+    aggregation: bool = False
+    cross_comparison: bool = False
+
+
 class GameTotal(BaseModel):
     value_type: Any
 
     index: int
     name: str | None = None
     description: str | None = None
-    # is resposible for boolean values that should trasnform into chance/percent during aggregation or comparison
     pseudo_bool: bool = False
     aggregation_only: bool = False
-    match_only: bool = False
+    available_in: None | FieldAvailability = None
 
 
 def set_total_name(klass: object):
@@ -84,7 +91,11 @@ class GameTotals:
         pseudo_bool=True
     )
     lost_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=27)
-    lost_tower_lane: GameTotal = GameTotal(value_type=Optional[int], index=26, match_only=True)
+    lost_tower_lane: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=26,
+        available_in=FieldAvailability(match=True),
+    )
 
     destroyed_tower_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -94,22 +105,22 @@ class GameTotals:
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
-        match_only=True,
+        available_in=FieldAvailability(match=True),
     )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
     win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
 
     no_death: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=32, pseudo_bool=True)
     no_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=33, pseudo_bool=True)
@@ -129,12 +140,12 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=42,
         pseudo_bool=True
-        )
+    )
     aghanims_shard: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=43,
         pseudo_bool=True
-        )
+    )
     moonshard: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=44, pseudo_bool=True)
 
     hero_damage: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=45)
@@ -144,47 +155,47 @@ class GameTotals:
     no_assists: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
-        aggregation_only=False,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
 
     first_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
     first_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
     first_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
 
     first_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
     first_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
     first_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
-        aggregation_only=True,
+        available_in=FieldAvailability(aggregation=True, cross_comparison=True),
         pseudo_bool=True
-        )
+    )
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

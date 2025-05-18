@@ -8,7 +8,6 @@ from typing import Any
 import numpy as np
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from constants.calculation.game.calculation_type.aggregation import TotalAggregationMethod
 from constants.calculation.game.calculation_type.helpers import CalculationItem
 from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.window import AllWindows
@@ -71,13 +70,12 @@ class PerformanceDataProcessor:
 
     def calculate_windows_totals_by_type(self):
         for name, matrix in self.windows_data.items():
-            for windows, total_window in AllWindows.WINDOWS_PROCESSING:
-                columns_idxs = [item.index - OFFSET for item in windows]
-                total_window_idx = total_window.index - OFFSET
+            for windows, total_windows in AllWindows.WINDOWS_PROCESSING:
+                for total_window in total_windows:
+                    columns_idxs = [item.index - OFFSET for item in windows]
+                    total_window_idx = total_window.index - OFFSET
 
-                for total_func_idx, rows_idxs in self.TOTALS_MAP.items():
-                    func = TotalAggregationMethod.FUNCTION_MAP[total_func_idx]
-                    matrix[rows_idxs, :][:, total_window_idx] = func(matrix[rows_idxs, :][:, columns_idxs], axis=1)
+                    matrix[:, total_window_idx] = total_window.agg_func(matrix[:, columns_idxs], axis=1)
 
 
     def process_slot(self, slot: int) -> None:

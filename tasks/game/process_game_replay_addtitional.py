@@ -86,6 +86,21 @@ def _get_building_dict(db_session, ) -> dict:
     return igb_dict
 
 
+def _get_pick_data(df: pd.DataFrame) -> dict[int, int]:
+    output = dict()
+    counter = 1
+    for idx, line in df.iterrows():
+        values = line.to_dict()
+
+        if not values["pick"]:
+            continue
+
+        output[values["hero_id"]] = counter
+
+        counter += 1
+    return output
+
+
 def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> Dict[str, BuildingData]:
     igb_dict = _get_building_dict(db_session)
     output_dict = dict()
@@ -189,6 +204,8 @@ def process_additional_replay_data(
     )
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
+    pick_dict = _get_pick_data(match_data['draft'])
+
     for player_slot in range(10):
         this_player_data = PDP.get_player_data(player_slot)
         this_total_perf_obj: PerformanceTotalData = this_player_data['performance_total_data']
@@ -217,6 +234,21 @@ def process_additional_replay_data(
         this_total_perf_obj.first_lost_mid = hero_building_data['first_lost_mid']
         this_total_perf_obj.first_lost_top = hero_building_data['first_lost_top']
         this_total_perf_obj.first_lost_bot = hero_building_data['first_lost_bot']
+
+        hero_id = hero_death_player_data['hero_id']
+        first_pick = pick_dict[hero_id] == 1
+        last_pick = pick_dict[hero_id] == 10
+        win = this_total_perf_obj.win == True
+        lose = this_total_perf_obj.win == False
+
+        this_total_perf_obj.first_pick_win = first_pick and win
+        this_total_perf_obj.first_pick_lose = first_pick and lose
+
+        this_total_perf_obj.last_pick_win = last_pick and win
+        this_total_perf_obj.last_pick_lose = last_pick and lose
+
+        this_total_perf_obj.first_pick_hero = first_pick
+        this_total_perf_obj.last_pick_hero = last_pick
 
         db_session.add(this_total_perf_obj)
 

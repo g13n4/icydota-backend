@@ -365,6 +365,9 @@ class MatchAnalyser:
         # DOTA_COMBATLOG_GOLD
         gold = []
 
+        # draft_timings
+        draft = []
+
         from_cdata = dict()
         from_ingame = dict()
 
@@ -398,6 +401,9 @@ class MatchAnalyser:
 
                 # in new games the end games sets time to -855
                 total_game_length = max(total_game_length, line_time)
+
+                if line_type == 'draft_timings':
+                    draft.append(p_line)
 
                 # the game hasn't started yet
                 if line_time <= -90:
@@ -483,4 +489,5 @@ class MatchAnalyser:
             'damage': pd.DataFrame(damage),
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
+            'draft': pd.DataFrame()
         }

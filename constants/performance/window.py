@@ -155,7 +155,7 @@ class GameStageWindows:
         start_time=None,
         end_time=None,
         description='by the game\'s end (sum)',
-        agg_func=np.min,
+        agg_func=np.sum,
     )
 
     g_empty_mask: str = 'g_empty_mask'

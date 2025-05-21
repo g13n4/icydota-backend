@@ -58,7 +58,7 @@ async def get_games_all(
         PlayerGameData.dire,
         PlayerGameData.hero_id,
         Player.nickname,
-        PlayerGameData.position_id
+        PlayerGameData.position_id,
     ).join(Player, onclause=PlayerGameData.player_id == Player.account_id)
                       .join(Game, onclause=Game.id == PlayerGameData.game_id)
                       .where(where_condition).order_by(Game.id.desc()).offset(offset * 10)

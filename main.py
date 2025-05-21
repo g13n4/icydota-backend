@@ -96,13 +96,13 @@ class AllMatchesTypes(CaseInsensitiveEnum):
     patch = "patch"
 
 
-@icydota_api.get(API_PREFIX + 'all/{type_}/{id_}')
+@icydota_api.get(API_PREFIX + '/all/{type_}/{id_}')
 async def get_league_matches_route(
         type_: AllMatchesTypes,
         id_: int,
         db_session: AsyncSession = Depends(get_async_db_session),
 ) -> dict:
-    if type_.league:
+    if type_ == AllMatchesTypes.league:
         output = await get_games_all(db_session=db_session, league_id=id_)
     else:
         output = await get_games_all(db_session=db_session, patch_id=id_)

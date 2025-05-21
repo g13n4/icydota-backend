@@ -12,10 +12,10 @@ APPEND_CONST = "___APPEND_CONST"
 
 
 class AggregationKeyCreator:
-    def __init__(self, match_type_id: int | None = None, *, fields: list[str] | None = None ):
-        if match_type_id:
-            self.type_id = match_type_id
-            self.fields = [item.associated_field for item in AGGREGATION_MODELS[match_type_id]]
+    def __init__(self, type_id: int | None = None, *, fields: list[str] | None = None ):
+        if type_id:
+            self.type_id = type_id
+            self.fields = [item.associated_field for item in AGGREGATION_MODELS[type_id]]
         elif fields:
             self.fields = fields
         else:

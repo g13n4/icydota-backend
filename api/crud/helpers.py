@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from typing import Any
 
 from constants.performance.total import FieldAvailability, GameTotals
 from models import PerformanceTotalData
@@ -8,7 +9,7 @@ TOTAL_EXCLUDE_FIELDS = { "id", "performance_id" }
 async def to_basic_list(objs: Iterable) -> list[dict]:
     return [
         {
-            "title": league.name,
+            "label": league.name,
             "value": league.id,
         } for league in objs
     ]
@@ -32,3 +33,10 @@ async def process_total_output(data: PerformanceTotalData,
             data[game_total.name] = value * 100
 
     return data
+
+
+
+def to_front_bool(value: Any) -> str:
+    if value:
+        return "Yes"
+    return "No"

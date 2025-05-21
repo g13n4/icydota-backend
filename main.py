@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 from api.crud.initial_data import get_initial_data
+from api.crud.match import get_games
+from api.crud.match_all import get_games_all
 from api.table.table_data import get_performance_data, get_performance_data_comparison, get_aggregated_performance_data, \
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
@@ -75,10 +77,37 @@ async def get_index():
 
 
 @icydota_api.get(API_PREFIX + '/initial')
-async def get_league_header_api(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
+async def get_initial_data_route(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
     items = await get_initial_data(db_session)
-    print(items)
     return items
+
+
+@icydota_api.get(API_PREFIX + '/league/{league_id}')
+async def get_league_matches_route(
+    league_id: int,
+    db_session: AsyncSession = Depends(get_async_db_session),
+) -> dict:
+    output = await get_games(db_session, league_id=league_id)
+    return output
+
+
+class AllMatchesTypes(CaseInsensitiveEnum):
+    league = "league"
+    patch = "patch"
+
+
+@icydota_api.get(API_PREFIX + 'all/{type_}/{id_}')
+async def get_league_matches_route(
+        type_: AllMatchesTypes,
+        id_: int,
+        db_session: AsyncSession = Depends(get_async_db_session),
+) -> dict:
+    if type_.league:
+        output = await get_games_all(db_session=db_session, league_id=id_)
+    else:
+        output = await get_games_all(db_session=db_session, patch_id=id_)
+
+    return output
 
 
 # DATA

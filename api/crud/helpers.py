@@ -40,3 +40,15 @@ def to_front_bool(value: Any) -> str:
     if value:
         return "Yes"
     return "No"
+
+
+async def to_field_list(values: Iterable) -> list[dict[str, str | int]]:
+    output = []
+    for item in values:
+        output.append(
+            {
+                "value": item.name,
+                "label": item.description,
+            }
+        )
+    return output

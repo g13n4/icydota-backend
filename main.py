@@ -6,6 +6,8 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from api.crud.cross_comparison_field import get_cross_comparison_fields
 from api.crud.initial_data import get_initial_data
 from api.crud.match import get_games
 from api.crud.match_all import get_games_all
@@ -79,6 +81,12 @@ async def get_index():
 @icydota_api.get(API_PREFIX + '/initial')
 async def get_initial_data_route(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
     items = await get_initial_data(db_session)
+    return items
+
+
+@icydota_api.get(API_PREFIX + '/cross-comparison/fields')
+async def get_cross_comparison_fields_route() -> dict:
+    items = await get_cross_comparison_fields()
     return items
 
 

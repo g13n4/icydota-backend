@@ -107,9 +107,9 @@ class LaneStageWindows:
     # 12-15
     l15: GameWindow = GameWindow(start_time=12 * M, end_time=15 * M)
     # total calc
-    ltotal_max: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (max)', agg_func=np.max)
-    ltotal_min: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (min)', agg_func=np.min)
-    ltotal_sum: GameWindow = GameWindow(start_time=None, end_time=None, description='<15m (sum)', agg_func=np.sum)
+    ltotal_max: GameWindow = GameWindow(start_time=None, end_time=None, description='<15 m. (max)', agg_func=np.max)
+    ltotal_min: GameWindow = GameWindow(start_time=None, end_time=None, description='<15 m. (min)', agg_func=np.min)
+    ltotal_sum: GameWindow = GameWindow(start_time=None, end_time=None, description='<15 m. (sum)', agg_func=np.sum)
 
     l_empty_mask: str = 'l_empty_mask'
     empty_mask: str = 'l_empty_mask'
@@ -137,7 +137,7 @@ class GameStageWindows:
     # 47 - 60
     g60: GameWindow = GameWindow(start_time=45 * M, end_time=H)
     # 60 - inf
-    g60plus: GameWindow = GameWindow(start_time=H, end_time=H * 60, description='60m - the game\'s end')
+    g60plus: GameWindow = GameWindow(start_time=H, end_time=H * 60, description='60 m. - the game\'s end')
     # total calc
     gtotal_max: GameWindow = GameWindow(
         start_time=None,

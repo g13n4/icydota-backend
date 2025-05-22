@@ -88,7 +88,7 @@ class GetItemHelper:
 
 
 def sec_to_min(value: int) -> str:
-    return f"{value / 60:.1f} min."
+    return f"{value / 60:.1f} m."
 
 
 def to_range(value1: int, value2: int) -> str:

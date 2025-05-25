@@ -70,16 +70,43 @@ left_towers_to_vars = {
     0: 'rax_left_total',
 }
 
-first_destroyed_dict = {
-    1: 'first_destroyed_bot',
-    2: 'first_destroyed_mid',
-    3: 'first_destroyed_top',
+# FIRST TOWER
+first_tower_destroyed_dict = {
+    1: 'first_tower_destroyed_bot',
+    2: 'first_tower_destroyed_mid',
+    3: 'first_tower_destroyed_top',
 }
 
-first_lost_dict = {
-    1: 'first_lost_top',
-    2: 'first_lost_mid',
-    3: 'first_lost_bot',
+first_tower_lost_dict = {
+    1: 'first_tower_lost_top',
+    2: 'first_tower_lost_mid',
+    3: 'first_tower_lost_bot',
+}
+
+# FIRST TOWER LANE
+first_tower_lane_destroyed_dict = {
+    1: 'first_tower_lane_destroyed_bot',
+    2: 'first_tower_lane_destroyed_mid',
+    3: 'first_tower_lane_destroyed_top',
+}
+
+first_tower_lane_lost_dict = {
+    1: 'first_tower_lane_lost_top',
+    2: 'first_tower_lane_lost_mid',
+    3: 'first_tower_lane_lost_bot',
+}
+
+# FIRST BARRACKS SET
+first_barracks_set_destroyed_dict = {
+    1: 'first_barracks_set_destroyed_bot',
+    2: 'first_barracks_set_destroyed_mid',
+    3: 'first_barracks_set_destroyed_top',
+}
+
+first_barracks_set_lost_dict = {
+    1: 'first_barracks_set_lost_top',
+    2: 'first_barracks_set_lost_mid',
+    3: 'first_barracks_set_lost_bot',
 }
 
 
@@ -108,7 +135,7 @@ def _find_left_towers(killed_buildings: List[dict]) -> dict:
     return { left_towers_to_vars[k]: v for k, v in left_towers.items() }
 
 
-def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
+def _find_destroyed_lane(killed_buildings: List[dict]) -> tuple[int | None, int | None]:
     lane_state = {
         1: 0,
         2: 0,
@@ -126,6 +153,8 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
     rax_counter = 0
     throne_towers = 0
 
+    first_tower_lane_destroyed = None
+    first_barracks_set_destroyed = None
     killed_buildings.sort(key=lambda x: x['time'])
     for idx, item in enumerate(killed_buildings, 1):
         item['destruction_order'] = idx
@@ -139,6 +168,9 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
                 if throne_towers == 2:
                     item['naked_throne'] = True
                     item['lane']['first_tower_4'] = True
+            elif item['tower']['tier'] == 3 and first_tower_lane_destroyed is None:
+                first_tower_lane_destroyed= item['lane']
+
         else:
             rax_counter += 1
             item['rax']['destruction_order'] = rax_counter
@@ -147,6 +179,9 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
 
             lsv = lane_state[item['lane']['value']]
             if lsv == 2:
+                if first_barracks_set_destroyed is None:
+                    first_barracks_set_destroyed = item['lane']
+
                 item['lane']['destroyed_lane'] = True
                 lane_destruction_status[item['lane']['value']] = True
 
@@ -156,6 +191,7 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> None:
                     item['megacreeps'] = True
 
         item['lanes_destroyed'] = copy.deepcopy(lane_destruction_status)
+    return (first_tower_lane_destroyed, first_barracks_set_destroyed)
 
 
 def process_building_kill_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -181,14 +217,31 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
         'destroyed_tower_first': 0.0,
         'destroyed_tower_lane': None,
         'destroyed_tower_time': None,
+        # First Tower
+        "first_tower_destroyed_mid": 0.0,
+        "first_tower_destroyed_top": 0.0,
+        "first_tower_destroyed_bot": 0.0,
 
-        "first_destroyed_mid": 0.0,
-        "first_destroyed_top": 0.0,
-        "first_destroyed_bot": 0.0,
+        "first_tower_lost_mid": 0.0,
+        "first_tower_lost_top": 0.0,
+        "first_tower_lost_bot": 0.0,
+        # First Tower Lane
+        'first_tower_lane_destroyed_mid': 0.0,
+        'first_tower_lane_destroyed_top': 0.0,
+        'first_tower_lane_destroyed_bot': 0.0,
 
-        "first_lost_mid": 0.0,
-        "first_lost_top": 0.0,
-        "first_lost_bot": 0.0,
+        'first_tower_lane_lost_mid': 0.0,
+        'first_tower_lane_lost_top': 0.0,
+        'first_tower_lane_lost_bot': 0.0,
+
+        # First Barracks Set
+        'first_barracks_set_destroyed_mid': 0.0,
+        'first_barracks_set_destroyed_top': 0.0,
+        'first_barracks_set_destroyed_bot': 0.0,
+
+        'first_barracks_set_lost_mid': 0.0,
+        'first_barracks_set_lost_top': 0.0,
+        'first_barracks_set_lost_bot': 0.0,
     } for x in range(10) }
 
     dire_t_died = []
@@ -240,7 +293,7 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
                 position_towers_status[slot]['lost_tower_lane'] = values['lane']
                 position_towers_status[slot]['lost_tower_time'] = values['time']
 
-                lane_name = first_lost_dict[values['lane']]
+                lane_name = first_tower_lost_dict[values['lane']]
                 position_towers_status[slot][lane_name] = 1.0
 
             for pos in killed_t_pos:
@@ -250,24 +303,43 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
                 position_towers_status[slot]['destroyed_tower_lane'] = values['lane']
                 position_towers_status[slot]['destroyed_tower_time'] = values['time']
 
-                lane_name = first_destroyed_dict[values['lane']]
+                lane_name = first_tower_destroyed_dict[values['lane']]
                 position_towers_status[slot][lane_name] = 1.0
 
             first_tower = False
 
-    _find_destroyed_lane(dire_t_died)
-    _find_destroyed_lane(sent_t_died)
+    dire_first_lost_lane, dire_first_lost_barracks = _find_destroyed_lane(dire_t_died)
+    sent_first_lost_lane, sent_first_lost_barracks = _find_destroyed_lane(sent_t_died)
+
+    for slot in range(10):
+        if slot < 5:
+            side_first_lost_lane, side_first_lost_barracks = dire_first_lost_lane, dire_first_lost_barracks
+            side_first_destroyed_lane, side_first_destroyed_barracks = sent_first_lost_lane, sent_first_lost_barracks
+        else:
+            side_first_lost_lane, side_first_lost_barracks = sent_first_lost_lane, sent_first_lost_barracks
+            side_first_destroyed_lane, side_first_destroyed_barracks = dire_first_lost_lane, dire_first_lost_barracks
+
+        for value, name_dict in [
+            (side_first_lost_lane, first_tower_lane_lost_dict),
+            (side_first_lost_barracks, first_tower_lane_destroyed_dict),
+            (side_first_destroyed_lane, first_tower_lane_destroyed_dict),
+            (side_first_destroyed_barracks, first_barracks_set_destroyed_dict),
+        ]:
+            field_name = name_dict[value]
+            position_towers_status[slot][field_name] = 1.0
+
 
     dire_left = _find_left_towers(dire_t_died)
     sentinel_left = _find_left_towers(sent_t_died)
 
-    return (position_towers_status,
-            dire_lost_first_tower,
-            {
-                'dire_died': dire_t_died,
-                'sentinel_died': sent_t_died,
+    return (
+        position_towers_status,
+        dire_lost_first_tower,
+        {
+            'dire_died': dire_t_died,
+            'sentinel_died': sent_t_died,
 
-                'dire_left': dire_left,
-                'sentinel_left': sentinel_left,
-            }
-            )
+            'dire_left': dire_left,
+            'sentinel_left': sentinel_left,
+        }
+    )

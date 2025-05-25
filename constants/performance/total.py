@@ -41,6 +41,7 @@ class GameTotal(BaseModel):
     description: str | None = None
     pseudo_bool: bool = False
     availability: None | FieldAvailability = None
+    optional: bool = False
 
 
 def set_total_name(klass: object):
@@ -48,14 +49,18 @@ def set_total_name(klass: object):
     checker = UniqueIndexChecker()
     for name, type_ in klass.__annotations__.items():
         if type_ is GameTotal:
-            value = getattr(klass, name)
-            value.name = name
-            if value.description is None:
-                value.description = to_proper_name(name)
+            item = getattr(klass, name)
+            item.name = name
+            if item.description is None:
+                item.description = to_proper_name(name)
 
-            values.append(value)
+            values.append(item)
 
-            checker.add(value.index)
+            checker.add(item.index)
+
+            if item.availability is None:
+                item.optional = True
+
 
     setattr(klass, 'VALUES', values)
     setattr(klass, 'VALUES_NAMES', get_only_names(values))
@@ -173,44 +178,44 @@ class GameTotals:
         availability=FieldAvailability(match=False),
         pseudo_bool=True
     )
-
-    first_destroyed_mid: GameTotal = GameTotal(
+    # first tower
+    first_tower_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
-    first_destroyed_top: GameTotal = GameTotal(
+    first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
-    first_destroyed_bot: GameTotal = GameTotal(
+    first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
-
-    first_lost_mid: GameTotal = GameTotal(
+    first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
-    first_lost_top: GameTotal = GameTotal(
+    first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
-    first_lost_bot: GameTotal = GameTotal(
+    first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
         availability=FieldAvailability(player=False),
         pseudo_bool=True
     )
+    # picks
     first_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=55,
@@ -247,6 +252,81 @@ class GameTotals:
         availability=FieldAvailability(team=False),
         pseudo_bool=True
     )
+    # first lane
+    first_tower_lane_destroyed_mid: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=61,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_tower_lane_destroyed_top: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=62,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_tower_lane_destroyed_bot: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=63,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_tower_lane_lost_mid: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=64,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_tower_lane_lost_top: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=65,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_tower_lane_lost_bot: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=66,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    # first barracks
+    first_barracks_set_destroyed_mid: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=67,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_barracks_set_destroyed_top: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=68,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_barracks_set_destroyed_bot: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=69,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_barracks_set_lost_mid: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=70,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_barracks_set_lost_top: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=71,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+    first_barracks_set_lost_bot: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=72,
+        availability=FieldAvailability(player=False),
+        pseudo_bool=True
+    )
+
 
     VALUES: ClassVar[list[GameTotal]]
     VALUES_NAMES: ClassVar[list[str]]

@@ -227,13 +227,32 @@ def process_additional_replay_data(
         this_total_perf_obj.destroyed_tower_lane = hero_building_data['destroyed_tower_lane']
         this_total_perf_obj.destroyed_tower_time = hero_building_data['destroyed_tower_time']
 
-        this_total_perf_obj.first_destroyed_mid = hero_building_data['first_destroyed_mid']
-        this_total_perf_obj.first_destroyed_top = hero_building_data['first_destroyed_top']
-        this_total_perf_obj.first_destroyed_bot = hero_building_data['first_destroyed_bot']
+        # first tower
+        this_total_perf_obj.first_tower_destroyed_mid = hero_building_data['first_tower_destroyed_mid']
+        this_total_perf_obj.first_tower_destroyed_top = hero_building_data['first_tower_destroyed_top']
+        this_total_perf_obj.first_tower_destroyed_bot = hero_building_data['first_tower_destroyed_bot']
 
-        this_total_perf_obj.first_lost_mid = hero_building_data['first_lost_mid']
-        this_total_perf_obj.first_lost_top = hero_building_data['first_lost_top']
-        this_total_perf_obj.first_lost_bot = hero_building_data['first_lost_bot']
+        this_total_perf_obj.first_tower_lost_mid = hero_building_data['first_tower_lost_mid']
+        this_total_perf_obj.first_tower_lost_top = hero_building_data['first_tower_lost_top']
+        this_total_perf_obj.first_tower_lost_bot = hero_building_data['first_tower_lost_bot']
+
+        # lane
+        this_total_perf_obj.first_tower_lane_destroyed_mid = hero_building_data['first_tower_lane_destroyed_mid']
+        this_total_perf_obj.first_tower_lane_destroyed_top = hero_building_data['first_tower_lane_destroyed_top']
+        this_total_perf_obj.first_tower_lane_destroyed_bot = hero_building_data['first_tower_lane_destroyed_bot']
+
+        this_total_perf_obj.first_tower_lane_lost_mid = hero_building_data['first_tower_lane_lost_mid']
+        this_total_perf_obj.first_tower_lane_lost_top = hero_building_data['first_tower_lane_lost_top']
+        this_total_perf_obj.first_tower_lane_lost_bot = hero_building_data['first_tower_lane_lost_bot']
+
+        # rax
+        this_total_perf_obj.first_barracks_set_destroyed_mid = hero_building_data['first_barracks_set_destroyed_mid']
+        this_total_perf_obj.first_barracks_set_destroyed_top = hero_building_data['first_barracks_set_destroyed_top']
+        this_total_perf_obj.first_barracks_set_destroyed_bot = hero_building_data['first_barracks_set_destroyed_bot']
+
+        this_total_perf_obj.first_barracks_set_lost_mid = hero_building_data['first_barracks_set_lost_mid']
+        this_total_perf_obj.first_barracks_set_lost_top = hero_building_data['first_barracks_set_lost_top']
+        this_total_perf_obj.first_barracks_set_lost_bot = hero_building_data['first_barracks_set_lost_bot']
 
         hero_id = hero_death_player_data['hero_id']
         first_pick = pick_dict[hero_id] == 1

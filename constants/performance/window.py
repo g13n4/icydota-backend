@@ -106,6 +106,8 @@ class LaneStageWindows:
     l12: GameWindow = GameWindow(start_time=10 * M, end_time=12 * M)
     # 12-15
     l15: GameWindow = GameWindow(start_time=12 * M, end_time=15 * M)
+    # 15-20
+    l20: GameWindow = GameWindow(start_time=15 * M, end_time=20 * M)
     # total calc
     ltotal_max: GameWindow = GameWindow(start_time=None, end_time=None, description='<15 m. (max)', agg_func=np.max)
     ltotal_min: GameWindow = GameWindow(start_time=None, end_time=None, description='<15 m. (min)', agg_func=np.min)

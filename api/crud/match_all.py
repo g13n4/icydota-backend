@@ -90,7 +90,7 @@ async def get_games_all(
                 }
 
         data = {
-            "id": game_obj.id,
+            "id": str(game_obj.id),
             "dire_won": game_obj.dire_win,
             "name_dire": dire_name,
             "name_sent": sent_name,

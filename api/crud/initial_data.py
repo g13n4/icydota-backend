@@ -9,7 +9,7 @@ from models import League, Patch
 async def _build_computations() -> list[dict]:
     output = dict()
     for item in WindowCalculations.VALUES:
-        category_id = item.category.value
+        category_id = str(item.category.value)
         if category_id not in output:
             output[category_id] = {
                 "label": item.category.name,
@@ -21,13 +21,13 @@ async def _build_computations() -> list[dict]:
         output[category_id]["items"].append(
             {
                 "label": item.description,
-                "value": item.db_id,
+                "value": str(item.db_id),
             }
         )
     return [
         {
             "label": "Total data",
-            "value": 0,
+            "value": "0",
         }
     ] + list(output.values())
 

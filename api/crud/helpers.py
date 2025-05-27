@@ -6,25 +6,21 @@ from models import PerformanceTotalData
 
 TOTAL_EXCLUDE_FIELDS = { "id", "performance_id" }
 
-async def to_basic_list(objs: Iterable) -> list[dict]:
+async def to_basic_list(objs: Iterable) -> list[dict[str, str]]:
     return [
         {
             "label": league.name,
-            "value": league.id,
+            "value": str(league.id),
         } for league in objs
     ]
 
 
-async def process_total_output(data: PerformanceTotalData,
-                               *,
-                               match: bool = False,
-                               aggregation: bool = False,
-                               cross_comparison: bool = False) -> dict:
+async def process_total_output(data: PerformanceTotalData, **kwargs) -> dict:
     """Get Total data"""
     data = data.model_dump(exclude=TOTAL_EXCLUDE_FIELDS)
 
     for game_total in GameTotals.VALUES:
-        if not game_total.availability.required(match, aggregation, cross_comparison):
+        if not game_total.availability.required(**kwargs):
             del data[game_total.name]
             continue
 

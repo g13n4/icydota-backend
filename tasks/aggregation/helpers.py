@@ -12,7 +12,7 @@ APPEND_CONST = "___APPEND_CONST"
 
 
 class AggregationKeyCreator:
-    def __init__(self, type_id: int | None = None, *, fields: list[str] | None = None ):
+    def __init__(self, type_id: int | None = None, *, fields: list[str] | None = None):
         if type_id:
             self.type_id = type_id
             self.fields = [item.associated_field for item in AGGREGATION_MODELS[type_id]]
@@ -21,8 +21,10 @@ class AggregationKeyCreator:
         else:
             raise ValueError("Can't create {self.__name__} without id for match or fields for team")
 
+
     def get_fields(self):
         return self.fields
+
 
     def create_key(self, data: dict, fields: list[str] | None = None, *, append: Any = APPEND_CONST) -> tuple:
         """Get a dictionary and extract values from it according to the fields set"""
@@ -53,10 +55,15 @@ COMPARISON_MAP = {
 }
 
 
-def match_aggregation_league_participants_query_creator(league_id: int) -> tuple:
+def match_aggregation_league_participants_query_creator(league_id: int | None, patch_id: int | None) -> tuple:
     models = ModelList()
     joins = JoinList()
-    where = [Game.league_id == league_id]
+    if patch_id:
+        where = [Game.patch_id == patch_id]
+    elif league_id:
+        where = [Game.league_id == league_id]
+    else:
+        raise ValueError("No league_id value or patch_id value provided")
 
     models.add(PlayerGameData.hero_id, 'hero_id', True)
     models.add(PlayerGameData.player_id, 'player_id', True)
@@ -69,10 +76,16 @@ def match_aggregation_league_participants_query_creator(league_id: int) -> tuple
     return combine_select(models.get_models(), joins.data, where).distinct(), models.get_names()
 
 
-def team_aggregation_league_participants_query_creator(league_id: int) -> tuple:
+def team_aggregation_league_participants_query_creator(league_id: int | None, patch_id: int | None) -> tuple:
     models = ModelList()
     joins = JoinList()
-    where = [ByTeamType.league_id == league_id]
+
+    if patch_id:
+        where = [ByTeamType.patch_id == patch_id]
+    elif league_id:
+        where = [ByTeamType.league_id == league_id]
+    else:
+        raise ValueError("No league_id value or patch_id value provided")
 
     models.add(ByTeamType.team_id, 'team_id', True)
     models.add(ByTeamType.patch_id, 'patch_id', True)

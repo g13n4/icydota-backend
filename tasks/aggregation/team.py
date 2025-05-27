@@ -1,5 +1,3 @@
-import logging
-
 from celery import shared_task
 from sqlmodel import Session
 
@@ -12,7 +10,7 @@ from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 from tasks.aggregation.helpers import team_aggregation_league_participants_query_creator
-from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data, none_max
+from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
 
 
 # logging.basicConfig()
@@ -59,6 +57,7 @@ def create_performance_objs(
 
     return output
 
+
 # TODO: add patch_id functionality
 @shared_task(name="aggregate_league_team", ignore_result=True)
 def aggregate_league_team(league_id: int | None, patch_id: int | None = None):
@@ -75,6 +74,7 @@ def aggregate_league_team(league_id: int | None, patch_id: int | None = None):
     for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
         for calculation in WindowCalculations.VALUES:
             query, names = team_aggregation_query_creator(
+                patch_id=patch_id,
                 league_id=league_id,
                 calculation_type_id=calculation.db_id,
                 is_comparison=is_comparison,
@@ -91,6 +91,7 @@ def aggregate_league_team(league_id: int | None, patch_id: int | None = None):
             db_session.commit()
 
         query, names = team_aggregation_query_creator(
+            patch_id=patch_id,
             league_id=league_id,
             calculation_type_id=None,
             is_comparison=is_comparison,

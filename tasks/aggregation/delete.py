@@ -7,15 +7,21 @@ from models.performance import Performance
 from models.performance_data_type import ByTeamType
 
 
-@shared_task(name="delete_aggregation_league_match", ignore_result=True)
-def delete_aggregation_league_match(league_id: int):
+@shared_task(name="delete_aggregation_match", ignore_result=True)
+def delete_aggregation_match(league_id: int | None, patch_id: int | None):
     db_session: Session = get_sync_db_session(expire=False)
+    if patch_id:
+        where = [AggregationType.patch_id == patch_id]
+    elif league_id:
+        where = [AggregationType.league_id == league_id]
+    else:
+        raise ValueError("No league_id value or patch_id value provided for delete_aggregation_match task")
 
     select_performance_ids = (
         select(Performance.id)
         .join(AggregationType, AggregationType.performance_id == Performance.id)
         .where(
-            AggregationType.league_id == league_id,
+            where,
             col(Performance.type_id).in_(
                 [
                     Performance.const.game.AGGREGATION,
@@ -30,14 +36,20 @@ def delete_aggregation_league_match(league_id: int):
     db_session.commit()
 
 
-@shared_task(name="delete_aggregation_league_team", ignore_result=True)
-def delete_aggregation_league_team(league_id: int):
+@shared_task(name="delete_aggregation_team", ignore_result=True)
+def delete_aggregation_team(league_id: int | None, patch_id: int | None):
     db_session: Session = get_sync_db_session(expire=False)
+    if patch_id:
+        where = [ByTeamType.patch_id == patch_id]
+    elif league_id:
+        where = [ByTeamType.league_id == league_id]
+    else:
+        raise ValueError("No league_id value or patch_id value provided for delete_aggregation_team task")
 
     select_performance_ids = (select(Performance.id)
     .join(ByTeamType, ByTeamType.performance_id == Performance.id)
     .where(
-        ByTeamType.league_id == league_id,
+        where,
         col(Performance.type_id).in_(
             [
                 Performance.const.team.TEAM_MATCH_AGGREGATION,

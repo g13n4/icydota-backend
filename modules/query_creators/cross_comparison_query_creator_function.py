@@ -7,15 +7,23 @@ from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 
 def match_ccomparison_query_creator(
-        league_id: int,
         calculation_type_id: int | None,
         positions: list,
-        is_flat: bool | None = None
+        is_flat: bool | None = None,
+        league_id: int | None = None,
+        patch_id: int | None = None,
 ) -> tuple:
     models = ModelList()
     joins = JoinList()
+    if patch_id:
+        game_where = Game.patch_id == patch_id
+    elif league_id:
+        game_where = Game.league_id == league_id
+    else:
+        raise ValueError("No league_id value or patch_id value provided")
+
     where = [
-        Game.league_id == league_id,
+        game_where,
         Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON,
         ComparisonType.basic == True,
         ComparisonType.is_flat == is_flat,
@@ -57,16 +65,24 @@ def match_ccomparison_query_creator(
 
 
 def team_ccomparison_query_creator(
-        league_id: int,
         calculation_type_id: int | None,
-        is_flat: bool | None = None
+        is_flat: bool | None = None,
+        league_id: int | None = None,
+        patch_id: int | None = None,
 ) -> tuple:
+    if patch_id:
+        by_team_where = ByTeamType.patch_id == patch_id
+    elif league_id:
+        by_team_where = ByTeamType.league_id == league_id
+    else:
+        raise ValueError("No league_id value or patch_id value provided")
+
     models = ModelList()
     joins = JoinList()
     where = [
         Performance.type_id == Performance.const.team.TEAM_MATCH_COMPARISON,
         ByTeamType.is_flat == is_flat,
-        ByTeamType.league_id == league_id,
+        by_team_where,
     ]
 
     models.add(ByTeamType.team_cpd_id, 'team_cpd_id', True)

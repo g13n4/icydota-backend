@@ -51,7 +51,7 @@ def cross_comparison_league_team(league_id: int, patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)
-    if not league_obj:
+    if not league_obj or not (league_id or patch_id):
         raise ValueError("No such league in the database")
 
     columns = ['team_cpd_id', 'team_cps_id']
@@ -61,6 +61,7 @@ def cross_comparison_league_team(league_id: int, patch_id: int | None = None):
         for calculation in WindowCalculations.VALUES:
             query, names = team_ccomparison_query_creator(
                 league_id=league_id,
+                patch_id=patch_id,
                 calculation_type_id=calculation.db_id,
                 is_flat=is_flat
             )
@@ -86,6 +87,7 @@ def cross_comparison_league_team(league_id: int, patch_id: int | None = None):
 
         query, names = team_ccomparison_query_creator(
             league_id=league_id,
+            patch_id=patch_id,
             calculation_type_id=None,
             is_flat=is_flat
         )

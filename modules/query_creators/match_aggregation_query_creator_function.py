@@ -4,14 +4,20 @@ from modules.query_creators.helpers import ModelList, JoinList, combine_select
 
 
 def match_aggregation_query_creator(
-        league_id: int,
-        calculation_type_id: int | None,
+        league_id: int | None = None,
+        patch_id: int | None = None,
+        calculation_type_id: int | None = None,
         is_comparison: bool = False,
         is_flat: bool | None = None
 ) -> tuple:
     models = ModelList()
     joins = JoinList()
-    where = [Game.league_id == league_id]
+    if patch_id:
+        where = [Game.patch_id == patch_id]
+    elif league_id:
+        where = [Game.league_id == league_id]
+    else:
+        raise ValueError("No league_id value or patch_id value provided")
 
     models.add(PlayerGameData.hero_id, 'hero_id', True)
     models.add(PlayerGameData.player_id, 'player_id', True)

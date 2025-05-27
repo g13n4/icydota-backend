@@ -54,9 +54,8 @@ def create_performance_dict(
     return performance_dict
 
 
-# TODO: add patch_id functionality
 @shared_task(name="cross_comparison_league_match", ignore_result=True)
-def cross_comparison_league_match(league_id: int, ccomparison_type: int, patch_id: int | None = None):
+def cross_comparison_league_match(ccomparison_type: int, league_id: int | None = None,  patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = db_session.get(League, league_id)
@@ -72,6 +71,7 @@ def cross_comparison_league_match(league_id: int, ccomparison_type: int, patch_i
             for calculation in WindowCalculations.VALUES:
 
                 query, names = match_ccomparison_query_creator(
+                    patch_id=patch_id,
                     league_id=league_id,
                     calculation_type_id=calculation.db_id,
                     positions=enemies,
@@ -101,6 +101,7 @@ def cross_comparison_league_match(league_id: int, ccomparison_type: int, patch_i
                 db_session.commit()
 
             query, names = match_ccomparison_query_creator(
+                patch_id=patch_id,
                 league_id=league_id,
                 calculation_type_id=None,
                 positions=enemies,

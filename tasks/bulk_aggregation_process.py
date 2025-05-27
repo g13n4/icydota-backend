@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 
 from db import get_sync_db_session
 from models import League
-from tasks.aggregation.delete import delete_aggregation_league_match, delete_aggregation_league_team
+from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
 from tasks.aggregation.match import aggregate_league_match
 from tasks.aggregation.team import aggregate_league_team
 from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper
@@ -53,18 +53,18 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
 
     (
         # process games
-        group(games) |
-        approximate_positions.si(league_id=league_obj.id) |
-        # aggregate
-        delete_aggregation_league_team.si(league_id=league_id, cross_comparison=False) |
-        aggregate_league_team.si(league_id=league_id) |
-        delete_aggregation_league_match.si(league_id=league_id, cross_comparison=False) |
-        aggregate_league_match.si(league_id=league_id) |
-        # cross compare
-        delete_cross_comparison_team.si(league_id=league_id, cross_comparison=True) |
-        cross_comparison_league_team.si(league_id=league_id) |
-        delete_cross_comparison_match.si(league_id=league_id, cross_comparison=True) |
-        cross_comparison_league_match.si(league_id=league_id)
+            group(games) |
+            approximate_positions.si(league_id=league_obj.id) |
+            # aggregate
+            delete_aggregation_team.si(league_id=league_id, cross_comparison=False) |
+            aggregate_league_team.si(league_id=league_id) |
+            delete_aggregation_match.si(league_id=league_id, cross_comparison=False) |
+            aggregate_league_match.si(league_id=league_id) |
+            # cross compare
+            delete_cross_comparison_team.si(league_id=league_id, cross_comparison=True) |
+            cross_comparison_league_team.si(league_id=league_id) |
+            delete_cross_comparison_match.si(league_id=league_id, cross_comparison=True) |
+            cross_comparison_league_match.si(league_id=league_id)
     ).apply_async()
 
     logger.info(f"PARSING FOR LEAGUE {league_obj.id} IS DONE")

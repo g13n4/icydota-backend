@@ -3,7 +3,7 @@ from celery.utils.log import get_task_logger
 
 from constants.aggregation import AggregationConstant
 from constants.calculation.cross_comparison import CrossComparisonTypeConstant
-from tasks.aggregation.delete import delete_aggregation_league_match, delete_aggregation_league_team
+from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
 from tasks.aggregation.match import aggregate_league_match
 from tasks.aggregation.team import aggregate_league_team
 from tasks.approximate_positions import approximate_positions
@@ -25,32 +25,32 @@ def delete_league(league_id: int) -> None:
     delete_league_task.si(league_id=league_id)
 
 
-def aggregate_league_task_helper(league_id: int) -> None:
+def aggregate_league_task_helper(league_id: int | None, patch_id: int | None) -> None:
     aggregation_tasks = chain(
-        aggregate_league_match.si(league_id=league_id, aggregation_type=aggregation_type)
+        aggregate_league_match.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
         for aggregation_type in AggregationConstant.VALUES
     )
 
     all_tasks = (
-            delete_aggregation_league_team.si(league_id=league_id) |
-            aggregate_league_team.si(league_id=league_id) |
-            delete_aggregation_league_match.si(league_id=league_id) |
+            delete_aggregation_team.si(league_id=league_id, patch_id=patch_id) |
+            aggregate_league_team.si(league_id=league_id, patch_id=patch_id) |
+            delete_aggregation_match.si(league_id=league_id, patch_id=patch_id) |
             aggregation_tasks
 
     )
     all_tasks()
 
 
-def cross_compare_league_task_helper(league_id: int) -> None:
+def cross_compare_league_task_helper(league_id: int, patch_id: int | None) -> None:
     ccomparison_tasks = chain(
-        cross_comparison_league_match.si(league_id=league_id, ccomparison_type=ccomparison_type)
+        cross_comparison_league_match.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type)
         for ccomparison_type in CrossComparisonTypeConstant.VALUES
     )
 
     all_tasks = (
-            delete_cross_comparison_team.si(league_id=league_id) |
-            cross_comparison_league_team.si(league_id=league_id) |
-            delete_cross_comparison_match.si(league_id=league_id) |
+            delete_cross_comparison_team.si(league_id=league_id, patch_id=patch_id) |
+            cross_comparison_league_team.si(league_id=league_id, patch_id=patch_id) |
+            delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id) |
             ccomparison_tasks
     )
     all_tasks()

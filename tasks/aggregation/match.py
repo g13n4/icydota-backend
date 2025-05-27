@@ -59,9 +59,8 @@ def create_performance_objs(
 
     return output
 
-# TODO: add patch_id functionality
 @shared_task(name="aggregate_league_match", ignore_result=True)
-def aggregate_league_match(league_id: int | None, aggregation_type: int, patch_id: int | None = None):
+def aggregate_league_match(aggregation_type: int, league_id: int | None = None,  patch_id: int | None = None):
     db_session: Session = get_sync_db_session(expire=False)
 
 
@@ -78,6 +77,7 @@ def aggregate_league_match(league_id: int | None, aggregation_type: int, patch_i
         for calculation in WindowCalculations.VALUES:
             query, names = match_aggregation_query_creator(
                 league_id=league_id,
+                patch_id=patch_id,
                 calculation_type_id=calculation.db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat
@@ -94,9 +94,10 @@ def aggregate_league_match(league_id: int | None, aggregation_type: int, patch_i
 
         query, names = match_aggregation_query_creator(
             league_id=league_id,
+            patch_id=patch_id,
             calculation_type_id=None,
             is_comparison=is_comparison,
-            is_flat=is_flat
+            is_flat=is_flat,
             )
         data = get_query_data(db_session=db_session, query=query, names=names)
 

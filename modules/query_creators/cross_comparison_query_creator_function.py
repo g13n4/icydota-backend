@@ -80,7 +80,7 @@ def team_ccomparison_query_creator(
     models = ModelList()
     joins = JoinList()
     where = [
-        Performance.type_id == Performance.const.team.TEAM_MATCH_COMPARISON,
+        Performance.type_id == Performance.const.team.TEAM_MATCH_DATA_COMPARISON,
         ByTeamType.is_flat == is_flat,
         by_team_where,
     ]

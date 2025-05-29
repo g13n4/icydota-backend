@@ -15,6 +15,7 @@ from api.table.table_data import get_performance_data, get_performance_data_comp
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
 from celery_app import celery_app
+from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
 from db import get_async_db_session
 from utils import CaseInsensitiveEnum
 
@@ -119,71 +120,34 @@ async def get_league_matches_route(
 
 
 # DATA
-class CrossAggregationTypes(CaseInsensitiveEnum):
-    hero = "hero"
-    player = "player"
-
-
-class CrossAggregationPositions(CaseInsensitiveEnum):
-    support = "support"
-    carry = "core"
-    mid = "mid"
-
-
-class GameStage(CaseInsensitiveEnum):
-    lane = "lane"
-    game = "game"
-    both = "both"
-
-
-    @classmethod
-    def __missing__(cls, value):
-        return cls.both
-
-
-class FieldTypes(CaseInsensitiveEnum):
-    window = "window"
-    total = "total"
-
-
-COMPARISON_DICT = {
-    "player": False,
-    "general": True,
-}
-
-
-@icydota_api.get(API_PREFIX + '/performance_data/{match_id}/{data_type}')
+@icydota_api.get(API_PREFIX + 'data/match/{pot}/{match_id}/{data_type}')
 async def get_performance_data_api(
         match_id: int,
         data_type: int,
-        game_stage: GameStage,
-        comparison: Optional[str] = None,
-        flat: bool = None,
+        pot: PoTEnum,
+        stage: GameStageEnum,
+        comparison: ComparisonEnum | bool = None,
+        ctype: ComparisonTypeEnum = ComparisonTypeEnum.PLAYER,
         db=Depends(get_async_db_session)
 ):
-    if (comparison and comparison) and flat is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Choose whether the windows_data for comparison should be is_flat or percents"
-        )
 
-    is_comparison = COMPARISON_DICT.get(comparison, None)
-
-    if is_comparison is None:
+    if comparison is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
             db_session=db,
+            pot=pot,
             match_id=match_id,
             data_type=data_type,
-            game_stage=game_stage.value,
+            game_stage=stage,
         )
     else:
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(
             db_session=db,
+            pot=pot,
             match_id=match_id,
             calculation_type_id=data_type,
-            game_stage=game_stage,
-            basic=comparison == "player",
-            flat=flat,
+            game_stage=stage,
+            basic=ctype.value,
+            flat=comparison,
         )
 
     output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
@@ -194,29 +158,27 @@ async def get_performance_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/performance_aggregated_data/{league_id}/{data_type}/{aggregation_type}')
+@icydota_api.get(API_PREFIX + 'data/aggregation/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}')
 async def get_performance_aggregated_data_api(
-        league_id: int,
+        pot: PoTEnum,
+        lop: LoPEnum,
+        lop_value: int,
         aggregation_type: int,
-        game_stage: GameStage,
+        game_stage: GameStageEnum,
         data_type: int,
-        comparison: bool = False,
         flat: bool = True,
         db=Depends(get_async_db_session)
 ):
-    if comparison and flat is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Choose whether the windows_data for comparison should be is_flat or percents"
-        )
+    league_id, patch_id = lop.to_api(lop_value)
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(
         db_session=db,
+        pot=pot,
         league_id=league_id,
+        patch_id=patch_id,
         aggregation_type=aggregation_type,
         calculation_type_id=data_type,
         game_stage=game_stage,
-        is_comparison=comparison,
         flat=flat
     )
 
@@ -228,26 +190,31 @@ async def get_performance_aggregated_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/performance_cross_comparison/{league_id}/{data_type}/{aggregation_type}/{position}')
+@icydota_api.get(API_PREFIX + 'data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}')
 async def get_performance_cross_comparison_data_api(
-        league_id: int,
+        pot: PoTEnum,
+        lop: LoPEnum,
+        lop_value: int,
+        data_type: int,
         aggregation_type: int,
         position: int,
         data_field: str,
-        data_type: int,
-        flat: bool = True,
+        flat: ComparisonEnum = ComparisonEnum.FLAT,
         db=Depends(get_async_db_session)
 ):
-    # TODO:  "GET /performance_cross_comparison/15475/hero/mid/?data_field=l2&data_type=106&is_flat=false HTTP/1.1"
+    league_id, patch_id = lop.to_api(lop_value)
+
 
     data_dict, values_info = await get_cross_comparison_performance_data(
         db_session=db,
+        pot=pot,
         league_id=league_id,
+        patch_id=patch_id,
         aggregation_type=aggregation_type,
         position=position,
         data_field=data_field,
         calculation_type_id=data_type,
-        flat=flat
+        flat=flat.value,
     )
 
     if not data_dict.keys():
@@ -260,48 +227,6 @@ async def get_performance_cross_comparison_data_api(
     )
 
     return output
-
-
-# # LISTS
-# @icydota_api.get(API_PREFIX + '/field/{field_type}/')
-# async def get_field_types_api(field_type: FieldTypes):
-#     field_types = await get_field_types(field_type)
-#     return field_types
-#
-#
-# @icydota_api.get(API_PREFIX + '/calcs/')
-# async def get_performance_types(db=Depends(get_async_db_session)):
-#     categories = await get_items(db, PerformanceWindowCalculationType)
-#     return categories.all()
-#
-#
-# @icydota_api.get(API_PREFIX + '/leagues/')
-# async def get_leagues(db=Depends(get_async_db_session)):
-#     league_objs = await get_items(db, League)
-#     return league_objs.all()
-#
-#
-# @icydota_api.get(API_PREFIX + '/categories/')
-# async def get_performance_categories(db=Depends(get_async_db_session)):
-#     categories = await get_items(db, PerformanceWindowCalculationCategory)
-#     return categories.all()
-#
-#
-# @icydota_api.get(API_PREFIX + '/games/{league_id}')
-# async def get_league_games_api(league_id: int, db=Depends(get_async_db_session)):
-#     categories = await get_league_games(db, league_id)
-#     return categories
-#
-# @icydota_api.get(API_PREFIX + '/games_info/{league_id}')
-# async def get_league_games_info_api(league_id: int, db=Depends(get_async_db_session)):
-#     categories = await get_league_games_info(db, league_id)
-#     return categories
-#
-#
-# @icydota_api.get(API_PREFIX + '/default_menu_data/')
-# async def get_default_menu_data_api(db=Depends(get_async_db_session)):
-#     data = await get_default_menu_data(db)
-#     return data
 
 
 # PROCESSING WITH CELERY
@@ -327,14 +252,16 @@ if not LIGHT_MODE:
         return { 'status': 'processing' }
 
 
-    @icydota_api.post(API_PREFIX + '/aggregate/league/{league_id}', status_code=202)
-    async def aggregate_league_api(league_id: int):
-        aggregate_league_task_helper(league_id=league_id, )
+    @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_id}', status_code=202)
+    async def aggregate_api(lop: LoPEnum, lop_value: int):
+        league_id, patch_id = lop.to_api(lop_value)
+        aggregate_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-    @icydota_api.post(API_PREFIX + '/cross_comparison/league/{league_id}', status_code=202)
-    async def create_cross_comparison_api(league_id: int):
-        cross_compare_league_task_helper(league_id=league_id, )
+    @icydota_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_id}', status_code=202)
+    async def create_cross_comparison_api(lop: LoPEnum, lop_value: int):
+        league_id, patch_id = lop.to_api(lop_value)
+        cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
     @icydota_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)

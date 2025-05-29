@@ -4,19 +4,25 @@ from typing import Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output, extract_window_data_for_field
-from modules.query_creators.performance_query_creator import APIPerformanceQueryCreator
+from constants.api import PoTEnum
+from modules.query_creators.performance.aggregation_performance_query_creator import \
+    APIAggregationPerformanceQueryCreator
+from modules.query_creators.performance.crosscomparison_performance_query_creator import \
+    APICrossComparisonPerformanceQueryCreator
+from modules.query_creators.performance.match_performance_query_creator import APIMatchPerformanceQueryCreator
 from utils import is_na_decimal, TableMinMaxFinder
 
 
 async def get_performance_data(
         db_session: AsyncSession,
+        pot: PoTEnum,
         match_id: int,
         data_type: int,
         game_stage: str,
 ):
 
-    PQC = APIPerformanceQueryCreator()
-    select_query = PQC.get_match_query(match_id=match_id, data_type=data_type)
+    PQC = APIMatchPerformanceQueryCreator()
+    select_query = PQC.get_match_query(match_id=match_id, calculation_type_id=data_type, pot=pot)
     model_names = PQC.get_model_names()
 
     query_output = await db_session.exec(select_query)
@@ -32,18 +38,20 @@ async def get_performance_data(
 
 async def get_performance_data_comparison(
         db_session: AsyncSession,
+        pot: PoTEnum,
         match_id: int,
         calculation_type_id: int,
         game_stage: str,
         basic: bool,
         flat: Optional[bool]
 ):
-    PQC = APIPerformanceQueryCreator()
+    PQC = APIMatchPerformanceQueryCreator()
     select_query = PQC.get_match_comparison_query(
         match_id=match_id,
         calculation_type_id=calculation_type_id,
+        pot=pot,
         basic=basic,
-        is_flat=flat
+        is_flat=flat,
     )
     model_names = PQC.get_model_names()
 
@@ -60,24 +68,29 @@ async def get_performance_data_comparison(
 
 async def get_aggregated_performance_data(
         db_session: AsyncSession,
-        league_id: int,
+        pot: PoTEnum,
+        league_id: int | None,
+        patch_id: int | None,
         aggregation_type: int,
         calculation_type_id: int,
         game_stage: str,
-        is_comparison: bool,
         flat: Optional[bool],
 ):
-    PQC = APIPerformanceQueryCreator()
-    if is_comparison:
+    PQC = APIAggregationPerformanceQueryCreator()
+    if flat is not None:
         select_query = PQC.get_aggregation_comparison_query(
+            pot=pot,
             league_id=league_id,
+            patch_id=patch_id,
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
             is_flat=flat,
         )
     else:
         select_query = PQC.get_aggregation_query(
+            pot=pot,
             league_id=league_id,
+            patch_id=patch_id,
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
         )
@@ -111,7 +124,9 @@ def _extract_ccomp_value(*values, field_name: str, is_total_data: bool) -> float
 
 async def get_cross_comparison_performance_data(
         db_session: AsyncSession,
-        league_id: int,
+        pot: PoTEnum,
+        league_id: int | None,
+        patch_id: int | None,
         aggregation_type: int,
         position: int,
         data_field: str,
@@ -120,9 +135,11 @@ async def get_cross_comparison_performance_data(
 ):
     is_total_data = calculation_type_id == 0
 
-    PQC = APIPerformanceQueryCreator()
+    PQC = APICrossComparisonPerformanceQueryCreator()
     select_query = PQC.get_cross_comparison_query(
+        pot=pot,
         league_id=league_id,
+        patch_id=patch_id,
         aggregation_type_id=aggregation_type,
         position_id=position,
         data_field=data_field,

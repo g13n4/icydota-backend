@@ -12,8 +12,8 @@ class GamePerformanceTypeConstant:
 
 class TeamPerformanceConstant:
     """Data aggregated by team"""
-    TEAM_MATCH: int = 201
-    TEAM_MATCH_COMPARISON: int = 202
+    TEAM_MATCH_DATA: int = 201
+    TEAM_MATCH_DATA_COMPARISON: int = 202
 
     TEAM_MATCH_AGGREGATION: int = 203
     TEAM_MATCH_AGGREGATION_COMPARISON: int = 204

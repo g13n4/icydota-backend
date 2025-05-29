@@ -30,9 +30,9 @@ def team_aggregation_query_creator(
     where.append(ByTeamType.is_flat == is_flat)
 
     if is_comparison:
-        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH_COMPARISON)
+        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH_DATA_COMPARISON)
     else:
-        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH)
+        where.append(Performance.type_id == Performance.const.team.TEAM_MATCH_DATA)
 
     if calculation_type_id:
         models.add(PerformanceWindowData.l_empty_mask, 'l_empty_mask', True)

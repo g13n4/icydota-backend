@@ -254,7 +254,7 @@ class PerformanceDataProcessor:
             )
 
             GP_obj = Performance(
-                type_id=Performance.const.team.TEAM_MATCH,
+                type_id=Performance.const.team.TEAM_MATCH_DATA,
                 by_team_type=BTT_obj,
             )
 
@@ -295,7 +295,7 @@ class PerformanceDataProcessor:
                 )
 
                 P_obj = Performance(
-                    type_id=Performance.const.team.TEAM_MATCH_COMPARISON,
+                    type_id=Performance.const.team.TEAM_MATCH_DATA_COMPARISON,
                     by_team_type=BTT_obj,
                 )
 

@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar, Optional, Literal
 
 from pydantic import condecimal, BaseModel
 
@@ -66,6 +66,38 @@ def set_total_name(klass: object):
     setattr(klass, 'VALUES_NAMES', get_only_names(values))
 
     return klass
+
+
+class GameTotalsIterator:
+    def __init__(self, values: list[GameTotal]):
+        self._values = values
+
+
+    def __call__(
+            self,
+            only_pseudo_bools: bool = False,
+            only_always_available: bool = False,
+            only_optional: bool = False,
+
+            only_field: Literal["index", "name"] | None = None,
+    ):
+        for item in self._values:
+            if only_pseudo_bools and not item.pseudo_bool:
+                continue
+            if only_always_available and item.availability is not None:
+                continue
+            if only_optional and item.availability is None:
+                continue
+
+
+            if only_field is None:
+                yield item
+            else:
+                yield getattr(item, only_field)
+
+
+    def __iter__(self):
+        yield from self._values
 
 
 @set_total_name
@@ -328,5 +360,8 @@ class GameTotals:
     )
 
 
-    VALUES: ClassVar[list[GameTotal]]
-    VALUES_NAMES: ClassVar[list[str]]
+    _VALUES: ClassVar[list[GameTotal]]
+
+
+GameTotals.VALUES = GameTotalsIterator(GameTotals._VALUES)
+GameTotals.VALUES_NAMES = GameTotals.VALUES(only_field="name")

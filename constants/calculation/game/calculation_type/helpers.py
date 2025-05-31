@@ -10,20 +10,18 @@ CalculationType = TypeVar('CalculationType')
 
 
 class PostprocessingItem(BaseModel):
-    total_format: int | None = None
     calculated_later: bool = False
 
 
 class CalculationItem(BaseModel):
     name: str
     description: str
-    value: int | None = None
+    value: int | None = None  # global
     db_id: int | None = None
+    index: int  # local
 
     is_active: bool = True
-    index: int
     category: Item | None = None
-    active: bool = True
     processing: tuple[Any, Any] | None = None
     postprocessing: PostprocessingItem | None = None
 

@@ -66,19 +66,6 @@ async def get_index():
     return { 'hello': 'world' }
 
 
-# MENUS
-# @icydota_api.get(API_PREFIX + '/menu_tc/')
-# async def get_menu_types_and_categories(comparison: bool | None = None, db=Depends(get_async_db_session)):
-#     categories = await get_categories_menu(db, include_disabled=not comparison)
-#     return categories
-#
-#
-# @icydota_api.get(API_PREFIX + '/league_header/')
-# async def get_league_header_api(db=Depends(get_async_db_session)):
-#     items = await get_league_header(db)
-#     return items
-
-
 @icydota_api.get(API_PREFIX + '/initial')
 async def get_initial_data_route(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
     items = await get_initial_data(db_session)

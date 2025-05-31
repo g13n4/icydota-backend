@@ -1,6 +1,5 @@
 import copy
 import operator
-from collections import defaultdict
 from collections.abc import Iterable
 from functools import reduce
 from typing import Any
@@ -22,19 +21,10 @@ from modules.processors.windows import WindowsPerformanceProcessor
 OFFSET = 1
 
 
-def create_totals_map(calculations: list) -> dict[int, list[int]]:
-    totals_map = defaultdict(list)
-    for calc in calculations:
-        if calc.postprocessing and calc.postprocessing.total_format:
-            totals_map[calc.postprocessing.total_format].append(calc.value)
-    return totals_map
-
-
 class PerformanceDataProcessor:
     ROWS_SIZE = len(WindowCalculations.VALUES)
     COLUMNS_SIZE = len(AllWindows.VALUES)
 
-    TOTALS_MAP = create_totals_map(WindowCalculations.VALUES)
     COLUMN_MAP = { item.name: item.index - OFFSET for item in AllWindows.VALUES }
 
     DIRE = "dire"

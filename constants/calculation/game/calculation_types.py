@@ -1,3 +1,5 @@
+from typing import Literal
+
 from constants.calculation.game.calculation_type.damage import DamageCalculations
 from constants.calculation.game.calculation_type.deward import DewardCalculations
 from constants.calculation.game.calculation_type.gold import GoldCalculations
@@ -6,30 +8,50 @@ from constants.calculation.game.calculation_type.interval import IntervalCalcula
 from constants.calculation.game.calculation_type.pings import PingsCalculations
 from constants.calculation.game.calculation_type.wards import WardsCalculations
 from constants.calculation.game.calculation_type.xp import XPCalculations
+from constants.helpers import Item
 
 
-# class ValuesGetter:
-#     VALUES: list[CalculationItem] = (
-#             IntervalCalculations.VALUES +
-#             PingsCalculations.VALUES +
-#             DamageCalculations.VALUES +
-#             WardsCalculations.VALUES +
-#             DewardCalculations.VALUES +
-#             XPCalculations.VALUES +
-#             GoldCalculations.VALUES
-#     )
-#
-#
-#     def __iter__(self):
-#         yield iter(ValuesGetter.VALUES)
-#
-#     def __call__(self, no_match: bool = False, no_agg: bool = False):
-#         for item in self:
-#             if no_match and item.no_match:
-#                 continue
-#             if no_agg and item.no_agg:
-#                 continue
-#             yield item
+class WindowCalculationsIterator:
+    def __init__(self, values: list[CalculationItem]):
+        self._values = values
+
+    def __iter__(self):
+        yield from self._values
+
+    def __call__(
+            self,
+            only_active: bool = False,
+            only_calculated_later: bool = False,
+            only_calculated_normally: bool = False,
+
+            only_category: int | Item | None = None,
+
+            only_field: Literal["name", "value", "db_id", "index"] | None = None,
+    ):
+        for item in self._values:
+            if only_active and not item.is_active:
+                continue
+            if (
+                    only_calculated_later and
+                    not (
+                            item.postprocessing is not None and item.postprocessing.calculated_later
+                    )
+            ):
+                continue
+            if (
+                    only_calculated_normally and
+                    item.postprocessing is not None and
+                    item.postprocessing.calculated_later
+            ):
+                continue
+
+            if only_category is not None and only_category != item.category:
+                continue
+
+            if only_field is None:
+                yield item
+            else:
+                yield getattr(item, only_field)
 
 
 class WindowCalculations(
@@ -41,7 +63,7 @@ class WindowCalculations(
     XPCalculations,
     GoldCalculations
 ):
-    VALUES: list[CalculationItem] = (
+    _VALUES: list[CalculationItem] = (
             IntervalCalculations.VALUES +
             PingsCalculations.VALUES +
             DamageCalculations.VALUES +
@@ -50,19 +72,18 @@ class WindowCalculations(
             XPCalculations.VALUES +
             GoldCalculations.VALUES
     )
-    VALUES_NAMES: list[str] = (
-            IntervalCalculations.VALUES_NAMES +
-            PingsCalculations.VALUES_NAMES +
-            DamageCalculations.VALUES_NAMES +
-            WardsCalculations.VALUES_NAMES +
-            DewardCalculations.VALUES_NAMES +
-            XPCalculations.VALUES_NAMES +
-            GoldCalculations.VALUES_NAMES
-    )
 
     DB_INDEX_MAP: dict[int, int]
+    VALUES: WindowCalculationsIterator
+    VALUES_NAMES: list[str]
+
+
+WindowCalculations.VALUES = WindowCalculationsIterator(WindowCalculations._VALUES)
+WindowCalculations.VALUES_NAMES = WindowCalculations.VALUES(only_field="name")
 
 
 WindowCalculations.DB_INDEX_MAP = {
     item.value: item.db_id for item in WindowCalculations.VALUES
 }
+
+print(list(WindowCalculations.VALUES(only_field="index")))

@@ -73,7 +73,7 @@ class GameTotalsIterator:
 
 
     def __len__(self):
-        return len(list(self))
+        return len(self._values)
 
 
     def __call__(

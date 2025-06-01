@@ -22,11 +22,11 @@ def create_facets(db_session: Session, heroes: list[Hero]) -> None:
             db_facet_id = hero_obj.id * 100 + (facet_idx + 1)
 
             if (facet_obj := facet_dict.get(db_facet_id, None)):
-                facet_obj.cdota_name=facet_data['name']
-                facet_obj.icon=facet_data['icon']
-                facet_obj.gradient_id=facet_data['gradient_id']
-                facet_obj.name=facet_data['title']
-                facet_obj.description=facet_data['description']
+                facet_obj.cdota_name = facet_data['name']
+                facet_obj.icon = facet_data['icon']
+                facet_obj.gradient_id = facet_data['gradient_id']
+                facet_obj.name = facet_data['title']
+                facet_obj.description = facet_data['description']
             else:
                 facet_obj = Facet(
                     id=db_facet_id,

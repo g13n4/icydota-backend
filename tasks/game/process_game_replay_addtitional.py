@@ -89,11 +89,13 @@ def _get_building_dict(db_session, ) -> dict:
 def _get_pick_data(df: pd.DataFrame) -> dict[int, int]:
     output = dict()
     counter = 1
-    for idx, line in df.iterrows():
-        values = line.to_dict()
+    # I have no idea why values are this way but they have to halved
+    # Ursa: id 70 - draft Id 140
+    df['hero_id'] = df['hero_id'] / 2
+    df_filtered = df[df['pick'] == True]
 
-        if not values["pick"]:
-            continue
+    for idx, line in df_filtered.iterrows():
+        values = line.to_dict()
 
         output[values["hero_id"]] = counter
 
@@ -254,7 +256,9 @@ def process_additional_replay_data(
         this_total_perf_obj.first_barracks_set_lost_top = hero_building_data['first_barracks_set_lost_top']
         this_total_perf_obj.first_barracks_set_lost_bot = hero_building_data['first_barracks_set_lost_bot']
 
-        hero_id = hero_death_player_data['hero_id']
+
+        hero_id = this_player_data['hero_id']
+
         first_pick = pick_dict[hero_id] == 1
         last_pick = pick_dict[hero_id] == 10
         win = this_total_perf_obj.win == True

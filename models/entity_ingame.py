@@ -27,7 +27,8 @@ class Hero(SQLModel, table=True):
     )
 
 class Facet(SQLModel, table=True):
-    """We can get them from dotaconstants provided by opendota.
+    """
+    We can get them from dotaconstants provided by opendota.
     Facet in constants == hero_variant (provided by opendota game api) - 1.
     """
     __tablename__ = "facets"
@@ -36,11 +37,9 @@ class Facet(SQLModel, table=True):
     const_id: int
 
     hero_id: Optional[int] = _fk("heroes", col_type="smallint")
-    hero: Optional[Hero] = Relationship(
-        back_populates="facets",
-    )
+    hero: Optional[Hero] = Relationship(back_populates="facets")
 
-    cdota_name: str = Field(unique=True, index=True)
+    cdota_name: str
     icon: str
     gradient_id: int
     name: str

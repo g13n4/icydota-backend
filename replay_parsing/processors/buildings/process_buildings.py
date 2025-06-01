@@ -169,7 +169,7 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> tuple[int | None, int 
                     item['naked_throne'] = True
                     item['lane']['first_tower_4'] = True
             elif item['tower']['tier'] == 3 and first_tower_lane_destroyed is None:
-                first_tower_lane_destroyed= item['lane']
+                first_tower_lane_destroyed = item['lane']['value']
 
         else:
             rax_counter += 1
@@ -180,7 +180,7 @@ def _find_destroyed_lane(killed_buildings: List[dict]) -> tuple[int | None, int 
             lsv = lane_state[item['lane']['value']]
             if lsv == 2:
                 if first_barracks_set_destroyed is None:
-                    first_barracks_set_destroyed = item['lane']
+                    first_barracks_set_destroyed = item['lane']['value']
 
                 item['lane']['destroyed_lane'] = True
                 lane_destruction_status[item['lane']['value']] = True
@@ -313,20 +313,21 @@ def process_building(df: pd.DataFrame, pos_to_slot: dict) -> (dict, bool, dict):
 
     for slot in range(10):
         if slot < 5:
-            side_first_lost_lane, side_first_lost_barracks = dire_first_lost_lane, dire_first_lost_barracks
-            side_first_destroyed_lane, side_first_destroyed_barracks = sent_first_lost_lane, sent_first_lost_barracks
-        else:
             side_first_lost_lane, side_first_lost_barracks = sent_first_lost_lane, sent_first_lost_barracks
             side_first_destroyed_lane, side_first_destroyed_barracks = dire_first_lost_lane, dire_first_lost_barracks
+        else:
+            side_first_lost_lane, side_first_lost_barracks = dire_first_lost_lane, dire_first_lost_barracks
+            side_first_destroyed_lane, side_first_destroyed_barracks = sent_first_lost_lane, sent_first_lost_barracks
 
         for value, name_dict in [
             (side_first_lost_lane, first_tower_lane_lost_dict),
-            (side_first_lost_barracks, first_tower_lane_destroyed_dict),
+            (side_first_lost_barracks, first_barracks_set_lost_dict),
             (side_first_destroyed_lane, first_tower_lane_destroyed_dict),
             (side_first_destroyed_barracks, first_barracks_set_destroyed_dict),
         ]:
-            field_name = name_dict[value]
-            position_towers_status[slot][field_name] = 1.0
+            if value is not None:  # nothing happened
+                field_name = name_dict[value]
+                position_towers_status[slot][field_name] = 1.0
 
 
     dire_left = _find_left_towers(dire_t_died)

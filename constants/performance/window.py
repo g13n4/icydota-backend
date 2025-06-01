@@ -119,7 +119,9 @@ class LaneStageWindows:
     VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10, l12, l15]
     VALUES_REAL_NAMES: list[GameWindow]
 
-    VALUES: list[GameWindow] = VALUES_REAL + [ltotal_max, ltotal_min]
+    VALUES_TOTALS: list[GameWindow] = [ltotal_max, ltotal_min, ltotal_sum]
+
+    VALUES: list[GameWindow] = VALUES_REAL + VALUES_TOTALS
     VALUES_NAMES: list[GameWindow]
 
 
@@ -166,7 +168,9 @@ class GameStageWindows:
     VALUES_REAL: list[GameWindow] = [g5, g15, g25, g35, g47, g60, g60plus]
     VALUES_REAL_NAMES: list[GameWindow]
 
-    VALUES: list[GameWindow] = VALUES_REAL + [gtotal_max, gtotal_min]
+    VALUES_TOTALS: list[GameWindow] = [gtotal_max, gtotal_min, gtotal_sum]
+
+    VALUES: list[GameWindow] = VALUES_REAL + VALUES_TOTALS
     VALUES_NAMES: list[GameWindow]
 
 
@@ -176,6 +180,8 @@ class AllWindows(LaneStageWindows, GameStageWindows):
 
     VALUES: list[GameWindow] = LaneStageWindows.VALUES + GameStageWindows.VALUES
     VALUES_NAMES: list[GameWindow]
+
+    VALUES_TOTALS: list[GameWindow] = LaneStageWindows.VALUES_TOTALS + GameStageWindows.VALUES_TOTALS
 
     VALUES_REAL: list[GameWindow] = LaneStageWindows.VALUES_REAL + GameStageWindows.VALUES_REAL
     VALUES_REAL_NAMES: list[GameWindow]

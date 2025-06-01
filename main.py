@@ -107,7 +107,7 @@ async def get_league_matches_route(
 
 
 # DATA
-@icydota_api.get(API_PREFIX + 'data/match/{pot}/{match_id}/{data_type}')
+@icydota_api.get(API_PREFIX + '/data/match/{pot}/{match_id}/{data_type}')
 async def get_performance_data_api(
         match_id: int,
         data_type: int,
@@ -145,7 +145,7 @@ async def get_performance_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + 'data/aggregation/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}')
+@icydota_api.get(API_PREFIX + '/data/aggregation/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}')
 async def get_performance_aggregated_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
@@ -177,7 +177,7 @@ async def get_performance_aggregated_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + 'data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}')
+@icydota_api.get(API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}')
 async def get_performance_cross_comparison_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
@@ -285,3 +285,8 @@ if not LIGHT_MODE:
 #
 #
 #     uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, use_colors=True)
+
+
+# blast - 17418
+# last dream league - 18111
+# fissure universe - 17907

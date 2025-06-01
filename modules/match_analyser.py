@@ -489,5 +489,5 @@ class MatchAnalyser:
             'damage': pd.DataFrame(damage),
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
-            'draft': pd.DataFrame()
+            'draft': pd.DataFrame(draft)
         }

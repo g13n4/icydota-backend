@@ -22,7 +22,7 @@ OFFSET = 1
 
 
 class PerformanceDataProcessor:
-    ROWS_SIZE = len(WindowCalculations.VALUES)
+    ROWS_SIZE = len(list(WindowCalculations.VALUES))
     COLUMNS_SIZE = len(AllWindows.VALUES)
 
     COLUMN_MAP = { item.name: item.index - OFFSET for item in AllWindows.VALUES }

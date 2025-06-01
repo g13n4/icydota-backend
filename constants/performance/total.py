@@ -62,8 +62,7 @@ def set_total_name(klass: object):
                 item.optional = True
 
 
-    setattr(klass, 'VALUES', values)
-    setattr(klass, 'VALUES_NAMES', get_only_names(values))
+    setattr(klass, '_VALUES', values)
 
     return klass
 

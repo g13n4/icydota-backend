@@ -85,5 +85,3 @@ WindowCalculations.VALUES_NAMES = WindowCalculations.VALUES(only_field="name")
 WindowCalculations.DB_INDEX_MAP = {
     item.value: item.db_id for item in WindowCalculations.VALUES
 }
-
-print(list(WindowCalculations.VALUES(only_field="index")))

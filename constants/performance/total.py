@@ -72,6 +72,10 @@ class GameTotalsIterator:
         self._values = values
 
 
+    def __len__(self):
+        return len(list(self))
+
+
     def __call__(
             self,
             only_pseudo_bools: bool = False,

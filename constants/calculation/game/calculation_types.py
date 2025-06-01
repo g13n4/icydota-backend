@@ -15,8 +15,14 @@ class WindowCalculationsIterator:
     def __init__(self, values: list[CalculationItem]):
         self._values = values
 
+
     def __iter__(self):
         yield from self._values
+
+
+    def __len__(self):
+        return len(list(self))
+
 
     def __call__(
             self,

@@ -1,9 +1,6 @@
 from celery import shared_task
-from sqlmodel import Session
 
 from constants.calculation.game.calculation_types import WindowCalculations
-from db import get_sync_db_session
-from models import League
 from models.performance import Performance
 from models.performance_data_type import ByTeamType
 from modules.processors.totals import TotalPerformanceProcessor
@@ -11,6 +8,7 @@ from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 from tasks.aggregation.helpers import team_aggregation_league_participants_query_creator
 from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
+from tasks.task_decorator import processing_task_decorator
 
 
 # logging.basicConfig()
@@ -28,7 +26,7 @@ def create_performance_objs(
         patch_id: int | None,
 ) -> dict[tuple, Performance]:
     output = dict()
-    query, names = team_aggregation_league_participants_query_creator(league_id=league_id)
+    query, names = team_aggregation_league_participants_query_creator(league_id=league_id, patch_id=patch_id)
     league_participants = db_session.exec(query)
 
     for row in league_participants:
@@ -58,15 +56,9 @@ def create_performance_objs(
     return output
 
 
-# TODO: add patch_id functionality
 @shared_task(name="aggregate_league_team", ignore_result=True)
-def aggregate_league_team(league_id: int | None, patch_id: int | None = None):
-    db_session: Session = get_sync_db_session(expire=False)
-
-    league_obj = db_session.get(League, league_id)
-    if not league_obj or not (league_id or patch_id):
-        raise ValueError("No such league in the database")
-
+@processing_task_decorator
+def aggregate_league_team(db_session, league_id: int | None = None, patch_id: int | None = None):
     columns = ['team_id']
 
     performance_dict = create_performance_objs(db_session=db_session, league_id=league_id, patch_id=patch_id)

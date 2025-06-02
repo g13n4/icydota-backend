@@ -12,6 +12,7 @@ from modules.query_creators.cross_comparison_query_creator_function import (
     team_ccomparison_query_creator,
 )
 from tasks.helpers import process_data, get_query_data
+from tasks.task_decorator import processing_task_decorator
 
 
 def _get_key(data: dict, is_flat: bool | None) -> tuple[int, int, bool | None]:
@@ -47,13 +48,8 @@ def create_performance_dict(
 
 
 @shared_task(name="cross_comparison_league_team", ignore_result=True)
-def cross_comparison_league_team(league_id: int, patch_id: int | None = None):
-    db_session: Session = get_sync_db_session(expire=False)
-
-    league_obj = db_session.get(League, league_id)
-    if not league_obj or not (league_id or patch_id):
-        raise ValueError("No such league in the database")
-
+@processing_task_decorator
+def cross_comparison_league_team(db_session, league_id: int, patch_id: int | None = None):
     columns = ['team_cpd_id', 'team_cps_id']
 
     for is_flat in [True, False]:

@@ -11,6 +11,7 @@ from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.cross_comparison_query_creator_function import match_ccomparison_query_creator
 from tasks.cross_comparison.helpers import CrossComparisonKeyCreator, COMPARISON_TYPE_POSITION_MAP
 from tasks.helpers import process_data, get_query_data
+from tasks.task_decorator import processing_task_decorator
 
 
 logger = get_task_logger(__name__)
@@ -55,13 +56,8 @@ def create_performance_dict(
 
 
 @shared_task(name="cross_comparison_league_match", ignore_result=True)
-def cross_comparison_league_match(ccomparison_type: int, league_id: int | None = None,  patch_id: int | None = None):
-    db_session: Session = get_sync_db_session(expire=False)
-
-    league_obj = db_session.get(League, league_id)
-    if not league_obj or not (league_id or patch_id):
-        raise ValueError("No such league in the database")
-
+@processing_task_decorator
+def cross_comparison_league_match(db_session, ccomparison_type: int, league_id: int | None = None,  patch_id: int | None = None):
     CCKC = CrossComparisonKeyCreator(ccomparison_type)
     columns = CCKC.get_fields()
 

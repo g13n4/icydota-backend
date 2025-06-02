@@ -367,4 +367,4 @@ class GameTotals:
 
 
 GameTotals.VALUES = GameTotalsIterator(GameTotals._VALUES)
-GameTotals.VALUES_NAMES = GameTotals.VALUES(only_field="name")
+GameTotals.VALUES_NAMES = list(GameTotals.VALUES(only_field="name"))

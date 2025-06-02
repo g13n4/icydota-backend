@@ -85,7 +85,7 @@ class WindowCalculations(
 
 
 WindowCalculations.VALUES = WindowCalculationsIterator(WindowCalculations._VALUES)
-WindowCalculations.VALUES_NAMES = WindowCalculations.VALUES(only_field="name")
+WindowCalculations.VALUES_NAMES = list(WindowCalculations.VALUES(only_field="name"))
 
 
 WindowCalculations.DB_INDEX_MAP = {

@@ -239,13 +239,13 @@ if not LIGHT_MODE:
         return { 'status': 'processing' }
 
 
-    @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_id}', status_code=202)
+    @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
     async def aggregate_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         aggregate_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-    @icydota_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_id}', status_code=202)
+    @icydota_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=202)
     async def create_cross_comparison_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
@@ -290,3 +290,6 @@ if not LIGHT_MODE:
 # blast - 17418
 # last dream league - 18111
 # fissure universe - 17907
+
+# patch 7.39 - 58
+# patch 7.38 - 57

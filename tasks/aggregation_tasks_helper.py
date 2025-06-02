@@ -25,7 +25,7 @@ def delete_league(league_id: int) -> None:
     delete_league_task.si(league_id=league_id)
 
 
-def aggregate_league_task_helper(league_id: int | None, patch_id: int | None) -> None:
+def aggregate_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
     aggregation_tasks = chain(
         aggregate_league_match.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
         for aggregation_type in AggregationConstant.VALUES
@@ -41,7 +41,7 @@ def aggregate_league_task_helper(league_id: int | None, patch_id: int | None) ->
     all_tasks()
 
 
-def cross_compare_league_task_helper(league_id: int, patch_id: int | None) -> None:
+def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
     ccomparison_tasks = chain(
         cross_comparison_league_match.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type)
         for ccomparison_type in CrossComparisonTypeConstant.VALUES

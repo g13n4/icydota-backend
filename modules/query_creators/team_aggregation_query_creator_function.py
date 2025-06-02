@@ -20,8 +20,6 @@ def team_aggregation_query_creator(
     else:
         raise ValueError("No league_id value or patch_id value provided")
 
-
-
     models.add(ByTeamType.team_id, 'team_id', True)
     models.add(ByTeamType.team_cpd_id, 'team_cpd_id', True)
 

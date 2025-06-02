@@ -30,7 +30,7 @@ def unpack_row(row: Iterable, names: list[str]) -> dict[str, Any]:
         if name in [WindowEmptyMask.l_empty_mask, WindowEmptyMask.g_empty_mask]:
             mask_data = process_mask(name, value)
             output_mask.update(mask_data)
-        elif name in ['window_table', 'total_data'] and  value is not None:
+        elif name in ['window_table', 'total_data'] and value is not None:
             model_dump = value.model_dump(exclude=set(DATA_MODEL_IGNORE_FIELDS))
             output.update(model_dump)
         else:

@@ -1,8 +1,8 @@
-"""init
+"""innit
 
-Revision ID: 729ea122d8ba
+Revision ID: 726221ac25d6
 Revises: 
-Create Date: 2025-05-17 02:13:04.586022
+Create Date: 2025-06-02 15:22:30.661325
 
 """
 from typing import Sequence, Union
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '729ea122d8ba'
+revision: str = '726221ac25d6'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -117,7 +117,10 @@ def upgrade() -> None:
     sa.Column('l10', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('l12', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('l15', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('ltotal', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('l20', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('ltotal_max', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('ltotal_min', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('ltotal_sum', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('g5', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('g15', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('g25', sa.Numeric(precision=10, scale=2), nullable=True),
@@ -125,7 +128,9 @@ def upgrade() -> None:
     sa.Column('g47', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('g60', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('g60plus', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('gtotal', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('gtotal_max', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('gtotal_min', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('gtotal_sum', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -186,7 +191,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['hero_id'], ['heroes.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_facets_cdota_name'), 'facets', ['cdota_name'], unique=True)
     op.create_table('performance_ranking_data',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('type_id', sa.Integer(), nullable=True),
@@ -377,7 +381,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_by_team_types_is_flat'), 'by_team_types', ['is_flat'], unique=False)
     op.create_table('comparison_types',
-    sa.Column('id', sa.SMALLINT(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('is_flat', sa.Boolean(), nullable=True),
     sa.Column('basic', sa.Boolean(), nullable=True),
     sa.Column('cpd_name_short', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -404,7 +408,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['pos_cps_id'], ['positions.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_comparison_types_id'), 'comparison_types', ['id'], unique=False)
     op.create_table('cross_comparison_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('league_id', sa.Integer(), nullable=True),
@@ -456,8 +459,8 @@ def upgrade() -> None:
     sa.Column('buyback_count', sa.Numeric(precision=4, scale=2), nullable=True),
     sa.Column('observer_uses', sa.Numeric(precision=4, scale=2), nullable=True),
     sa.Column('sentry_uses', sa.Numeric(precision=4, scale=2), nullable=True),
-    sa.Column('lane_efficiency', sa.Numeric(precision=6, scale=4), nullable=True),
-    sa.Column('lane_efficiency_pct', sa.Numeric(precision=6, scale=4), nullable=True),
+    sa.Column('lane_efficiency', sa.Numeric(precision=4, scale=3), nullable=True),
+    sa.Column('lane_efficiency_pct', sa.Numeric(precision=6, scale=2), nullable=True),
     sa.Column('first_blood_claimed', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('first_kill_time', sa.Integer(), nullable=True),
     sa.Column('died_first', sa.Numeric(precision=3, scale=2), nullable=True),
@@ -478,8 +481,8 @@ def upgrade() -> None:
     sa.Column('denies', sa.Numeric(precision=6, scale=2), nullable=True),
     sa.Column('gold_per_min', sa.Numeric(precision=6, scale=2), nullable=True),
     sa.Column('xp_per_min', sa.Numeric(precision=6, scale=2), nullable=True),
-    sa.Column('level', sa.Numeric(precision=4, scale=2), nullable=True),
-    sa.Column('net_worth', sa.Numeric(precision=7, scale=2), nullable=True),
+    sa.Column('level', sa.Numeric(precision=5, scale=2), nullable=True),
+    sa.Column('net_worth', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('aghanims_scepter', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('aghanims_shard', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('moonshard', sa.Numeric(precision=3, scale=2), nullable=True),
@@ -487,12 +490,30 @@ def upgrade() -> None:
     sa.Column('tower_damage', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('hero_healing', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('no_assists', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_destroyed_mid', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_destroyed_top', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_destroyed_bot', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_lost_mid', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_lost_top', sa.Numeric(precision=3, scale=2), nullable=True),
-    sa.Column('first_lost_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_destroyed_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_destroyed_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_destroyed_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lost_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lost_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lost_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_pick_win', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_pick_lose', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('last_pick_win', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('last_pick_lose', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('last_pick_hero', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_pick_hero', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_destroyed_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_destroyed_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_destroyed_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_lost_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_lost_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_tower_lane_lost_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_destroyed_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_destroyed_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_destroyed_bot', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_lost_mid', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_lost_top', sa.Numeric(precision=3, scale=2), nullable=True),
+    sa.Column('first_barracks_set_lost_bot', sa.Numeric(precision=3, scale=2), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('performance_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['performance_id'], ['performances.id'], ondelete='CASCADE'),
@@ -543,7 +564,6 @@ def downgrade() -> None:
     op.drop_table('performance_totals_data')
     op.drop_table('data_aggregation_types')
     op.drop_table('cross_comparison_types')
-    op.drop_index(op.f('ix_comparison_types_id'), table_name='comparison_types')
     op.drop_table('comparison_types')
     op.drop_index(op.f('ix_by_team_types_is_flat'), table_name='by_team_types')
     op.drop_table('by_team_types')
@@ -564,7 +584,6 @@ def downgrade() -> None:
     op.drop_table('performance_window_calculation_types')
     op.drop_index(op.f('ix_performance_ranking_data_type_id'), table_name='performance_ranking_data')
     op.drop_table('performance_ranking_data')
-    op.drop_index(op.f('ix_facets_cdota_name'), table_name='facets')
     op.drop_table('facets')
     op.drop_table('buildings_data')
     op.drop_table('approximated_positions')

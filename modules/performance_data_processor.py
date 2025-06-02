@@ -20,7 +20,6 @@ from modules.processors.windows import WindowsPerformanceProcessor
 
 OFFSET = 1
 
-
 class PerformanceDataProcessor:
     ROWS_SIZE = len(list(WindowCalculations.VALUES))
     COLUMNS_SIZE = len(AllWindows.VALUES)

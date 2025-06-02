@@ -264,14 +264,14 @@ def process_additional_replay_data(
         win = this_total_perf_obj.win == True
         lose = this_total_perf_obj.win == False
 
-        this_total_perf_obj.first_pick_win = first_pick and win
-        this_total_perf_obj.first_pick_lose = first_pick and lose
+        this_total_perf_obj.first_pick_win = int(first_pick and win)
+        this_total_perf_obj.first_pick_lose = int(first_pick and lose)
 
-        this_total_perf_obj.last_pick_win = last_pick and win
-        this_total_perf_obj.last_pick_lose = last_pick and lose
+        this_total_perf_obj.last_pick_win = int(last_pick and win)
+        this_total_perf_obj.last_pick_lose = int(last_pick and lose)
 
-        this_total_perf_obj.first_pick_hero = first_pick
-        this_total_perf_obj.last_pick_hero = last_pick
+        this_total_perf_obj.first_pick_hero = int(first_pick)
+        this_total_perf_obj.last_pick_hero = int(last_pick)
 
         db_session.add(this_total_perf_obj)
 

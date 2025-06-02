@@ -116,7 +116,7 @@ class LaneStageWindows:
     l_empty_mask: str = 'l_empty_mask'
     empty_mask: str = 'l_empty_mask'
 
-    VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10, l12, l15]
+    VALUES_REAL: list[GameWindow] = [l2, l4, l6, l8, l10, l12, l15, l20]
     VALUES_REAL_NAMES: list[GameWindow]
 
     VALUES_TOTALS: list[GameWindow] = [ltotal_max, ltotal_min, ltotal_sum]

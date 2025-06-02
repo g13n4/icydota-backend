@@ -21,7 +21,7 @@ def delete_aggregation_match(league_id: int | None, patch_id: int | None):
         select(Performance.id)
         .join(AggregationType, AggregationType.performance_id == Performance.id)
         .where(
-            where,
+            *where,
             col(Performance.type_id).in_(
                 [
                     Performance.const.game.AGGREGATION,
@@ -49,7 +49,7 @@ def delete_aggregation_team(league_id: int | None, patch_id: int | None):
     select_performance_ids = (select(Performance.id)
     .join(ByTeamType, ByTeamType.performance_id == Performance.id)
     .where(
-        where,
+        *where,
         col(Performance.type_id).in_(
             [
                 Performance.const.team.TEAM_MATCH_AGGREGATION,

@@ -7,10 +7,7 @@ from modules.performance_data_processor import PerformanceDataProcessor
 def postprocess_windows(
         PDP: PerformanceDataProcessor,
 ) -> None:
-    for window in WindowCalculations.VALUES:
-        if not window.postprocessing.calculated_later:
-            continue
-
+    for window in WindowCalculations.VALUES(only_calculated_later=True):
         for slot in range(10):
             window_data = PDP.windows_data[slot]
 

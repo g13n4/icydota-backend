@@ -10,6 +10,7 @@ from sqlmodel import Session
 from celery import shared_task
 
 from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data, get_query_data
+from tasks.task_decorator import processing_task_decorator
 
 
 def create_performance_objs(
@@ -19,7 +20,7 @@ def create_performance_objs(
         patch_id: int | None,
         ) -> dict[tuple, Performance]:
     output = dict()
-    query, names = match_aggregation_league_participants_query_creator(league_id=league_id)
+    query, names = match_aggregation_league_participants_query_creator(league_id=league_id, patch_id=patch_id)
     league_participants = db_session.exec(query)
 
     for row in league_participants:
@@ -60,14 +61,8 @@ def create_performance_objs(
     return output
 
 @shared_task(name="aggregate_league_match", ignore_result=True)
-def aggregate_league_match(aggregation_type: int, league_id: int | None = None,  patch_id: int | None = None):
-    db_session: Session = get_sync_db_session(expire=False)
-
-
-    league_obj = db_session.get(League, league_id)
-    if not league_obj or not (league_id or patch_id):
-        raise ValueError("No such league in the database")
-
+@processing_task_decorator
+def aggregate_league_match(db_session, aggregation_type: int, league_id: int | None = None,  patch_id: int | None = None):
     AGC = AggregationKeyCreator(aggregation_type)
     columns = AGC.get_fields()
 

@@ -21,7 +21,7 @@ def delete_cross_comparison_match(league_id: int | None, patch_id: int | None):
         select(Performance.id)
         .join(AggregationType, AggregationType.performance_id == Performance.id)
         .where(
-            where,
+            *where,
             Performance.type_id == Performance.const.game.CROSS_COMPARISON,
         )
     )
@@ -46,7 +46,7 @@ def delete_cross_comparison_team(league_id: int, patch_id: int):
         select(Performance.id)
         .join(ByTeamType, ByTeamType.performance_id == Performance.id)
         .where(
-            where,
+            *where,
             Performance.type_id == Performance.const.team.TEAM_MATCH_CROSS_COMPARISON,
         )
     )

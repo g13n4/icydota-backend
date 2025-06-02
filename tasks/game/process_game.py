@@ -15,6 +15,7 @@ from models import Player, Team, SidePerformanceData, PlayerGameData, Game, Posi
 from models.game import Patch
 from models.performance import PerformanceTotalData
 from tasks.game.helpers import fix_odota_data
+from tasks.game.manual_processing import check_for_manual_fix_inplace
 from tasks.game.proces_game_replay import process_game_replay
 from tasks.league.create_league import get_or_create_league
 from utils import none_to_zero, get_or_create, get_positions_approximations
@@ -295,7 +296,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         db_session.add(PTD_obj)
 
-        player_data_dict[this_slot] = {
+        player_data = {
             'position': this_position,
             'position_id': this_position,
             'hero_id': this_hero,
@@ -304,6 +305,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
             'player_game_data': PGD_obj,
             'performance_total_data': PTD_obj,
         }
+
+        check_for_manual_fix_inplace(game_id=match_id, data=player_data)
+        player_data_dict[this_slot] = player_data
 
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(

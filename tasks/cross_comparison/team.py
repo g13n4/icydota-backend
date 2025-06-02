@@ -1,9 +1,6 @@
 from celery import shared_task
-from sqlmodel import Session
 
 from constants.calculation.game.calculation_types import WindowCalculations
-from db import get_sync_db_session
-from models import League
 from models.performance import Performance
 from models.performance_data_type import ByTeamType
 from modules.processors.totals import TotalPerformanceProcessor

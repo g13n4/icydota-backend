@@ -33,7 +33,7 @@ def processing_task_decorator(func):
         else:
             raise ValueError("No league or patch id were provided")
 
-        result = func(db_session=db_session, league_id=league_id, patch_id=patch_id, **kwargs)
+        result = func(db_session=db_session, **kwargs)
         return result
 
     return wrapper

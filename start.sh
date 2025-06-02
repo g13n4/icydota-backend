@@ -2,10 +2,11 @@
 
 echo "Choose console command to run"
 echo "0 - fastapi uvicorn app"
-echo "1 - celery app (4 threads)"
-echo "2 - celery app (solo)"
-echo "3 - celery app flower"
-echo "4 - celery purge queue"
+echo "1 - celery app (solo)"
+echo "2 - celery app (4 threads)"
+echo "3 - celery app (8 threads)"
+echo "4 - celery app flower"
+echo "5 - celery purge queue"
 while :
 do
   read -r INT_INPUT
@@ -15,18 +16,22 @@ do
 		break
 		;;
 	1)
-		celery --app=celery_app worker --concurrency=4 -l INFO -E -P gevent
-		break
-		;;
-	2)
 		celery --app=celery_app worker --concurrency=1 -l INFO -E -P solo
 		break
 		;;
+  2)
+		celery --app=celery_app worker --concurrency=4 -l INFO -E -P gevent
+		break
+		;;
 	3)
+		celery --app=celery_app worker --concurrency=8 -l INFO -E -P gevent
+		break
+		;;
+	4)
 		celery --app=celery_app flower
 		break
 		;;
-  4)
+  5)
     celery --app=celery_app purge
 		break
 		;;

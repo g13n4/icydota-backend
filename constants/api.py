@@ -4,15 +4,15 @@ from utils import CaseInsensitiveEnum
 
 
 class CrossComparisonPositionEnum(CaseInsensitiveEnum):
-    SUPPORT = "support"
-    CORE = "core"
-    MID = "mid"
+    support = "support"
+    core = "core"
+    mid = "mid"
 
 
 class GameStageEnum(CaseInsensitiveEnum):
-    LANE = "lane"
-    GAME = "game"
-    BOTH = "both"
+    lane = "lane"
+    game = "game"
+    both = "both"
 
 
     @classmethod
@@ -20,36 +20,54 @@ class GameStageEnum(CaseInsensitiveEnum):
         for member in cls:
             if member.lower() == value.lower():
                 return member
-        return cls.BOTH
+        return cls.both
 
 
 class FieldTypesEnum(CaseInsensitiveEnum):
-    WINDOW = "window"
-    TOTAL = "total"
+    window = "window"
+    total = "total"
 
 
 class ComparisonTypeEnum(CaseInsensitiveEnum):
-    PLAYER = False
-    GENERAL = True
+    player = "player"
+    general = "general"
+
+    def to_value(self) -> bool:
+        if self == self.player:
+            return False
+        elif self == self.general:
+            return True
+
+        raise ValueError("Can only be used if Enum is value")
 
 
-class ComparisonEnum(enum.Enum):
-    FLAT = True
-    PERC = False
-    NONE = None
+class ComparisonEnum(CaseInsensitiveEnum):
+    flat = "flat"
+    perc = "perc"
+    none = "none"
+
+    def to_value(self)  -> bool | None:
+        if self == self.flat:
+            return True
+        elif self == self.perc:
+            return False
+        elif self == self.none:
+            return None
+
+        raise ValueError("Can only be used if Enum is value")
 
 
 class PoTEnum(CaseInsensitiveEnum):
-    PLAYER = "player"
-    TEAM = "team"
+    PLAYER = "PLAYER"
+    TEAM = "TEAM"
 
     def isPlayer(self):
         return self == PoTEnum.PLAYER
 
 
 class LoPEnum(CaseInsensitiveEnum):
-    LEAGUE = "league"
-    PATCH = "patch"
+    LEAGUE = "LEAGUE"
+    PATCH = "PATCH"
 
     def to_api(self, value: int) -> tuple[int | None, int | None]:
         if self == LoPEnum.LEAGUE:

@@ -33,7 +33,7 @@ class PerformanceQueryCreatorMixin:
         else:
             self.models.add(getattr(self.data_model, field), field)
 
-        self.joins.add(Performance, self.data_model.game_performance_id == Performance.id)
+        self.joins.add(Performance, self.data_model.performance_id == Performance.id)
 
         if calculation_type_id > 0:
             self.models.add(PerformanceWindowTable, 'window_table', True)

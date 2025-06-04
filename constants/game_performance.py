@@ -28,6 +28,6 @@ class AbilitiesPerformanceTypeConstant:
 
 
 class PerformanceTypeConstant:
-    ability: [AbilitiesPerformanceTypeConstant] = AbilitiesPerformanceTypeConstant
-    game: [GamePerformanceTypeConstant] = GamePerformanceTypeConstant
-    team: [TeamPerformanceConstant] = TeamPerformanceConstant
+    ability: AbilitiesPerformanceTypeConstant = AbilitiesPerformanceTypeConstant
+    game: GamePerformanceTypeConstant = GamePerformanceTypeConstant
+    team: TeamPerformanceConstant = TeamPerformanceConstant

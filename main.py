@@ -113,18 +113,20 @@ async def get_performance_data_api(
         data_type: int,
         pot: PoTEnum,
         stage: GameStageEnum,
-        comparison: ComparisonEnum | bool = None,
-        ctype: ComparisonTypeEnum = ComparisonTypeEnum.PLAYER,
+        comp: ComparisonEnum = ComparisonEnum.none,
+        ctype: ComparisonTypeEnum = ComparisonTypeEnum.player,
         db=Depends(get_async_db_session)
 ):
+    flat = comp.to_value()
+    ctype = ctype.to_value()
 
-    if comparison is None:
+    if flat is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
             db_session=db,
             pot=pot,
             match_id=match_id,
             data_type=data_type,
-            game_stage=stage,
+            game_stage=stage.value,
         )
     else:
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(
@@ -132,9 +134,9 @@ async def get_performance_data_api(
             pot=pot,
             match_id=match_id,
             calculation_type_id=data_type,
-            game_stage=stage,
-            basic=ctype.value,
-            flat=comparison,
+            game_stage=stage.value,
+            basic=ctype,
+            flat=flat,
         )
 
     output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
@@ -153,10 +155,11 @@ async def get_performance_aggregated_data_api(
         aggregation_type: int,
         game_stage: GameStageEnum,
         data_type: int,
-        flat: bool = True,
+        comp: ComparisonEnum = ComparisonEnum.flat,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)
+    flat = comp.to_value()
 
     items, value_mapping, sum_total = await get_aggregated_performance_data(
         db_session=db,
@@ -165,7 +168,7 @@ async def get_performance_aggregated_data_api(
         patch_id=patch_id,
         aggregation_type=aggregation_type,
         calculation_type_id=data_type,
-        game_stage=game_stage,
+        game_stage=game_stage.value,
         flat=flat
     )
 
@@ -186,11 +189,11 @@ async def get_performance_cross_comparison_data_api(
         aggregation_type: int,
         position: int,
         data_field: str,
-        flat: ComparisonEnum = ComparisonEnum.FLAT,
+        comp: ComparisonEnum = ComparisonEnum.flat,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)
-
+    flat = comp.to_value()
 
     data_dict, values_info = await get_cross_comparison_performance_data(
         db_session=db,
@@ -201,7 +204,7 @@ async def get_performance_cross_comparison_data_api(
         position=position,
         data_field=data_field,
         calculation_type_id=data_type,
-        flat=flat.value,
+        flat=flat,
     )
 
     if not data_dict.keys():

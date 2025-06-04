@@ -10,7 +10,7 @@ from constants.performance.window import WINDOWS_BY_MASK, AllWindows, WindowEmpt
 from modules.empty_mask_converter import EmptyMaskConverter
 
 
-DATA_MODEL_IGNORE_FIELDS = ['id', 'game_performance_id']
+DATA_MODEL_IGNORE_FIELDS = ['id', 'performance_id']
 PROCESSING_COMPARISON_LIST = [(False, None), (True, True), (True, False), ]
 
 

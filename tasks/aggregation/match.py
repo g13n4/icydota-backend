@@ -1,15 +1,14 @@
+from celery import shared_task
+
 from constants.calculation.game.calculation_types import WindowCalculations
-from db import get_sync_db_session
-from models import AggregationType, ComparisonType, League
+from models import AggregationType, ComparisonType
 from models.performance import Performance
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.match_aggregation_query_creator_function import match_aggregation_query_creator
-from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, match_aggregation_league_participants_query_creator
-from sqlmodel import Session
-from celery import shared_task
-
-from tasks.helpers import PROCESSING_COMPARISON_LIST, unpack_row, process_data, get_query_data
+from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, \
+    match_aggregation_league_participants_query_creator
+from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
 from tasks.task_decorator import processing_task_decorator
 
 
@@ -18,7 +17,7 @@ def create_performance_objs(
         league_id: int | None,
         AGC: AggregationKeyCreator,
         patch_id: int | None,
-        ) -> dict[tuple, Performance]:
+) -> dict[tuple, Performance]:
     output = dict()
     query, names = match_aggregation_league_participants_query_creator(league_id=league_id, patch_id=patch_id)
     league_participants = db_session.exec(query)
@@ -60,9 +59,15 @@ def create_performance_objs(
 
     return output
 
+
 @shared_task(name="aggregate_league_match", ignore_result=True)
 @processing_task_decorator
-def aggregate_league_match(db_session, aggregation_type: int, league_id: int | None = None,  patch_id: int | None = None):
+def aggregate_league_match(
+        db_session,
+        aggregation_type: int,
+        league_id: int | None = None,
+        patch_id: int | None = None
+        ):
     AGC = AggregationKeyCreator(aggregation_type)
     columns = AGC.get_fields()
 
@@ -76,7 +81,7 @@ def aggregate_league_match(db_session, aggregation_type: int, league_id: int | N
                 calculation_type_id=calculation.db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat
-                )
+            )
             data = get_query_data(db_session=db_session, query=query, names=names)
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):
@@ -93,7 +98,7 @@ def aggregate_league_match(db_session, aggregation_type: int, league_id: int | N
             calculation_type_id=None,
             is_comparison=is_comparison,
             is_flat=is_flat,
-            )
+        )
         data = get_query_data(db_session=db_session, query=query, names=names)
 
         for total_data in process_data(data=data, group_by=columns, is_window=False):

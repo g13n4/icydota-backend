@@ -1,6 +1,19 @@
 import enum
 
-from utils import CaseInsensitiveEnum
+
+class CaseInsensitiveEnum(str, enum.Enum):
+    @classmethod
+    def _missing_(cls, value: str):
+        for member in cls:
+            if member.lower() == value.lower():
+                return member
+        return None
+
+
+class ProcessTypes(CaseInsensitiveEnum):
+    league = "league"
+    aggregation = "aggregation"
+    cross_comparison = "cross_comparison"
 
 
 class CrossComparisonPositionEnum(CaseInsensitiveEnum):
@@ -32,6 +45,7 @@ class ComparisonTypeEnum(CaseInsensitiveEnum):
     player = "player"
     general = "general"
 
+
     def to_value(self) -> bool:
         if self == self.player:
             return False
@@ -46,7 +60,8 @@ class ComparisonEnum(CaseInsensitiveEnum):
     perc = "perc"
     none = "none"
 
-    def to_value(self)  -> bool | None:
+
+    def to_value(self) -> bool | None:
         if self == self.flat:
             return True
         elif self == self.perc:
@@ -58,20 +73,21 @@ class ComparisonEnum(CaseInsensitiveEnum):
 
 
 class PoTEnum(CaseInsensitiveEnum):
-    PLAYER = "PLAYER"
-    TEAM = "TEAM"
+    player = "player"
+    team = "team"
+
 
     def isPlayer(self):
-        return self == PoTEnum.PLAYER
+        return self == PoTEnum.player
 
 
 class LoPEnum(CaseInsensitiveEnum):
-    LEAGUE = "LEAGUE"
-    PATCH = "PATCH"
+    league = "league"
+    patch = "patch"
+
 
     def to_api(self, value: int) -> tuple[int | None, int | None]:
-        if self == LoPEnum.LEAGUE:
+        if self == LoPEnum.league:
             return value, None
         else:
             return None, value
-

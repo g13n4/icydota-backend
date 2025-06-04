@@ -1,6 +1,6 @@
+import re
 from math import floor
 from typing import Any, Optional, List
-import re
 
 
 class IncorrectDataCombination(Exception):
@@ -15,10 +15,12 @@ class TableMinMaxFinder:
     because white is colours[0]
     """
 
+
     def __init__(self, index_steps: int = 10):
         self.data = dict()
         self.index_steps = index_steps
         self.alias = dict()
+
 
     def add(self, column: str, value: int | float | None) -> None:
         if not value:
@@ -34,8 +36,10 @@ class TableMinMaxFinder:
         self.data[column]["max"] = max(self.data[column]["max"], value)
         self.data[column]["min"] = min(self.data[column]["min"], value)
 
+
     def add_alias(self, key_: Any, value: Any):
         self.alias[key_] = value
+
 
     def _calculate_index(self, column: str, value: int | float | None) -> int:
         max_value = self.data[column]["max"]
@@ -65,7 +69,13 @@ class TableMinMaxFinder:
         return False
 
 
-    def insert_index_in_dict(self, item: dict, column: str, value: int | float, inplace: bool = False) -> Optional[dict]:
+    def insert_index_in_dict(
+            self,
+            item: dict,
+            column: str,
+            value: int | float,
+            inplace: bool = False
+    ) -> Optional[dict]:
         item[f'_index_{column}'] = self.get_index(value=value, column=column)
         if inplace:
             return None
@@ -73,7 +83,13 @@ class TableMinMaxFinder:
             return item
 
 
-    def insert_index_in_dict_bulk(self, data: List[dict], include: List[str] = None, exclude: List[str] = None, inplace: bool = False):
+    def insert_index_in_dict_bulk(
+            self,
+            data: List[dict],
+            include: List[str] = None,
+            exclude: List[str] = None,
+            inplace: bool = False
+    ):
         if (include is None and exclude is None) or (isinstance(include, list) and isinstance(exclude, list)):
             raise IncorrectDataCombination("Only include or exclude should be set")
         elif (include is None and exclude is None):
@@ -95,10 +111,14 @@ class TableMinMaxFinder:
             fields_to_process = [field_name for field_name in data[0].keys()
                                  if (include and field_name in include) or (not (exclude and field_name in exclude))]
             # MUTATE DICTS
-            [self.insert_index_in_dict(item, column=field, value=item[field], inplace=True)
-             for item in data for field in fields_to_process]
+            [
+                self.insert_index_in_dict(item, column=field, value=item[field], inplace=True)
+                for item in data for field in fields_to_process
+            ]
+
+        return None
 
 
     def get_minmax_values(self, use_alias: bool = False) -> List[dict]:
-        return [{'col': (self.alias.get(col, col) if use_alias else col), **col_data}
+        return [{ 'col': (self.alias.get(col, col) if use_alias else col), **col_data }
                 for col, col_data in self.data.items()]

@@ -4,7 +4,26 @@ from typing import Tuple
 from constants.performance.window import WINDOWS_BY_TYPE, WindowType, AllWindows
 from models.performance import PerformanceWindowData, PerformanceWindowTable
 from modules.empty_mask_converter import EmptyMaskConverter
-from utils import is_na_decimal, TableMinMaxFinder
+from modules.minmax_finder import TableMinMaxFinder
+from utils import is_na_decimal
+
+from constants.api import PoTEnum
+from constants.performance.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
+from functools import lru_cache
+
+
+@lru_cache(maxsize=6)
+def get_total_required_fields(
+        data_representation: FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL,
+        pot: PoTEnum,
+):
+    return list(GameTotals.VALUES(available_for=[data_representation, pot.value], only_field="name"))
+
+
+def get_windows_required_fields(
+        game_stage: str,
+):
+    return WINDOWS_BY_TYPE[game_stage].VALUES_NAMES
 
 
 def set_calculated_data(TMMF: TableMinMaxFinder, calculated_data: dict) -> dict:
@@ -17,6 +36,7 @@ def set_calculated_data(TMMF: TableMinMaxFinder, calculated_data: dict) -> dict:
 
         # LOOKING FOR MIN AND MAX VALUES
         TMMF.add(column=field_name, value=value)
+
     return output
 
 
@@ -53,28 +73,33 @@ def extract_window_data_for_field(
     return mask_data.get(field, None)
 
 
-def process_db_output(query,
-                      model_names: list[str],
-                      game_stage: str | None = None,
-                      ) ->  Tuple[list, list, bool]:
+def process_db_output(
+        query,
+        model_names: list[str],
+        pot: PoTEnum,
+        req_type: str,
+        data_model_name: str,
+        game_stage: str | None = None,
+) -> Tuple[list, list, bool]:
     TMMF = TableMinMaxFinder()
     output = []
-    for row in query:
-        row_data = {name: data for name, data in zip(model_names, row)}
 
+    for row in query:
+        row_data = { name: data for name, data in zip(model_names, row) }
         row_data['side'] = 'Dire' if row_data['side'] else 'Sentinel'
 
-        if 'window_data' in row_data or 'window_data' in row_data:
+        if data_model_name == 'window_data':
             window_data = extract_window_data(row_data['window_data'], row_data['window_table'], game_stage)
             calculated_data = set_calculated_data(TMMF=TMMF, calculated_data=window_data)
 
             del row_data['window_data']
             del row_data['window_table']
 
-        elif 'total_data' in row_data:
+        elif data_model_name == 'total_data':
+            fields = get_total_required_fields(data_representation=req_type, pot=pot)
             calculated_data = set_calculated_data(
                 TMMF=TMMF,
-                calculated_data=row_data['total_data'].model_dump(include=WINDOWS_BY_TYPE[game_stage].VALUES_NAMES)
+                calculated_data=row_data['total_data'].model_dump(include=fields)
             )
 
             del row_data['total_data']
@@ -86,4 +111,3 @@ def process_db_output(query,
         output.append(row_data)
 
     return output, TMMF.get_minmax_values(), TMMF.has_totals()
-

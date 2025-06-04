@@ -1,12 +1,12 @@
 from constants.api import PoTEnum
-from models import PlayerGameData, Player, Position
+from models import PlayerGameData, Player, Position, ByTeamType
 from models.performance import Performance
 from modules.query_creators.helpers import combine_select
 from modules.query_creators.performance.query_creator_mixin import PerformanceQueryCreatorMixin
 
 
 class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
-    def _set_match_select_query_data(
+    def _set_player_select_query_data(
             self,
             calculation_type_id: int,
             match_id: int | None = None,
@@ -27,11 +27,25 @@ class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         self.where.append(PlayerGameData.game_id == match_id)
 
 
+    def _set_team_select_query_data(
+            self,
+            calculation_type_id: int,
+            match_id: int | None = None,
+            is_flat: bool | None = None,
+    ) -> None:
+        self._set_data_model(calculation_type_id=calculation_type_id)
+
+        self._set_by_team_model(is_flat)
+
+        self.where.append(ByTeamType.match_id == match_id)
+
+
     def get_match_query(self, match_id: int, calculation_type_id: int, pot: PoTEnum):
-        self._set_match_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)
         if pot.isPlayer():
+            self._set_player_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)
             self.where.insert(0, Performance.type_id == Performance.const.game.MATCH_DATA)
         else:
+            self._set_team_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id, is_flat=None)
             self.where.insert(0, Performance.type_id == Performance.const.team.TEAM_MATCH_DATA)
 
         return combine_select(self.models.get_models(), self.joins.data, self.where)
@@ -45,12 +59,16 @@ class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             basic: bool,
             is_flat: bool,
     ):
-        self._set_match_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)
-        self._set_comparison_model(basic=basic, is_flat=is_flat, name='compared_to')
-
         if pot.isPlayer():
+            self._set_player_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)
+            self._set_comparison_model(basic=basic, is_flat=is_flat, name='compared_to')
             self.where.append(Performance.type_id == Performance.const.game.MATCH_DATA_COMPARISON)
         else:
+            self._set_team_select_query_data(
+                calculation_type_id=calculation_type_id,
+                match_id=match_id,
+                is_flat=is_flat
+                )
             self.where.append(Performance.type_id == Performance.const.team.TEAM_MATCH_DATA_COMPARISON)
 
         return combine_select(self.models.get_models(), self.joins.data, self.where)

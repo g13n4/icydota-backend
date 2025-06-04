@@ -1,8 +1,8 @@
+from collections.abc import Iterable
 from typing import Any, ClassVar, Optional, Literal
 
 from pydantic import condecimal, BaseModel
 
-from constants.helpers import get_only_names
 from helpers import to_proper_name, UniqueIndexChecker
 
 
@@ -33,6 +33,20 @@ class FieldAvailability(BaseModel):
         return True
 
 
+    def available_for_types(self, *args) -> bool:
+        """
+        :param args: names of the different types of calculations declared in FieldAvailability class
+        :return: bool
+        """
+        for field in args:
+            if not getattr(self, field):
+                return False
+        return True
+
+
+FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[FieldAvailability.__match_args__]
+
+
 class GameTotal(BaseModel):
     value_type: Any
 
@@ -42,7 +56,7 @@ class GameTotal(BaseModel):
     pseudo_bool: bool = False
     availability: None | FieldAvailability = None
     optional: bool = False
-
+    sort_offset: int = 0
 
 def set_total_name(klass: object):
     values = []
@@ -61,7 +75,6 @@ def set_total_name(klass: object):
             if item.availability is None:
                 item.optional = True
 
-
     setattr(klass, '_VALUES', values)
 
     return klass
@@ -78,20 +91,18 @@ class GameTotalsIterator:
 
     def __call__(
             self,
+            available_for: Iterable | None = None,
             only_pseudo_bools: bool = False,
-            only_always_available: bool = False,
-            only_optional: bool = False,
 
             only_field: Literal["index", "name"] | None = None,
     ):
         for item in self._values:
             if only_pseudo_bools and not item.pseudo_bool:
                 continue
-            if only_always_available and item.availability is not None:
-                continue
-            if only_optional and item.availability is None:
-                continue
 
+            if available_for and item.availability is not None:
+                if not item.availability.available_for_types(*available_for):
+                    continue
 
             if only_field is None:
                 yield item
@@ -362,8 +373,9 @@ class GameTotals:
         pseudo_bool=True
     )
 
-
     _VALUES: ClassVar[list[GameTotal]]
+    VALUES: GameTotalsIterator
+    VALUES_NAMES: list[str]
 
 
 GameTotals.VALUES = GameTotalsIterator(GameTotals._VALUES)

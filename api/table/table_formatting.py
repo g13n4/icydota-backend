@@ -1,31 +1,15 @@
 from typing import List, Optional, Dict
 
-from helpers import to_proper_name
-from utils import PERFORMANCE_FIELD_DICT, performance_data_sort_rating
+from constants.calculation.game.calculation_types import WindowCalculations
+from constants.performance.total import GameTotals
+from constants.performance.window import AllWindows
 
 
-def get_field_name(value: str, sum_total: Optional[bool] = None):
-    if value.endswith('total'):
-        field_name = PERFORMANCE_FIELD_DICT[value]
-        if sum_total is None:
-            field_name += ' (not calculated)'
-        elif sum_total:
-            field_name += ' (SUM)'
-        else:
-            field_name += ' (AVG)'
-
-        return field_name
-
-    if value in PERFORMANCE_FIELD_DICT:
-        return PERFORMANCE_FIELD_DICT[value]
-
-    return to_proper_name(value)
-
-
-def update_row_fields(data: List[dict], rows: list[str]) -> None:
-    for item in data:
-        for row in rows:
-            item[row] = get_field_name(item[row])
+ALL_CALCULATION_FIELDS = {
+    **{ item.name: item.description for item in GameTotals.VALUES },
+    **{ item.name: item.description for item in WindowCalculations.VALUES },
+    **{ item.name: item.description for item in AllWindows.VALUES },
+}
 
 
 def to_table_format(
@@ -45,8 +29,7 @@ def to_table_format(
 
     values = sorted(
         [key_name for key_name in item.keys() if key_name not in rows],
-        key=performance_data_sort_rating
-        )
+    )
 
     fields = {
         'rows': rows,
@@ -58,7 +41,7 @@ def to_table_format(
     meta = [
         {
             'field': x,
-            'name': get_field_name(x, sum_total),
+            'name': ALL_CALCULATION_FIELDS.get(x, x),
         } for x in item.keys()
     ]
 
@@ -81,7 +64,7 @@ def to_table_format_cross_comparison(
         data: Dict[int, list],
         values_info: list,
         aggregation_type: str
-        ) -> dict:
+) -> dict:
     if not data:
         return { }
 

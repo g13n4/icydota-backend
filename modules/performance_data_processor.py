@@ -59,9 +59,9 @@ class PerformanceDataProcessor:
 
     def calculate_windows_totals_by_type(self):
         for name, matrix in self.windows_data.items():
-            for windows, total_windows in AllWindows.WINDOWS_PROCESSING:
-                for total_window in total_windows:
-                    columns_idxs = [item.index - OFFSET for item in windows]
+            for stage in AllWindows.STAGES:
+                for total_window in stage.VALUES_TOTALS:
+                    columns_idxs = [item.index - OFFSET for item in stage.VALUES_REAL]
                     total_window_idx = total_window.index - OFFSET
 
                     matrix[:, total_window_idx] = total_window.agg_func(matrix[:, columns_idxs], axis=1)
@@ -278,6 +278,7 @@ class PerformanceDataProcessor:
                     patch_id=match_data["patch_id"],
                     team_id=match_data[side],
 
+                    is_dire=side == self.DIRE,
                     is_flat=is_flat,
                     team_cpd_id=match_data[side],
                     team_cps_id=match_data[opponents_side],

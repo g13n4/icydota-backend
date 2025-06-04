@@ -1,8 +1,7 @@
 import os
-from typing import Optional, Annotated, Union
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -17,7 +16,6 @@ from api.table.table_formatting import to_table_format_cross_comparison, to_tabl
 from celery_app import celery_app
 from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
 from db import get_async_db_session
-from utils import CaseInsensitiveEnum
 
 
 __all__ = ['celery_app']
@@ -80,28 +78,23 @@ async def get_cross_comparison_fields_route() -> dict:
 
 @icydota_api.get(API_PREFIX + '/league/{league_id}')
 async def get_league_matches_route(
-    league_id: int,
-    db_session: AsyncSession = Depends(get_async_db_session),
+        league_id: int,
+        db_session: AsyncSession = Depends(get_async_db_session),
 ) -> dict:
     output = await get_games(db_session, league_id=league_id)
     return output
 
 
-class AllMatchesTypes(CaseInsensitiveEnum):
-    league = "league"
-    patch = "patch"
-
-
-@icydota_api.get(API_PREFIX + '/all/{type_}/{id_}')
+@icydota_api.get(API_PREFIX + '/all/{lop}/{lod_id}')
 async def get_league_matches_route(
-        type_: AllMatchesTypes,
-        id_: int,
+        lop: LoPEnum,
+        lod_id: int,
         db_session: AsyncSession = Depends(get_async_db_session),
 ) -> dict:
-    if type_ == AllMatchesTypes.league:
-        output = await get_games_all(db_session=db_session, league_id=id_)
+    if lop == LoPEnum.league:
+        output = await get_games_all(db_session=db_session, league_id=lod_id)
     else:
-        output = await get_games_all(db_session=db_session, patch_id=id_)
+        output = await get_games_all(db_session=db_session, patch_id=lod_id)
 
     return output
 
@@ -139,10 +132,10 @@ async def get_performance_data_api(
             flat=flat,
         )
 
-    output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
-
-    if not output:
+    if not items:
         raise HTTPException(status_code=404)
+
+    output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
 
     return output
 
@@ -180,7 +173,9 @@ async def get_performance_aggregated_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}')
+@icydota_api.get(
+    API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}'
+    )
 async def get_performance_cross_comparison_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
@@ -222,7 +217,7 @@ async def get_performance_cross_comparison_data_api(
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
     from tasks.league.cron_tasks import process_league, process_game_helper
-    from tasks.bulk_aggregation_process import process_full_cycle, mass_process
+    from tasks.bulk_aggregation_process import process_full_cycle
     from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
         approximate_positions_helper, set_comparison_names_helper
 
@@ -262,20 +257,6 @@ if not LIGHT_MODE:
     @icydota_api.post(API_PREFIX + '/process/full_cycle/{league_id}', status_code=202)
     async def process_full_cycle_api(league_id: int):
         process_full_cycle(league_id=league_id)
-
-
-    class ProcessTypes(CaseInsensitiveEnum):
-        process_league = "process_league"
-        aggregate_league = "aggregate_league"
-        cross_compare_league = "cross_compare_league"
-
-
-    @icydota_api.post(API_PREFIX + '/process/all/{process_type}', status_code=202)
-    async def mass_process_api(
-            process_type: ProcessTypes,
-            ids: Annotated[Union[list[int], None], Query()] = None
-    ):
-        mass_process(process_type=process_type.value, league_ids=ids)
 
 
     @icydota_api.post(API_PREFIX + '/set_comparison_names', status_code=202)

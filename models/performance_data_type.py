@@ -123,6 +123,7 @@ class ByTeamType(SQLModel, table=True):
     )
 
     is_flat: Optional[bool] = Field(index=True)
+    is_dire: Optional[bool] = Field(index=True)
 
     team_cpd_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")

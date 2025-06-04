@@ -1,4 +1,3 @@
-import enum
 import math
 import re
 from collections.abc import Iterable
@@ -10,6 +9,7 @@ from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
 import numpy as np
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
+
 
 
 T = TypeVar('T')
@@ -151,13 +151,6 @@ def get_positions_approximations(db_session: Session, model, league_id) -> Dict[
     return { pid: poid for pid, poid in objs }
 
 
-class CaseInsensitiveEnum(str, enum.Enum):
-    @classmethod
-    def _missing_(cls, value: str):
-        for member in cls:
-            if member.lower() == value.lower():
-                return member
-        return None
 
 
 def is_na_decimal(value: Any) -> bool:

@@ -178,6 +178,8 @@ class GameStageWindows:
 class AllWindows(LaneStageWindows, GameStageWindows):
     WINDOW_TYPES = [WindowType.lane, WindowType.game]
 
+    STAGES = [LaneStageWindows, GameStageWindows]
+
     VALUES: list[GameWindow] = LaneStageWindows.VALUES + GameStageWindows.VALUES
     VALUES_NAMES: list[GameWindow]
 
@@ -186,10 +188,6 @@ class AllWindows(LaneStageWindows, GameStageWindows):
     VALUES_REAL: list[GameWindow] = LaneStageWindows.VALUES_REAL + GameStageWindows.VALUES_REAL
     VALUES_REAL_NAMES: list[GameWindow]
 
-    WINDOWS_PROCESSING: list[tuple[list[GameWindow], tuple[GameWindow]]] = [
-        (LaneStageWindows.VALUES_REAL, (LaneStageWindows.ltotal_max, LaneStageWindows.ltotal_min,)),
-        (GameStageWindows.VALUES_REAL, (GameStageWindows.gtotal_max, GameStageWindows.gtotal_min,)),
-    ]
 
     EMPTY_MASK_WINDOWS_MAP: list[tuple[list[GameWindow], str]] = [
         (LaneStageWindows.VALUES, LaneStageWindows.l_empty_mask),

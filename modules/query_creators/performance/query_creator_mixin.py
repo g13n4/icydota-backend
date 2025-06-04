@@ -1,4 +1,6 @@
-from models import PlayerGameData, Player, Position, ComparisonType
+from sqlalchemy.orm import aliased
+
+from models import ComparisonType, ByTeamType, Team
 from models.performance import PerformanceTotalData, PerformanceWindowData, Performance, \
     PerformanceWindowTable
 from modules.query_creators.helpers import ModelList, JoinList
@@ -9,6 +11,7 @@ class PerformanceQueryCreatorMixin:
         self.data_model = None
         self.data_model_name = None
         self.is_header = False
+        self.is_total_data = None
 
         self.models = ModelList()
         self.joins = JoinList()
@@ -56,3 +59,15 @@ class PerformanceQueryCreatorMixin:
     def get_model_names(self, only_header: bool = False) -> list[str]:
         return self.models.get_names(only_header=only_header)
 
+
+    def _set_by_team_model(self, is_flat: bool | None = None, name: None | str = None):
+        self.models.add(ByTeamType.is_dire, "side", True)
+        self.models.add(Team.name, "team", True)
+        self.joins.add(ByTeamType, ByTeamType.performance_id == Performance.id)
+        self.joins.add(Team, ByTeamType.team_id == Team.id)
+        self.where.append(ByTeamType.is_flat == is_flat)
+
+        if is_flat is not None:
+            comparans_team = aliased(Team)
+            self.models.add(comparans_team, name or "opponent", True)
+            self.joins.add(comparans_team, ByTeamType.performance_id == Performance.id)

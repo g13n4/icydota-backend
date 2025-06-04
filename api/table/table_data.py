@@ -5,12 +5,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output, extract_window_data_for_field
 from constants.api import PoTEnum
+from modules.minmax_finder import TableMinMaxFinder
 from modules.query_creators.performance.aggregation_performance_query_creator import \
     APIAggregationPerformanceQueryCreator
 from modules.query_creators.performance.crosscomparison_performance_query_creator import \
     APICrossComparisonPerformanceQueryCreator
 from modules.query_creators.performance.match_performance_query_creator import APIMatchPerformanceQueryCreator
-from utils import is_na_decimal, TableMinMaxFinder
+from utils import is_na_decimal
 
 
 async def get_performance_data(
@@ -24,13 +25,15 @@ async def get_performance_data(
     PQC = APIMatchPerformanceQueryCreator()
     select_query = PQC.get_match_query(match_id=match_id, calculation_type_id=data_type, pot=pot)
     model_names = PQC.get_model_names()
-
     query_output = await db_session.exec(select_query)
 
     data, value_mapping, has_total_field = process_db_output(
         query=query_output,
         model_names=model_names,
-        game_stage=game_stage
+        game_stage=game_stage,
+        pot=pot,
+        req_type="match",
+        data_model_name=PQC.data_model_name,
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
@@ -43,7 +46,7 @@ async def get_performance_data_comparison(
         calculation_type_id: int,
         game_stage: str,
         basic: bool,
-        flat: Optional[bool]
+        flat: bool | None,
 ):
     PQC = APIMatchPerformanceQueryCreator()
     select_query = PQC.get_match_comparison_query(
@@ -54,13 +57,15 @@ async def get_performance_data_comparison(
         is_flat=flat,
     )
     model_names = PQC.get_model_names()
-
     query_output = await db_session.exec(select_query)
 
     data, value_mapping, has_total_field = process_db_output(
         query=query_output,
         model_names=model_names,
-        game_stage=game_stage
+        game_stage=game_stage,
+        pot=pot,
+        req_type="match",
+        data_model_name=PQC.data_model_name,
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)

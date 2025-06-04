@@ -69,5 +69,5 @@ class PerformanceQueryCreatorMixin:
 
         if is_flat is not None:
             comparans_team = aliased(Team)
-            self.models.add(comparans_team, name or "opponent", True)
-            self.joins.add(comparans_team, ByTeamType.performance_id == Performance.id)
+            self.models.add(comparans_team.name, name or "opponent", True)
+            self.joins.add(comparans_team, comparans_team.id == ByTeamType.team_cps_id)

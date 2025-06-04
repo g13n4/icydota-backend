@@ -58,7 +58,6 @@ async def get_performance_data_comparison(
     )
     model_names = PQC.get_model_names()
     query_output = await db_session.exec(select_query)
-
     data, value_mapping, has_total_field = process_db_output(
         query=query_output,
         model_names=model_names,

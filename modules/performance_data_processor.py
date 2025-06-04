@@ -152,6 +152,16 @@ class PerformanceDataProcessor:
 
                     pos_cpd_id=comparandum_data['position_id'],
                     pos_cps_id=comparans_data['position_id'],
+
+                # todo: заполнить
+                # # position/hero
+                # cpd_name_short: Optional[str]
+                # cps_name_short: Optional[str]
+                #
+                # # position/hero/player
+                # cpd_name: Optional[str]
+                # cps_name: Optional[str]
+
                 )
 
                 GP_obj = Performance(

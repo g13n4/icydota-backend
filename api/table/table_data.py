@@ -77,8 +77,8 @@ async def get_aggregated_performance_data(
         patch_id: int | None,
         aggregation_type: int,
         calculation_type_id: int,
-        game_stage: str,
-        flat: Optional[bool],
+        game_stage: str | None = None,
+        flat: bool | None = None,
 ):
     PQC = APIAggregationPerformanceQueryCreator()
     if flat is not None:
@@ -101,11 +101,14 @@ async def get_aggregated_performance_data(
     model_names = PQC.get_model_names()
 
     query_output = await db_session.exec(select_query)
-
+    print(select_query)
     data, value_mapping, has_total_field = process_db_output(
         query=query_output,
         model_names=model_names,
-        game_stage=game_stage
+        game_stage=game_stage,
+        pot=pot,
+        req_type="aggregation",
+        data_model_name=PQC.data_model_name,
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)

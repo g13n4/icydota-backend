@@ -140,35 +140,36 @@ async def get_performance_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/data/aggregation/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}')
+@icydota_api.get(API_PREFIX + '/data/aggregation/{pot}/{lop}/{lop_value}/{data_type}')
 async def get_performance_aggregated_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
         lop_value: int,
-        aggregation_type: int,
-        game_stage: GameStageEnum,
         data_type: int,
-        comp: ComparisonEnum = ComparisonEnum.flat,
+        atype: int | None = None,
+        game_stage: GameStageEnum | None = None,
+        comp: ComparisonEnum = ComparisonEnum.none,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)
     flat = comp.to_value()
+    game_stage = game_stage and game_stage.value
 
-    items, value_mapping, sum_total = await get_aggregated_performance_data(
+    items, value_mapping, sum_total, header_fields = await get_aggregated_performance_data(
         db_session=db,
         pot=pot,
         league_id=league_id,
         patch_id=patch_id,
-        aggregation_type=aggregation_type,
+        aggregation_type=atype,
         calculation_type_id=data_type,
-        game_stage=game_stage.value,
+        game_stage=game_stage,
         flat=flat
     )
 
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, [aggregation_type], sum_total=sum_total)
+    output = to_table_format(items, value_mapping, header_fields, sum_total=sum_total)
 
     return output
 

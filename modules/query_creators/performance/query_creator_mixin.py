@@ -61,13 +61,12 @@ class PerformanceQueryCreatorMixin:
 
 
     def _set_by_team_model(self, is_flat: bool | None = None, name: None | str = None):
-        self.models.add(ByTeamType.is_dire, "side", True)
-        self.models.add(Team.name, "team", True)
+
         self.joins.add(ByTeamType, ByTeamType.performance_id == Performance.id)
+
+        self.models.add(Team.name, "team", True)
         self.joins.add(Team, ByTeamType.team_id == Team.id)
+
+
         self.where.append(ByTeamType.is_flat == is_flat)
 
-        if is_flat is not None:
-            comparans_team = aliased(Team)
-            self.models.add(comparans_team.name, name or "opponent", True)
-            self.joins.add(comparans_team, comparans_team.id == ByTeamType.team_cps_id)

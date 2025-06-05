@@ -32,11 +32,14 @@ def create_performance_objs(
             aggregation_obj = AggregationType(
                 type_id=AGC.type_id,
                 patch_id=patch_id,
+                league_id=league_id,
                 **required_row_data,
             )
 
             comparison_obj = None
+            performance_type = Performance.const.game.AGGREGATION
             if is_comparison:
+                performance_type = Performance.const.game.AGGREGATION_COMPARISON
                 comparison_data = { COMPARISON_MAP[name].cpd: value for name, value in required_row_data.items() }
 
                 comparison_obj = ComparisonType(
@@ -44,9 +47,6 @@ def create_performance_objs(
                     basic=False,
                     **comparison_data,
                 )
-
-            performance_type = Performance.const.game.AGGREGATION_COMPARISON if is_comparison \
-                else Performance.const.game.AGGREGATION
 
             performance_obj = Performance(
                 type_id=performance_type,

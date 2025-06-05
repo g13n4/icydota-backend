@@ -86,7 +86,8 @@ def process_db_output(
 
     for row in query:
         row_data = { name: data for name, data in zip(model_names, row) }
-        row_data['side'] = 'Dire' if row_data['side'] else 'Sentinel'
+        if "side" in row_data:
+            row_data['side'] = 'Dire' if row_data['side'] else 'Sentinel'
 
         if data_model_name == 'window_data':
             window_data = extract_window_data(row_data['window_data'], row_data['window_table'], game_stage)

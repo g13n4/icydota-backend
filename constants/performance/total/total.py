@@ -3,48 +3,14 @@ from typing import Any, ClassVar, Optional, Literal
 
 from pydantic import condecimal, BaseModel
 
+from constants.performance.total.field_option import FieldOption
 from helpers import to_proper_name, UniqueIndexChecker
 
 
 MINUTE = 60
 
 
-class FieldAvailability(BaseModel):
-    __match_args__ = ("match", "aggregation", "cross_comparison")
-
-    match: bool = True
-    aggregation: bool = True
-    cross_comparison: bool = True
-
-    player: bool = True
-    team: bool = True
-
-
-    def required(self, **kwargs):
-        """If a value is required it should present during output. If it's not it should be removed"""
-        for k, v in kwargs:
-            try:
-                availability_value = getattr(self, k)
-            except AttributeError:
-                raise AttributeError(f"Wrong required type {k} with value {v} in {self.__name__}")
-
-            if not (availability_value and v):
-                return False
-        return True
-
-
-    def available_for_types(self, *args) -> bool:
-        """
-        :param args: names of the different types of calculations declared in FieldAvailability class
-        :return: bool
-        """
-        for field in args:
-            if not getattr(self, field):
-                return False
-        return True
-
-
-FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[FieldAvailability.__match_args__]
+FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[FieldOption.__match_args__]
 
 
 class GameTotal(BaseModel):
@@ -54,9 +20,10 @@ class GameTotal(BaseModel):
     name: str | None = None
     description: str | None = None
     pseudo_bool: bool = False
-    availability: None | FieldAvailability = None
+    availability: None | FieldOption = None
     optional: bool = False
     sort_offset: int = 0
+    normalization: None | FieldOption = None
 
 def set_total_name(klass: object):
     values = []
@@ -101,7 +68,7 @@ class GameTotalsIterator:
                 continue
 
             if available_for and item.availability is not None:
-                if not item.availability.available_for_types(*available_for):
+                if not item.availability.is_available(*available_for):
                     continue
 
             if only_field is None:
@@ -160,7 +127,7 @@ class GameTotals:
     lost_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=26,
-        availability=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldOption(aggregation=True, cross_comparison=True),
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -171,20 +138,20 @@ class GameTotals:
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
-        availability=FieldAvailability(aggregation=True, cross_comparison=True),
+        availability=FieldOption(aggregation=True, cross_comparison=True),
     )
     destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
 
     win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
-        availability=FieldAvailability(match=False),
+        availability=FieldOption(match=False),
         pseudo_bool=True
     )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
-        availability=FieldAvailability(match=False),
+        availability=FieldOption(match=False),
         pseudo_bool=True
     )
 
@@ -221,155 +188,155 @@ class GameTotals:
     no_assists: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
-        availability=FieldAvailability(match=False),
+        availability=FieldOption(match=False),
         pseudo_bool=True
     )
     # first tower
     first_tower_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     # picks
     first_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=55,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=56,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     last_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=57,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     last_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=58,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     last_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=59,
-        availability=FieldAvailability(team=False),
+        availability=FieldOption(team=False),
         pseudo_bool=True
     )
     first_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=60,
-        availability=FieldAvailability(team=False),
+        availability=FieldOption(team=False),
         pseudo_bool=True
     )
     # first lane
     first_tower_lane_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=61,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lane_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=62,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lane_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=63,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lane_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=64,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lane_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=65,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_tower_lane_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=66,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     # first barracks
     first_barracks_set_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=67,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_barracks_set_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=68,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_barracks_set_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=69,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_barracks_set_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=70,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_barracks_set_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=71,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
     first_barracks_set_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=72,
-        availability=FieldAvailability(player=False),
+        availability=FieldOption(player=False),
         pseudo_bool=True
     )
 

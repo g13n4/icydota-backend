@@ -275,7 +275,8 @@ if not LIGHT_MODE:
 
 # blast - 17418
 # fissure universe - 17907
-# last dream league - 18111
+# last dream league -
 
+# TODO: обновить подсчет для аггрегации по лиге
 # patch 7.39 - 58
 # patch 7.38 - 57

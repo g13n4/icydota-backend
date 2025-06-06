@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import Select
 
-from constants.performance.total import GameTotals
+from constants.performance.total.total import GameTotals
 from constants.performance.window import WINDOWS_BY_MASK, AllWindows, WindowEmptyMask
 from modules.empty_mask_converter import EmptyMaskConverter
 

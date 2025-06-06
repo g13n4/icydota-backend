@@ -1,7 +1,7 @@
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from constants.calculation.game.calculation_types import WindowCalculations
-from constants.performance.total import GameTotals
+from constants.performance.total.total import GameTotals
 from constants.performance.window import AllWindows
 
 

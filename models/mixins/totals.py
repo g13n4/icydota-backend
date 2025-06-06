@@ -1,7 +1,6 @@
-from pydantic import condecimal
 from sqlmodel import Field
 
-from constants.performance.total import GameTotals
+from constants.performance.total.total import GameTotals
 
 
 class PerformanceTotalDataMixin:

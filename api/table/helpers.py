@@ -8,7 +8,7 @@ from modules.minmax_finder import TableMinMaxFinder
 from utils import is_na_decimal
 
 from constants.api import PoTEnum
-from constants.performance.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
+from constants.performance.total.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
 from functools import lru_cache
 
 

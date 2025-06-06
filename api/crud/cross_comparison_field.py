@@ -1,5 +1,5 @@
 from api.crud.helpers import to_field_list
-from constants.performance.total import GameTotals
+from constants.performance.total.total import GameTotals
 from constants.performance.window import GameStageWindows, LaneStageWindows
 
 

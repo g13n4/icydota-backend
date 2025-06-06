@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from typing import Any
 
-from constants.performance.total import FieldAvailability, GameTotals
+from constants.performance.total.total import GameTotals
 from models import PerformanceTotalData
 
 TOTAL_EXCLUDE_FIELDS = { "id", "performance_id" }
@@ -20,7 +20,7 @@ async def process_total_output(data: PerformanceTotalData, **kwargs) -> dict:
     data = data.model_dump(exclude=TOTAL_EXCLUDE_FIELDS)
 
     for game_total in GameTotals.VALUES:
-        if not game_total.availability.required(**kwargs):
+        if not game_total.availability.is_required(**kwargs):
             del data[game_total.name]
             continue
 

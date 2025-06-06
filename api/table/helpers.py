@@ -52,7 +52,7 @@ def extract_window_data(
     for stage in WindowType.VALUES:
         windows_class = WINDOWS_BY_TYPE[game_stage]
         mask_value = getattr(PWD_obj, windows_class.empty_mask)
-        if game_stage in ['all', stage] and mask_value is not None:
+        if game_stage in ['both', stage] and mask_value is not None:
             mask_data = EmptyMaskConverter.mask_to_dict(mask_value, windows_class.VALUES_NAMES)
             output.update(mask_data)
     return output

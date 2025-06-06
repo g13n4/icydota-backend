@@ -34,6 +34,7 @@ class PerformanceQueryCreatorMixin:
         if field is None:
             self.models.add(self.data_model, self.data_model_name, self.is_header)
         else:
+            print(self.data_model, calculation_type_id)
             self.models.add(getattr(self.data_model, field), field)
 
         self.joins.add(Performance, self.data_model.performance_id == Performance.id)

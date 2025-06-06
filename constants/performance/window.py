@@ -198,7 +198,7 @@ class AllWindows(LaneStageWindows, GameStageWindows):
 WINDOWS_BY_TYPE = {
     WindowType.lane: LaneStageWindows,
     WindowType.game: GameStageWindows,
-    'all': AllWindows,
+    'both': AllWindows,
 }
 
 WINDOWS_BY_MASK = {

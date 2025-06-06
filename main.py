@@ -102,9 +102,10 @@ async def get_league_matches_route(
 # DATA
 @icydota_api.get(API_PREFIX + '/data/match/{pot}/{match_id}/{data_type}')
 async def get_performance_data_api(
+        pot: PoTEnum,
         match_id: int,
         data_type: int,
-        pot: PoTEnum,
+        # qparams
         stage: GameStageEnum,
         comp: ComparisonEnum = ComparisonEnum.none,
         ctype: ComparisonTypeEnum = ComparisonTypeEnum.player,
@@ -146,14 +147,15 @@ async def get_performance_aggregated_data_api(
         lop: LoPEnum,
         lop_value: int,
         data_type: int,
+        # qparams
         atype: int | None = None,
-        game_stage: GameStageEnum | None = None,
+        stage: GameStageEnum | None = None,
         comp: ComparisonEnum = ComparisonEnum.none,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)
     flat = comp.to_value()
-    game_stage = game_stage and game_stage.value
+    game_stage = stage and stage.value
 
     items, value_mapping, sum_total, header_fields = await get_aggregated_performance_data(
         db_session=db,
@@ -174,17 +176,16 @@ async def get_performance_aggregated_data_api(
     return output
 
 
-@icydota_api.get(
-    API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{position}'
-    )
+@icydota_api.get(API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}')
 async def get_performance_cross_comparison_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
         lop_value: int,
         data_type: int,
+        # qparams
         position: int,
-        data_field: str,
-        agg_type: int | None = None,
+        field: str,
+        atype: int | None = None,
         comp: ComparisonEnum = ComparisonEnum.flat,
         db=Depends(get_async_db_session)
 ):
@@ -196,9 +197,9 @@ async def get_performance_cross_comparison_data_api(
         pot=pot,
         league_id=league_id,
         patch_id=patch_id,
-        aggregation_type=agg_type,
+        aggregation_type=atype,
         position=position,
-        data_field=data_field,
+        data_field=field,
         calculation_type_id=data_type,
         flat=flat,
     )
@@ -277,6 +278,5 @@ if not LIGHT_MODE:
 # fissure universe - 17907
 # last dream league -
 
-# TODO: обновить подсчет для аггрегации по лиге
 # patch 7.39 - 58
 # patch 7.38 - 57

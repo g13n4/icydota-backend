@@ -3,6 +3,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
+from enum import EnumType
 from itertools import cycle
 from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
 
@@ -177,3 +178,7 @@ def is_equals_to_zero(value: Optional[T_numeric], pseudo: bool = False) -> Optio
             return int(output)
 
     return None
+
+
+def get_enum_values(enum_: EnumType):
+    return [x.value for x in enum_]

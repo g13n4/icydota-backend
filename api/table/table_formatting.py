@@ -61,24 +61,22 @@ def to_table_format(
 
 
 def to_table_format_cross_comparison(
-        data: Dict[int, list],
+        data: list,
         values_info: list,
-        aggregation_type: str
+        header_name: str,
+        columns: list[str],
 ) -> dict:
-    if not data:
-        return { }
-
     fields = {
-        'rows': [aggregation_type],  # hero/pos/player | l2/g2/etc
+        'rows': [header_name],  # hero/pos/player | l2/g2/etc
         'columns': [],
-        'values': sorted(data.keys(), key=lambda x: str(x).lower()),  # classic windows/ total_values
+        'values': columns,  # classic windows/ total_values
         'valueInCols': True,
     }
 
     return {
         "table_data": {
             'fields': fields,
-            'windows_data': [x for x in data.values()],
+            'windows_data': data,
         },
         "value_mapping": values_info,
     }

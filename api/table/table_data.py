@@ -5,6 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output, extract_window_data_for_field
 from constants.api import PoTEnum
+from modules.ccomparion_header_creator import CrossComparisonProcessor
 from modules.minmax_finder import TableMinMaxFinder
 from modules.query_creators.performance.aggregation_performance_query_creator import \
     APIAggregationPerformanceQueryCreator
@@ -134,77 +135,37 @@ async def get_cross_comparison_performance_data(
         pot: PoTEnum,
         league_id: int | None,
         patch_id: int | None,
-        aggregation_type: int,
+        aggregation_type: int | None,
         position: int,
         data_field: str,
         calculation_type_id: int,
         flat: bool,
 ):
-    is_total_data = calculation_type_id == 0
-
     PQC = APICrossComparisonPerformanceQueryCreator()
     select_query = PQC.get_cross_comparison_query(
         pot=pot,
         league_id=league_id,
         patch_id=patch_id,
-        aggregation_type_id=aggregation_type,
+        type_id=aggregation_type,
         position_id=position,
         data_field=data_field,
         calculation_type_id=calculation_type_id,
         is_flat=flat,
     )
-
+    print(select_query)
     query_output = await db_session.exec(select_query)
 
     # REFORMATTED _processing_db_output
     TMMF = TableMinMaxFinder()
-    output_dict = dict()
-    rename_dict = dict()
+    CCP = CrossComparisonProcessor(aggregation_type, TMMF, PQC.models.get_names())
     # hero/player name | id in db | id in db of the comparans player/hero
-    for *performance_value, this_actor, this_actor_id, this_cps in query_output.all():
-        value = _extract_ccomp_value(*performance_value, field_name=data_field, is_total_data=is_total_data)
+    data = {}
+    for value, *info in query_output.all():
+        key, inner_key = CCP.process_data_row(*info)
+        if key not in data:
+            data[key] = { inner_key: value }
+        else:
+            data[key][inner_key] = value
 
-        rename_dict[this_actor_id] = this_actor
-
-        if this_actor not in output_dict:
-            output_dict[this_actor] = {
-                aggregation_type: this_actor,
-            }
-
-        if is_na_decimal(value):
-            value = None
-
-        output_dict[this_actor][this_cps] = value
-
-        if value is None:
-            continue
-
-        TMMF.add(column=this_cps, value=value)
-
-    # LOOKING FOR DIFFERENCE VALUES
-    ordered_names = sorted(rename_dict.values(), key=lambda x: (x).lower())
-    # REMOVING OLD VALUES FROM DICTIONARY
-    new_output = dict()
-    for item_name, item in output_dict.items():
-        temp_dict = dict()
-        for id_, value in item.items():  # id / value
-            cps_name = rename_dict.get(id_, id_)
-
-            if cps_name != id_:
-                TMMF.add_alias(id_, cps_name)
-
-            temp_dict[cps_name] = value
-
-        new_output[item_name] = {
-            (o_name if o_name != item_name else aggregation_type):
-                (
-                    temp_dict.get(o_name, None)
-                    if o_name != item_name else
-                    temp_dict[aggregation_type]
-                )
-            for o_name in ordered_names
-        }
-
-    new_output = _order_ccomp_dict(new_output, aggregation_type)
-
-    return new_output, TMMF.get_minmax_values(use_alias=True)
+    ordered_headers, sorted_data = CCP.rearrange_dict(data)
+    return sorted_data, CCP.name, ordered_headers,  CCP.TMMF.get_minmax_values(use_alias=True)

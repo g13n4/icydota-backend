@@ -58,7 +58,7 @@ CCOMPARISON_MODELS = {
 CCOMPARISON_JOIN = {
     CrossComparisonTypeConstant.POSITION_HERO: [],
     CrossComparisonTypeConstant.POSITION_PLAYER: [
-        (Player, AggregationType.player_id == Player.account_id)
+        (Player, ComparisonType.player_cpd_id == Player.account_id)
     ],
     CrossComparisonTypeConstant.POSITION_HERO_FACET: [],
 }

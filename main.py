@@ -175,41 +175,42 @@ async def get_performance_aggregated_data_api(
 
 
 @icydota_api.get(
-    API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{aggregation_type}/{position}'
+    API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}/{position}'
     )
 async def get_performance_cross_comparison_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
         lop_value: int,
         data_type: int,
-        aggregation_type: int,
         position: int,
         data_field: str,
+        agg_type: int | None = None,
         comp: ComparisonEnum = ComparisonEnum.flat,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)
     flat = comp.to_value()
 
-    data_dict, values_info = await get_cross_comparison_performance_data(
+    data, header_name, columns, values_info = await get_cross_comparison_performance_data(
         db_session=db,
         pot=pot,
         league_id=league_id,
         patch_id=patch_id,
-        aggregation_type=aggregation_type,
+        aggregation_type=agg_type,
         position=position,
         data_field=data_field,
         calculation_type_id=data_type,
         flat=flat,
     )
 
-    if not data_dict.keys():
+    if not data:
         raise HTTPException(status_code=404)
 
     output = to_table_format_cross_comparison(
-        data=data_dict,
+        data=data,
         values_info=values_info,
-        aggregation_type=aggregation_type,
+        header_name=header_name,
+        columns=columns,
     )
 
     return output

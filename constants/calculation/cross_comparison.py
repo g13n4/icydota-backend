@@ -10,6 +10,7 @@ class CrossComparisonTypeConstant:
     ]
 
 
+
 class CrossComparisonPositionConstant:
     SUPPORT: int = 1
     CARRY: int = 2

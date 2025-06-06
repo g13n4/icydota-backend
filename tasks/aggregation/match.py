@@ -44,7 +44,6 @@ def create_performance_objs(
 
                 comparison_obj = ComparisonType(
                     is_flat=is_flat,
-                    basic=False,
                     **comparison_data,
                 )
 

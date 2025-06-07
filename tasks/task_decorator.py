@@ -28,7 +28,7 @@ def processing_task_decorator(func):
 
         elif patch_id:
             patch_obj = db_session.get(Patch, patch_id)
-            if not patch_obj:
+            if not (patch_obj and patch_obj.aggregation_allowed):
                 raise ValueError("No such patch in the database")
         else:
             raise ValueError("No league or patch id were provided")

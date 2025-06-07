@@ -58,7 +58,7 @@ def create_performance_objs(
 
 @shared_task(name="aggregate_league_team", ignore_result=True)
 @processing_task_decorator
-def aggregate_league_team(db_session, league_id: int | None = None, patch_id: int | None = None):
+def aggregate_league_team_task(db_session, league_id: int | None = None, patch_id: int | None = None):
     columns = ['team_id']
 
     performance_dict = create_performance_objs(db_session=db_session, league_id=league_id, patch_id=patch_id)

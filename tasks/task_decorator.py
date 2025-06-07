@@ -18,8 +18,8 @@ def processing_task_decorator(func):
     def wrapper(*args, **kwargs):
         db_session: Session = get_sync_db_session(expire=False)
 
-        league_id = kwargs.get("league_id", None)
-        patch_id = kwargs.get("patch_id", None)
+        league_id = kwargs.pop("league_id", None)
+        patch_id = kwargs.pop("patch_id", None)
 
         if league_id:
             league_obj = db_session.get(League, league_id)
@@ -33,7 +33,7 @@ def processing_task_decorator(func):
         else:
             raise ValueError("No league or patch id were provided")
 
-        result = func(db_session=db_session, **kwargs)
+        result = func(db_session=db_session, league_id=league_id, patch_id=patch_id, **kwargs)
         return result
 
     return wrapper

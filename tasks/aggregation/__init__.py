@@ -1,3 +1,3 @@
 from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
-from tasks.aggregation.match import aggregate_league_match
-from tasks.aggregation.team import aggregate_league_team
+from tasks.aggregation.match import aggregate_league_player_task
+from tasks.aggregation.team import aggregate_league_team_task

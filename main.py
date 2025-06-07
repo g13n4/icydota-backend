@@ -183,10 +183,10 @@ async def get_performance_cross_comparison_data_api(
         lop_value: int,
         data_type: int,
         # qparams
-        position: int,
         field: str,
-        atype: int | None = None,
         comp: ComparisonEnum = ComparisonEnum.flat,
+        position: int | None = None,
+        atype: int | None = None,
         db=Depends(get_async_db_session)
 ):
     league_id, patch_id = lop.to_api(lop_value)

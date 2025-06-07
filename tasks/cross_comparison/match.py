@@ -18,13 +18,13 @@ logger = get_task_logger(__name__)
 
 
 def create_performance_dict(
-        league_id: int,
+        league_id: int | None,
+        patch_id: int | None,
         data,
         CCKC: CrossComparisonKeyCreator,
         is_flat: bool,
         ccomparison_type: int,
         position_type: int,
-        patch_id: int | None,
 ) -> dict[tuple, Performance]:
     performance_dict = dict()
     for item in data:
@@ -55,9 +55,9 @@ def create_performance_dict(
     return performance_dict
 
 
-@shared_task(name="cross_comparison_league_match", ignore_result=True)
+@shared_task(name="cross_compare_player", ignore_result=True)
 @processing_task_decorator
-def cross_comparison_league_match(db_session, ccomparison_type: int, league_id: int | None = None,  patch_id: int | None = None):
+def cross_compare_player_task(db_session, league_id: int | None,  patch_id: int | None, ccomparison_type: int):
     CCKC = CrossComparisonKeyCreator(ccomparison_type)
     columns = CCKC.get_fields()
 
@@ -78,12 +78,12 @@ def cross_comparison_league_match(db_session, ccomparison_type: int, league_id: 
                 if performance_dict is None:
                     performance_dict = create_performance_dict(
                         league_id=league_id,
+                        patch_id=patch_id,
                         data=data,
                         CCKC=CCKC,
                         is_flat=is_flat,
                         ccomparison_type=ccomparison_type,
                         position_type=ccomp_pos_id,
-                        patch_id=patch_id,
                     )
 
                 for window_data in process_data(data=data, group_by=columns, is_window=True):

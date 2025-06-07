@@ -59,9 +59,9 @@ def create_performance_objs(
     return output
 
 
-@shared_task(name="aggregate_league_match", ignore_result=True)
+@shared_task(name="aggregate_league_player", ignore_result=True)
 @processing_task_decorator
-def aggregate_league_match(
+def aggregate_league_player_task(
         db_session,
         aggregation_type: int,
         league_id: int | None = None,

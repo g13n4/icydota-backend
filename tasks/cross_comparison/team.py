@@ -18,9 +18,9 @@ def _get_key(data: dict, is_flat: bool | None) -> tuple[int, int, bool | None]:
 
 def create_performance_dict(
         league_id: int | None,
+        patch_id: int | None,
         data,
         is_flat: bool,
-        patch_id: int | None,
 ) -> dict[tuple, Performance]:
     output = dict()
     for item in data:
@@ -44,9 +44,9 @@ def create_performance_dict(
     return output
 
 
-@shared_task(name="cross_comparison_league_team", ignore_result=True)
+@shared_task(name="cross_compare_team", ignore_result=True)
 @processing_task_decorator
-def cross_comparison_league_team(db_session, league_id: int, patch_id: int | None = None):
+def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = None):
     columns = ['team_cpd_id', 'team_cps_id']
 
     for is_flat in [True, False]:
@@ -63,9 +63,9 @@ def cross_comparison_league_team(db_session, league_id: int, patch_id: int | Non
             if performance_dict is None:
                 performance_dict = create_performance_dict(
                     league_id=league_id,
+                    patch_id=patch_id,
                     data=data,
                     is_flat=is_flat,
-                    patch_id=patch_id,
                 )
 
             for window_data in process_data(data=data, group_by=columns, is_window=True):

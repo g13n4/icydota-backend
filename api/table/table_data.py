@@ -134,7 +134,6 @@ async def get_cross_comparison_performance_data(
         is_flat=flat,
     )
     query_output = await db_session.exec(select_query)
-
     is_total = calculation_type_id == 0
     # REFORMATTED _processing_db_output
     TMMF = TableMinMaxFinder()
@@ -143,7 +142,7 @@ async def get_cross_comparison_performance_data(
     data = { }
     for value, *info in query_output.all():
         if not is_total:
-            mask_value, *info = info
+            mask_value, *_ = info
             field_index = WINDOWS_BY_FIELD[data_field].order
             if mask_value:
                 value = EmptyMaskConverter.extract_from_mask(mask=mask_value, index=field_index)

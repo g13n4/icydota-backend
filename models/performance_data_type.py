@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-import sqlalchemy as db
+
 from sqlalchemy.sql import text
 from sqlmodel import Field, Relationship, SQLModel
 from typing_extensions import ClassVar
@@ -49,6 +49,7 @@ class ComparisonType(SQLModel, table=True):
         back_populates="comparison_type",
     )
 
+
 # AGGREGATION
 class AggregationType(SQLModel, table=True):
     __tablename__ = "data_aggregation_types"
@@ -57,8 +58,8 @@ class AggregationType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
-    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
 
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
@@ -87,8 +88,8 @@ class CrossComparisonType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
-    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
@@ -111,8 +112,8 @@ class ByTeamType(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
+    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     match_id: Optional[int] = _fk('games', col_type='bigint')
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
 

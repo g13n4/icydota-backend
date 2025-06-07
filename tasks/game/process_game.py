@@ -130,8 +130,8 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 
     return players_dict
 
-
-@shared_task(name='process_game_data', retry=True, max_retries=2, default_retry_delay=120, ignore_result=True)
+# , retry=True, max_retries=2, default_retry_delay=120,
+@shared_task(name='process_game_data', ignore_result=True)
 def process_game_data(match_id: int, league_id: int | None = None):
     logger.info(f'Process replay for {match_id}')
 

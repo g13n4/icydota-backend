@@ -222,7 +222,8 @@ if not LIGHT_MODE:
     from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks.bulk_aggregation_process import process_full_cycle
     from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
-        approximate_positions_helper, set_comparison_names_helper
+        approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
+        delete_cross_comparison_task_helper
 
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
@@ -240,10 +241,24 @@ if not LIGHT_MODE:
         return { 'status': 'processing' }
 
 
+    # AGGREGATION
+    @icydota_api.delete(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=204)
+    async def delete_aggregation_api(lop: LoPEnum, lop_value: int):
+        league_id, patch_id = lop.to_api(lop_value)
+        delete_league_task_helper(league_id=league_id, patch_id=patch_id)
+
+
     @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
-    async def aggregate_api(lop: LoPEnum, lop_value: int):
+    async def create_aggregation_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         aggregate_league_task_helper(league_id=league_id, patch_id=patch_id)
+
+
+    # CROSS-COMPARISON
+    @icydota_api.delete(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=204)
+    async def delete_cross_comparison_api(lop: LoPEnum, lop_value: int):
+        league_id, patch_id = lop.to_api(lop_value)
+        delete_cross_comparison_task_helper(league_id=league_id, patch_id=patch_id)
 
 
     @icydota_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=202)
@@ -252,6 +267,7 @@ if not LIGHT_MODE:
         cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
+    # UTILS
     @icydota_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)
     async def approximate_positions_api(league_id: int):
         approximate_positions_helper(league_id=league_id)

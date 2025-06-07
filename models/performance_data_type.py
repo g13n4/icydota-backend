@@ -18,7 +18,7 @@ class ComparisonType(SQLModel, table=True):
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     # can be none if it's a basic cross-comparison
-    is_flat: Optional[bool]  # percent or is_flat
+    is_flat: Optional[bool] = Field(default=None, index=True)
 
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
@@ -66,7 +66,7 @@ class AggregationType(SQLModel, table=True):
         }
     )
     # get from const
-    type_id: int
+    type_id: int = Field(index=True)
     # We can combine IDs to show that a hero can be flexed
     player_id: Optional[int] = _fk("players", "account_id")
 
@@ -95,7 +95,7 @@ class CrossComparisonType(SQLModel, table=True):
         }
     )
 
-    type_id: int
+    type_id: int = Field(index=True)
     position_aggregation_id: int
 
     performance_id: Optional[int] = Field(default=None, foreign_key="performances.id", ondelete="CASCADE", )

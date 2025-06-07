@@ -10,7 +10,6 @@ from tasks.approximate_positions import approximate_positions
 from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_cross_comparison_team
 from tasks.cross_comparison.match import cross_compare_player_task
 from tasks.cross_comparison.team import cross_compare_team_task
-from tasks.league.delete import delete_league_task
 from tasks.set_comparison_names import set_comparison_names
 
 
@@ -21,24 +20,36 @@ def approximate_positions_helper(league_id: int) -> None:
     approximate_positions.delay(league_id=league_id)
 
 
-def delete_league(league_id: int) -> None:
-    delete_league_task.si(league_id=league_id)
+def delete_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
+    all_deletion_tasks = (
+            delete_aggregation_team.si(league_id=league_id, patch_id=patch_id) |
+            delete_aggregation_match.si(league_id=league_id, patch_id=patch_id)
+    )
+    all_deletion_tasks()
 
 
-def aggregate_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
+def aggregate_league_task_helper(
+        league_id: int | None = None,
+        patch_id: int | None = None,
+) -> None:
     aggregation_tasks = chain(
         aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
         for aggregation_type in AggregationConstant.VALUES
     )
 
     all_tasks = (
-            delete_aggregation_team.si(league_id=league_id, patch_id=patch_id) |
             aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id) |
-            delete_aggregation_match.si(league_id=league_id, patch_id=patch_id) |
             aggregation_tasks
-
     )
     all_tasks()
+
+
+def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
+    all_deletion_tasks = (
+            delete_cross_comparison_team.si(league_id=league_id, patch_id=patch_id) |
+            delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id)
+    )
+    all_deletion_tasks()
 
 
 def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
@@ -48,10 +59,7 @@ def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int
     )
 
     all_tasks = (
-            delete_cross_comparison_team.si(league_id=league_id, patch_id=patch_id) |
             cross_compare_team_task.si(league_id=league_id, patch_id=patch_id) |
-
-            delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id) |
             ccomparison_tasks
     )
     all_tasks()

@@ -1,18 +1,16 @@
-from collections import abc
-from typing import Optional
-
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from api.table.helpers import process_db_output, extract_window_data_for_field
+from api.table.helpers import process_db_output
 from constants.api import PoTEnum
+from constants.performance.window import WINDOWS_BY_FIELD
 from modules.ccomparion_header_creator import CrossComparisonProcessor
+from modules.empty_mask_converter import EmptyMaskConverter
 from modules.minmax_finder import TableMinMaxFinder
 from modules.query_creators.performance.aggregation_performance_query_creator import \
     APIAggregationPerformanceQueryCreator
 from modules.query_creators.performance.crosscomparison_performance_query_creator import \
     APICrossComparisonPerformanceQueryCreator
 from modules.query_creators.performance.match_performance_query_creator import APIMatchPerformanceQueryCreator
-from utils import is_na_decimal
 
 
 async def get_performance_data(
@@ -100,9 +98,7 @@ async def get_aggregated_performance_data(
             calculation_type_id=calculation_type_id,
         )
     model_names = PQC.get_model_names()
-
     query_output = await db_session.exec(select_query)
-    print(select_query)
     data, value_mapping, has_total_field = process_db_output(
         query=query_output,
         model_names=model_names,
@@ -113,21 +109,6 @@ async def get_aggregated_performance_data(
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
-
-
-def _update_variable(dict_: dict, key_: int | str, new_var: int | str):
-    dict_.update({ key_: new_var })
-    return dict_
-
-
-def _order_ccomp_dict(dict_: dict, field: abc.Hashable) -> dict:
-    return { k: v for k, v in sorted(dict_.items(), key=lambda item: str(item[1][field]).lower(), ) }
-
-
-def _extract_ccomp_value(*values, field_name: str, is_total_data: bool) -> float | None:
-    if is_total_data:
-        return getattr(values[0], field_name)
-    return extract_window_data_for_field(values[1], values[0], field_name)
 
 
 async def get_cross_comparison_performance_data(
@@ -152,15 +133,21 @@ async def get_cross_comparison_performance_data(
         calculation_type_id=calculation_type_id,
         is_flat=flat,
     )
-    print(select_query)
     query_output = await db_session.exec(select_query)
 
+    is_total = calculation_type_id == 0
     # REFORMATTED _processing_db_output
     TMMF = TableMinMaxFinder()
-    CCP = CrossComparisonProcessor(aggregation_type, TMMF, PQC.models.get_names())
+    CCP = CrossComparisonProcessor(aggregation_type, TMMF, PQC.models.get_names()[1:])
     # hero/player name | id in db | id in db of the comparans player/hero
-    data = {}
+    data = { }
     for value, *info in query_output.all():
+        if not is_total:
+            mask_value, *info = info
+            field_index = WINDOWS_BY_FIELD[data_field].order
+            if mask_value:
+                value = EmptyMaskConverter.extract_from_mask(mask=mask_value, index=field_index)
+
         key, inner_key = CCP.process_data_row(*info)
         if key not in data:
             data[key] = { inner_key: value }
@@ -168,4 +155,4 @@ async def get_cross_comparison_performance_data(
             data[key][inner_key] = value
 
     ordered_headers, sorted_data = CCP.rearrange_dict(data)
-    return sorted_data, CCP.name, ordered_headers,  CCP.TMMF.get_minmax_values(use_alias=True)
+    return sorted_data, CCP.name, ordered_headers, CCP.TMMF.get_minmax_values(use_alias=True)

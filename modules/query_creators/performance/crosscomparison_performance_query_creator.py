@@ -1,12 +1,36 @@
 from constants.api import PoTEnum
+from constants.performance.window import WINDOWS_BY_FIELD
 from models import ComparisonType, CrossComparisonType, ByTeamType, Team
-from models.performance import Performance
+from models.performance import Performance, PerformanceWindowData, PerformanceTotalData, PerformanceWindowTable
 from modules.query_creators.const_map import CCOMPARISON_MODELS, CCOMPARISON_JOIN
 from modules.query_creators.helpers import combine_select
 from modules.query_creators.performance.query_creator_mixin import PerformanceQueryCreatorMixin
 
 
 class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
+    def _set_data_model(self, calculation_type_id: int, field: str | None = None):
+        if calculation_type_id:
+            self.data_model = PerformanceWindowData
+
+            window_item = WINDOWS_BY_FIELD[field]
+            self.models.add(getattr(PerformanceWindowTable, field), "value")
+            self.models.add(getattr(PerformanceWindowData, window_item.empty_mask), "empty_mask")
+
+            self.joins.add(
+                PerformanceWindowTable,
+                PerformanceWindowData.performance_table_id == PerformanceWindowTable.id,
+                True
+            )
+            self.where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
+        else:
+            self.data_model = PerformanceTotalData
+
+            self.models.add(getattr(PerformanceTotalData, field), "value")
+
+
+        self.joins.add(Performance, self.data_model.performance_id == Performance.id)
+
+
     def _set_cross_comparison_match_data(
             self,
             league_id: int | None,

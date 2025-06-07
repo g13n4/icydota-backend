@@ -48,3 +48,14 @@ class EmptyMaskConverter:
         for value, field in zip_longest(EmptyMaskConverter.value_to_bin_list(mask, len(windows)), windows):
             output[field] = EmptyMaskConverter.MAP[value]
         return output
+
+    @staticmethod
+    def extract_from_mask(mask: int, index: int, from_end: bool = True) -> None | int:
+        binary_string = bin(mask)
+
+        if from_end:
+            value = binary_string[-index]
+        else:
+            value = binary_string[index]
+
+        return EmptyMaskConverter.MAP[value]

@@ -188,7 +188,6 @@ class AllWindows(LaneStageWindows, GameStageWindows):
     VALUES_REAL: list[GameWindow] = LaneStageWindows.VALUES_REAL + GameStageWindows.VALUES_REAL
     VALUES_REAL_NAMES: list[GameWindow]
 
-
     EMPTY_MASK_WINDOWS_MAP: list[tuple[list[GameWindow], str]] = [
         (LaneStageWindows.VALUES, LaneStageWindows.l_empty_mask),
         (GameStageWindows.VALUES, GameStageWindows.g_empty_mask),
@@ -205,3 +204,5 @@ WINDOWS_BY_MASK = {
     LaneStageWindows.empty_mask: LaneStageWindows,
     GameStageWindows.empty_mask: GameStageWindows,
 }
+
+WINDOWS_BY_FIELD = { item.name: item for item in AllWindows.VALUES }

@@ -23,7 +23,7 @@ class CrossComparisonProcessor:
                 self.name = "Team"
                 self.fields_key = ["team_cpd_id", ]
                 self.fields_value = ["team_cps_id", ]
-                self.expected_values = custom_expected[1:]  # excluding value which always go first
+                self.expected_values = custom_expected  # excluding value which always go first
 
             case CrossComparisonTypeConstant.POSITION_PLAYER:
                 self.name = "Player"
@@ -85,7 +85,6 @@ class CrossComparisonProcessor:
     def process_data_row(self, *args) -> tuple:
         data = { name: value for value, name in zip(args, self.expected_values) }
         self._update_replacement_dict(data)
-        print(data, args)
         dict_keys = tuple(data[x] for x in self.fields_key)
         dict_value_key = tuple(data[x] for x in self.fields_value)
 
@@ -96,7 +95,7 @@ class CrossComparisonProcessor:
     def rearrange_dict(self, data: dict):
         ordered_headers = sorted(
             list(self.ordered_header_map),
-            key=lambda x: self.process_key(x).lower()
+            key=lambda x: str(self.process_key(x)).lower()
         )
         output = list()
         ordered_formatted_header = []

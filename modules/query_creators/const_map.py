@@ -9,9 +9,9 @@ from models import Hero, Player, Position, Facet, AggregationType, ComparisonTyp
 AggItem = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
 
 HERO = AggItem(Hero, 'hero_id', AggregationType)
-PLAYER = AggItem(Player, 'player_id', None)
+PLAYER = AggItem(Player, 'player_id', AggregationType)
 POSITION = AggItem(Position, 'position_id', AggregationType)
-FACET = AggItem(Facet, 'facet_id', None)
+FACET = AggItem(Facet, 'facet_id', AggregationType)
 
 AGGREGATION_MODELS = {
     AggregationConstant.BY_HERO: [HERO, ],

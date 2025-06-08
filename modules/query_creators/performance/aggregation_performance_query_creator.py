@@ -23,12 +23,8 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         self.where.append(AggregationType.type_id == aggregation_type)
 
         for agg_item in AGGREGATION_MODELS[aggregation_type]:
-            if agg_item.from_model is not None:
-                agg_model = getattr(agg_item.from_model, agg_item.associated_field)
-            else:
-                agg_model = agg_item.model
-            self.models.add(agg_model, agg_item.associated_field)
-
+            self.models.add(agg_item.model_data, agg_item.model_data_name, True)
+            self.joins.add(agg_item.model, getattr(AggregationType, agg_item.associated_field) == agg_item.join_field)
 
     def _set_aggregation_team_query_data(
             self,
@@ -52,7 +48,7 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             aggregation_type: int,
             calculation_type_id: int
     ):
-        self._set_data_model(calculation_type_id=calculation_type_id)
+        self._set_data_model(calculation_type_id=calculation_type_id, header=False)
 
         if pot.isPlayer():
             self._set_aggregation_match_query_data(

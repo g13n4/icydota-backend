@@ -49,7 +49,7 @@ def to_table_format(
         "table_data": {
             'fields': fields,
             'meta': meta,
-            'windows_data': data,
+            'data': data,
         },
         "table_options": {
             "style": {

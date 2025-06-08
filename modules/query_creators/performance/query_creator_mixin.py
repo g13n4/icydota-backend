@@ -18,25 +18,25 @@ class PerformanceQueryCreatorMixin:
         self.where = []
 
 
-    def _set_model(self, calculation_type_id: int | None):
+    def _set_model(self, calculation_type_id: int | None, is_header: bool):
         if calculation_type_id:
             self.data_model = PerformanceWindowData
             self.data_model_name = 'window_data'
         else:
             self.data_model = PerformanceTotalData
             self.data_model_name = 'total_data'
-            self.is_header = True
+            self.is_header = is_header
 
 
-    def _set_data_model(self, calculation_type_id: int, field: str | None = None):
-        self._set_model(calculation_type_id)
+    def _set_data_model(self, calculation_type_id: int, field: str | None = None, header: bool = True):
+        self._set_model(calculation_type_id, header)
 
-        self.models.add(self.data_model, self.data_model_name, self.is_header)
+        self.models.add(self.data_model, self.data_model_name, header)
 
         self.joins.add(Performance, self.data_model.performance_id == Performance.id)
 
         if calculation_type_id > 0:
-            self.models.add(PerformanceWindowTable, 'window_table', True)
+            self.models.add(PerformanceWindowTable, 'window_table', header)
             self.joins.add(
                 PerformanceWindowTable,
                 PerformanceWindowData.performance_table_id == PerformanceWindowTable.id,

@@ -115,6 +115,7 @@ class PerformanceDataProcessor:
 
         if add_to_session:
             self.session.add(P_obj)
+            return None
         else:
             return P_obj
 

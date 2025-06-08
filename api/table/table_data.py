@@ -97,6 +97,7 @@ async def get_aggregated_performance_data(
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
         )
+    print(select_query)
     model_names = PQC.get_model_names()
     query_output = await db_session.exec(select_query)
     data, value_mapping, has_total_field = process_db_output(

@@ -249,9 +249,9 @@ if not LIGHT_MODE:
 
 
     @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
-    async def create_aggregation_api(lop: LoPEnum, lop_value: int):
+    async def create_aggregation_api(lop: LoPEnum, lop_value: int, atype: int | None = None):
         league_id, patch_id = lop.to_api(lop_value)
-        aggregate_league_task_helper(league_id=league_id, patch_id=patch_id)
+        aggregate_league_task_helper(league_id=league_id, patch_id=patch_id, atype=atype)
 
 
     # CROSS-COMPARISON
@@ -296,3 +296,5 @@ if not LIGHT_MODE:
 
 # patch 7.39 - 58
 # patch 7.38 - 57
+
+# 8301659325,

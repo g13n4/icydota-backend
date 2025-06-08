@@ -22,3 +22,4 @@ class AggregationConstant:
         BY_HERO_FACET_PLAYER,
         BY_PLAYER_HERO_FACET,
     ]
+

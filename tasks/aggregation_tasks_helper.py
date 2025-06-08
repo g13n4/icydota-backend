@@ -31,17 +31,24 @@ def delete_league_task_helper(league_id: int | None = None, patch_id: int | None
 def aggregate_league_task_helper(
         league_id: int | None = None,
         patch_id: int | None = None,
+        atype: int | None = None,
 ) -> None:
-    aggregation_tasks = chain(
-        aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
-        for aggregation_type in AggregationConstant.VALUES
-    )
+    if atype is not None:
+        if atype:
+            aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=atype).apply_async()
+        else:
+            aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id).apply_async()
+    else:
+        aggregation_tasks = chain(
+            aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
+            for aggregation_type in AggregationConstant.VALUES
+        )
 
-    all_tasks = (
-            aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id) |
-            aggregation_tasks
-    )
-    all_tasks()
+        all_tasks = (
+                aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id) |
+                aggregation_tasks
+        )
+        all_tasks()
 
 
 def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:

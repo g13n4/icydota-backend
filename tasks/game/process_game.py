@@ -130,6 +130,7 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 
     return players_dict
 
+
 # , retry=True, max_retries=2, default_retry_delay=120,
 @shared_task(name='process_game_data', ignore_result=True)
 def process_game_data(match_id: int, league_id: int | None = None):
@@ -207,17 +208,27 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         this_hero: int = player_info['hero_id']
         this_slot: int = player_info['player_slot']
-        this_facet: int = player_info.get('hero_variant', None)
+
+        this_facet_order: int | None = player_info.get('hero_variant', None)
+        this_facet: int | None = None if this_facet_order is None else (this_hero * 100 + this_facet_order)
 
         position_id: int = player_info['lane_role']
         this_position: int = approx_pos.get(players_dict[this_slot].account_id, position_id)
 
+        # setting up data to first to process bad ids
+        player_data = {
+            'player_id': players_dict[this_slot].account_id,
+            'hero_id': this_hero,
+            'facet_id': this_facet,
+
+            'position': this_position,
+            'position_id': this_position,
+        }
+        check_for_manual_fix_inplace(game_id=match_id, data=player_data)
+
+
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
-            player_id=players_dict[this_slot].account_id,
-
-            position_id=this_position,
-            hero_id=this_hero,
             lane=player_info['lane'],
             is_roaming=player_info['is_roaming'],
 
@@ -227,7 +238,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
             rank=player_info['rank_tier'],
             apm=player_info['actions_per_min'],
             slot=this_slot,
-            pings=player_info.get('pings', 0), )
+            pings=player_info.get('pings', 0),
+            **player_data,
+        )
 
         db_session.add(PGD_obj)
 
@@ -296,17 +309,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
         db_session.add(PTD_obj)
 
-        player_data = {
-            'position': this_position,
-            'position_id': this_position,
-            'hero_id': this_hero,
-            'facet_id': this_hero * 100 + this_facet,
-            'player_id': players_dict[this_slot].account_id,
-            'player_game_data': PGD_obj,
-            'performance_total_data': PTD_obj,
-        }
+        player_data['player_game_data'] = PGD_obj
+        player_data['performance_total_data'] = PTD_obj
 
-        check_for_manual_fix_inplace(game_id=match_id, data=player_data)
         player_data_dict[this_slot] = player_data
 
     # CREATING GAMEDATA OBJECTS

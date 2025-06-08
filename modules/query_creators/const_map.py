@@ -11,7 +11,7 @@ AggItem = namedtuple('AggItem', ['model', 'associated_field', 'from_model'])
 HERO = AggItem(Hero, 'hero_id', AggregationType)
 PLAYER = AggItem(Player, 'player_id', None)
 POSITION = AggItem(Position, 'position_id', AggregationType)
-FACET = AggItem(Facet, 'facet_id', AggregationType)
+FACET = AggItem(Facet, 'facet_id', None)
 
 AGGREGATION_MODELS = {
     AggregationConstant.BY_HERO: [HERO, ],

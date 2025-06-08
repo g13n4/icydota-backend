@@ -56,5 +56,4 @@ def process_game_replay(db_session,
     PDP.process_side_data(match_data=match_info)
 
 
-
     return (PDP.get_all_player_game_data(), additional_data)

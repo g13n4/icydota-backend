@@ -1,5 +1,5 @@
 from constants.api import PoTEnum
-from models import AggregationType, ByTeamType
+from models import AggregationType, ByTeamType, ComparisonType
 from models.performance import Performance
 from modules.query_creators.const_map import AGGREGATION_MODELS
 from modules.query_creators.helpers import combine_select
@@ -74,7 +74,7 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             calculation_type_id: int,
             is_flat: bool,
     ):
-        self._set_data_model(calculation_type_id=calculation_type_id)
+        self._set_data_model(calculation_type_id=calculation_type_id, header=False)
 
         if pot.isPlayer():
             self._set_aggregation_match_query_data(
@@ -82,7 +82,8 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
                 patch_id=patch_id,
                 aggregation_type=aggregation_type,
             )
-            self._set_comparison_model(is_flat=is_flat)
+            self.where.append(ComparisonType.is_flat == is_flat)
+            self.joins.add(ComparisonType, Performance.id == ComparisonType.performance_id)
 
             self.where.append(Performance.type_id == Performance.const.game.AGGREGATION_COMPARISON)
         else:

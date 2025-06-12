@@ -29,7 +29,7 @@ def get_parallel_helpers(with_query: bool = False, **kwargs) -> tuple[T, str] | 
     )
 
     match [processing_type, PoT]:
-        case ["aggregation", "team"]:
+        case ["aggregation", "player"]:
             KC = AggregationPlayerKeyCreator(type_value)
             query = match_aggregation_query_creator
         case ["aggregation", "team"]:

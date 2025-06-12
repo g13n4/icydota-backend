@@ -26,6 +26,7 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             self.models.add(agg_item.model_data, agg_item.model_data_name, True)
             self.joins.add(agg_item.model, getattr(AggregationType, agg_item.associated_field) == agg_item.join_field)
 
+
     def _set_aggregation_team_query_data(
             self,
             league_id: int | None,
@@ -40,7 +41,7 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         self._set_by_team_model(is_flat=is_flat)
 
 
-    def get_aggregation_query(
+    def get_query(
             self,
             league_id: int | None,
             pot: PoTEnum,
@@ -65,7 +66,7 @@ class APIAggregationPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
-    def get_aggregation_comparison_query(
+    def get_comparison_query(
             self,
             pot: PoTEnum,
             patch_id: int | None,

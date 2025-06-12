@@ -1,48 +1,9 @@
 from collections import namedtuple
-from typing import Any
 
 from models import Game, PlayerGameData
 from models.performance import Performance
 from models.performance_data_type import ByTeamType
-from modules.query_creators.const_map import AGGREGATION_MODELS
 from modules.query_creators.helpers import ModelList, JoinList, combine_select
-
-
-APPEND_CONST = "___APPEND_CONST"
-
-
-class AggregationKeyCreator:
-    def __init__(self, type_id: int | None = None, *, fields: list[str] | None = None):
-        if type_id:
-            self.type_id = type_id
-            self.fields = [item.associated_field for item in AGGREGATION_MODELS[type_id]]
-        elif fields:
-            self.fields = fields
-        else:
-            raise ValueError("Can't create {self.__name__} without id for match or fields for team")
-
-
-    def get_fields(self):
-        return self.fields
-
-
-    def create_key(self, data: dict, fields: list[str] | None = None, *, append: Any = APPEND_CONST) -> tuple:
-        """Get a dictionary and extract values from it according to the fields set"""
-        fields_to_use = fields or self.fields
-        output = [data[field] for field in fields_to_use]
-
-        if append != APPEND_CONST:
-            output.append(append)
-
-        return tuple(output)
-
-
-    def create_dict(self, data: dict, fields: list[str] | None = None) -> dict:
-        """Get a dictionary and recreate using only required fields"""
-        fields_to_use = fields or self.fields
-        output = { field: data[field] for field in fields_to_use }
-
-        return output
 
 
 ComparisonItem = namedtuple('ComparisonItem', ['cpd', 'cps'])

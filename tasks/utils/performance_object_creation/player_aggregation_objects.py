@@ -1,6 +1,6 @@
 from models import AggregationType, ComparisonType
 from models.performance import Performance
-from tasks.aggregation.helpers import AggregationKeyCreator, COMPARISON_MAP, \
+from tasks.aggregation.helpers import COMPARISON_MAP, \
     match_aggregation_league_participants_query_creator
 from tasks.helpers import PROCESSING_COMPARISON_LIST
 
@@ -8,7 +8,7 @@ from tasks.helpers import PROCESSING_COMPARISON_LIST
 def create_player_aggregation_performance_objs(
         db_session,
         league_id: int | None,
-        AGC: AggregationKeyCreator,
+        AGC,
         patch_id: int | None,
 ) -> dict[tuple, Performance]:
     output = dict()

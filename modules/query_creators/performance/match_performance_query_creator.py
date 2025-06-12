@@ -47,7 +47,7 @@ class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             self.joins.add(comparans_team, comparans_team.id == ByTeamType.team_cps_id)
 
 
-    def get_match_query(self, match_id: int, calculation_type_id: int, pot: PoTEnum):
+    def get_query(self, match_id: int, calculation_type_id: int, pot: PoTEnum, **kwargs):
         if pot.isPlayer():
             self._set_player_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)
             self.where.insert(0, Performance.type_id == Performance.const.game.MATCH_DATA)
@@ -58,13 +58,14 @@ class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         return combine_select(self.models.get_models(), self.joins.data, self.where)
 
 
-    def get_match_comparison_query(
+    def get_comparison_query(
             self,
             match_id: int,
             calculation_type_id: int,
             pot: PoTEnum,
             basic: bool,
             is_flat: bool,
+            **kwargs,
     ):
         if pot.isPlayer():
             self._set_player_select_query_data(calculation_type_id=calculation_type_id, match_id=match_id)

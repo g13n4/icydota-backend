@@ -1,64 +1,21 @@
 from celery import shared_task
-from celery.utils.log import get_task_logger
-from sqlmodel import Session
 
 from constants.calculation.game.calculation_types import WindowCalculations
-from db import get_sync_db_session
-from models import ComparisonType, League, CrossComparisonType
-from models.performance import Performance
+from modules.key_creators.ccomparison_key_creator import CrossComparisonPlayerKeyCreator
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.cross_comparison_query_creator_function import match_ccomparison_query_creator
-from tasks.cross_comparison.helpers import CrossComparisonKeyCreator, COMPARISON_TYPE_POSITION_MAP
+from tasks.cross_comparison.helpers import COMPARISON_TYPE_POSITION_MAP
 from tasks.helpers import process_data, get_query_data
 from tasks.task_decorator import processing_task_decorator
-
-
-logger = get_task_logger(__name__)
-
-
-def create_performance_dict(
-        league_id: int | None,
-        patch_id: int | None,
-        data,
-        CCKC: CrossComparisonKeyCreator,
-        is_flat: bool,
-        ccomparison_type: int,
-        position_type: int,
-) -> dict[tuple, Performance]:
-    performance_dict = dict()
-    for item in data:
-        key_tuple = CCKC.create_key(item, append=is_flat)
-        key_dict = CCKC.create_dict(item)
-
-        comparison_obj = ComparisonType(
-            is_flat=is_flat,
-            basic=False,
-            **key_dict,
-        )
-
-        ccomparison_obj = CrossComparisonType(
-            league_id=league_id,
-            type_id=ccomparison_type,
-            patch_id=patch_id,
-            position_aggregation_id=position_type,
-        )
-
-        performance_obj = Performance(
-            type_id=Performance.const.game.CROSS_COMPARISON,
-            comparison_type=comparison_obj,
-            cross_comparison_type=ccomparison_obj,
-        )
-
-        performance_dict[key_tuple] = performance_obj
-
-    return performance_dict
+from tasks.utils.performance_object_creation.player_cross_comparison_objects import \
+    create_player_cross_comparison_performance_objs
 
 
 @shared_task(name="cross_compare_player", ignore_result=True)
 @processing_task_decorator
-def cross_compare_player_task(db_session, league_id: int | None,  patch_id: int | None, ccomparison_type: int):
-    CCKC = CrossComparisonKeyCreator(ccomparison_type)
+def cross_compare_player_task(db_session, league_id: int | None, patch_id: int | None, ccomparison_type: int):
+    CCKC = CrossComparisonPlayerKeyCreator(ccomparison_type)
     columns = CCKC.get_fields()
 
     for ccomp_pos_id, enemies in COMPARISON_TYPE_POSITION_MAP.items():
@@ -76,7 +33,7 @@ def cross_compare_player_task(db_session, league_id: int | None,  patch_id: int 
                 data = get_query_data(db_session=db_session, query=query, names=names)
 
                 if performance_dict is None:
-                    performance_dict = create_performance_dict(
+                    performance_dict = create_player_cross_comparison_performance_objs(
                         league_id=league_id,
                         patch_id=patch_id,
                         data=data,

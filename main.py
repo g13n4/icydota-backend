@@ -222,8 +222,8 @@ if not LIGHT_MODE:
     from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks.bulk_aggregation_process import process_full_cycle
     from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
-    approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
-    delete_cross_comparison_task_helper, parallel_aggregate_league_player_task_helper
+        approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
+        delete_cross_comparison_task_helper, parallel_cross_comparison_task_helper, parallel_aggregate_task_helper
 
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
@@ -257,7 +257,8 @@ if not LIGHT_MODE:
     @icydota_api.post(API_PREFIX + '/aggregate-parallel/{lop}/{lop_value}', status_code=202)
     async def create_aggregation_parallel_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
-        parallel_aggregate_league_player_task_helper(league_id=league_id, patch_id=patch_id)
+        parallel_aggregate_task_helper(league_id=league_id, patch_id=patch_id)
+
 
     # CROSS-COMPARISON
     @icydota_api.delete(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=204)
@@ -270,6 +271,12 @@ if not LIGHT_MODE:
     async def create_cross_comparison_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
+
+
+    @icydota_api.post(API_PREFIX + '/cross-comparison-parallel/{lop}/{lop_value}', status_code=202)
+    async def create_cross_comparison_parallel_api(lop: LoPEnum, lop_value: int):
+        league_id, patch_id = lop.to_api(lop_value)
+        parallel_cross_comparison_task_helper(league_id=league_id, patch_id=patch_id)
 
 
     # UTILS

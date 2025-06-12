@@ -22,7 +22,7 @@ async def get_performance_data(
 ):
 
     PQC = APIMatchPerformanceQueryCreator()
-    select_query = PQC.get_match_query(match_id=match_id, calculation_type_id=data_type, pot=pot)
+    select_query = PQC.get_query(match_id=match_id, calculation_type_id=data_type, pot=pot)
     model_names = PQC.get_model_names()
     query_output = await db_session.exec(select_query)
 
@@ -48,7 +48,7 @@ async def get_performance_data_comparison(
         flat: bool | None,
 ):
     PQC = APIMatchPerformanceQueryCreator()
-    select_query = PQC.get_match_comparison_query(
+    select_query = PQC.get_comparison_query(
         match_id=match_id,
         calculation_type_id=calculation_type_id,
         pot=pot,
@@ -81,18 +81,18 @@ async def get_aggregated_performance_data(
 ):
     PQC = APIAggregationPerformanceQueryCreator()
     if flat is not None:
-        select_query = PQC.get_aggregation_comparison_query(
+        select_query = PQC.get_comparison_query(
             pot=pot,
-            league_id=league_id,
             patch_id=patch_id,
+            league_id=league_id,
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
             is_flat=flat,
         )
     else:
-        select_query = PQC.get_aggregation_query(
-            pot=pot,
+        select_query = PQC.get_query(
             league_id=league_id,
+            pot=pot,
             patch_id=patch_id,
             aggregation_type=aggregation_type,
             calculation_type_id=calculation_type_id,
@@ -124,7 +124,7 @@ async def get_cross_comparison_performance_data(
         flat: bool,
 ):
     PQC = APICrossComparisonPerformanceQueryCreator()
-    select_query = PQC.get_cross_comparison_query(
+    select_query = PQC.get_comparison_query(
         pot=pot,
         league_id=league_id,
         patch_id=patch_id,
@@ -132,7 +132,7 @@ async def get_cross_comparison_performance_data(
         position_id=position,
         data_field=data_field,
         calculation_type_id=calculation_type_id,
-        is_flat=flat,
+        is_flat=flat
     )
     query_output = await db_session.exec(select_query)
     is_total = calculation_type_id == 0

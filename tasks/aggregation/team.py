@@ -11,11 +11,6 @@ from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_da
 from tasks.task_decorator import processing_task_decorator
 
 
-# logging.basicConfig()
-# logger = logging.getLogger('sqlalchemy.engine')
-# logger.setLevel(logging.DEBUG)
-
-
 def _get_key(data: dict, is_flat: bool | None) -> tuple[int, bool | None]:
     return (data['team_id'], is_flat)
 

@@ -1,6 +1,6 @@
 from constants.api import PoTEnum
 from constants.performance.window import WINDOWS_BY_FIELD
-from models import ComparisonType, CrossComparisonType, ByTeamType, Team
+from models import ComparisonType, CrossComparisonType, ByTeamType
 from models.performance import Performance, PerformanceWindowData, PerformanceTotalData, PerformanceWindowTable
 from modules.query_creators.const_map import CCOMPARISON_MODELS, CCOMPARISON_JOIN
 from modules.query_creators.helpers import combine_select
@@ -8,7 +8,7 @@ from modules.query_creators.performance.query_creator_mixin import PerformanceQu
 
 
 class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
-    def _set_data_model(self, calculation_type_id: int, field: str | None = None):
+    def _set_data_ccomp_model(self, calculation_type_id: int, field: str | None = None):
         if calculation_type_id:
             self.data_model = PerformanceWindowData
 
@@ -26,7 +26,6 @@ class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             self.data_model = PerformanceTotalData
 
             self.models.add(getattr(PerformanceTotalData, field), "value")
-
 
         self.joins.add(Performance, self.data_model.performance_id == Performance.id)
 
@@ -76,7 +75,7 @@ class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         self.models.add(ByTeamType.team_cps_id, "team_cps_id", True)
 
 
-    def get_cross_comparison_query(
+    def get_comparison_query(
             self,
             pot: PoTEnum,
             league_id: int | None,
@@ -87,7 +86,7 @@ class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             calculation_type_id: int,
             is_flat: bool,
     ):
-        self._set_data_model(calculation_type_id=calculation_type_id, field=data_field)
+        self._set_data_ccomp_model(calculation_type_id=calculation_type_id, field=data_field)
 
         if pot.isPlayer():
             self._set_cross_comparison_match_data(

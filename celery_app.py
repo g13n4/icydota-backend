@@ -14,13 +14,9 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', default="127.0.0.1")
 
 tasks = [
-    'tasks.aggregation.player.parallel.create_performance',
-    'tasks.aggregation.player.parallel.process_calculation',
-    'tasks.aggregation.player',
-    'tasks.aggregation.team',
     'tasks.aggregation',
-
-    'tasks.cross_comparison',
+    'tasks.aggregation',
+    'tasks.parallel',
     'tasks.game',
     'tasks.league',
 ]

@@ -10,7 +10,7 @@
 # from models.performance import PerformanceWindowCalculationCategory
 # from utils.sorting_rating import gamedata_sort_rating
 # from utils.translation_dictionary import PERFORMANCE_FIELD_DICT, GAMEDATA_FIELD_DICT
-# from utils.helpers import to_str_time
+# from utils.utils import to_str_time
 #
 #
 # def _capitalize_name(name: str) -> str:

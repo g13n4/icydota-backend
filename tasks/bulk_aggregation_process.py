@@ -9,8 +9,8 @@ from sqlmodel import Session, select
 from db import get_sync_db_session
 from models import League
 from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
-from tasks.aggregation.player.player import aggregate_league_player_task
-from tasks.aggregation.team.team import aggregate_league_team_task
+from tasks.aggregation.player import aggregate_league_player_task
+from tasks.aggregation.team import aggregate_league_team_task
 from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper
 from tasks.approximate_positions import approximate_positions
 from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_cross_comparison_team

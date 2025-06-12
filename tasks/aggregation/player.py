@@ -1,13 +1,14 @@
 from celery import shared_task
 
 from constants.calculation.game.calculation_types import WindowCalculations
+from modules.key_creators.aggregation_key_creator import AggregationPlayerKeyCreator
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.match_aggregation_query_creator_function import match_aggregation_query_creator
-from tasks.aggregation.helpers import AggregationKeyCreator
-from tasks.aggregation.player.helpers import create_player_aggregation_performance_objs
 from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
 from tasks.task_decorator import processing_task_decorator
+from tasks.utils.performance_object_creation.player_aggregation_objects import \
+    create_player_aggregation_performance_objs
 
 
 @shared_task(name="aggregate_league_player", ignore_result=True)
@@ -18,7 +19,7 @@ def aggregate_league_player_task(
         league_id: int | None = None,
         patch_id: int | None = None
 ):
-    AGC = AggregationKeyCreator(aggregation_type)
+    AGC = AggregationPlayerKeyCreator(aggregation_type)
     columns = AGC.get_fields()
 
     performance_dict = create_player_aggregation_performance_objs(

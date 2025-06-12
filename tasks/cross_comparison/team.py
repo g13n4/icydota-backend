@@ -1,8 +1,7 @@
 from celery import shared_task
 
 from constants.calculation.game.calculation_types import WindowCalculations
-from models.performance import Performance
-from models.performance_data_type import ByTeamType
+from modules.key_creators.ccomparison_key_creator import CrossComparisonTeamKeyCreator
 from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.cross_comparison_query_creator_function import (
@@ -10,44 +9,14 @@ from modules.query_creators.cross_comparison_query_creator_function import (
 )
 from tasks.helpers import process_data, get_query_data
 from tasks.task_decorator import processing_task_decorator
-
-
-def _get_key(data: dict, is_flat: bool | None) -> tuple[int, int, bool | None]:
-    return (data['team_cpd_id'], data['team_cps_id'], is_flat)
-
-
-def create_performance_dict(
-        league_id: int | None,
-        patch_id: int | None,
-        data,
-        is_flat: bool,
-) -> dict[tuple, Performance]:
-    output = dict()
-    for item in data:
-        key = _get_key(item, is_flat)
-
-        type_obj = ByTeamType(
-            patch_id=patch_id,
-            league_id=league_id,
-            team_id=item['team_cpd_id'],
-            is_flat=is_flat,
-            team_cpd_id=item['team_cpd_id'],
-            team_cps_id=item['team_cps_id'],
-        )
-
-        performance_obj = Performance(
-            type_id=Performance.const.team.TEAM_MATCH_CROSS_COMPARISON,
-            by_team_type=type_obj,
-        )
-        output[key] = performance_obj
-
-    return output
+from tasks.utils.performance_object_creation.team_cross_comparison_objects import \
+    create_team_cross_comparison_performance_objs
 
 
 @shared_task(name="cross_compare_team", ignore_result=True)
 @processing_task_decorator
 def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = None):
-    columns = ['team_cpd_id', 'team_cps_id']
+    CCTKC = CrossComparisonTeamKeyCreator()
 
     for is_flat in [True, False]:
         performance_dict = None
@@ -61,16 +30,17 @@ def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = N
             data = get_query_data(db_session=db_session, query=query, names=names)
 
             if performance_dict is None:
-                performance_dict = create_performance_dict(
+                performance_dict = create_team_cross_comparison_performance_objs(
                     league_id=league_id,
                     patch_id=patch_id,
                     data=data,
                     is_flat=is_flat,
+                    CK=CCTKC,
                 )
 
-            for window_data in process_data(data=data, group_by=columns, is_window=True):
+            for window_data in process_data(data=data, group_by=CCTKC.fields, is_window=True):
                 PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
-                key = _get_key(window_data, is_flat)
+                key = CCTKC.create_key(window_data, append=is_flat)
                 performance_obj = performance_dict[key]
 
                 PWD_obj.performance = performance_obj
@@ -86,9 +56,9 @@ def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = N
         )
         data = get_query_data(db_session=db_session, query=query, names=names)
 
-        for total_data in process_data(data=data, group_by=columns, is_window=False):
+        for total_data in process_data(data=data, group_by=CCTKC.fields, is_window=False):
             PTD_obj = TotalPerformanceProcessor.create_object_from_dict(total_data)
-            key = _get_key(total_data, is_flat)
+            key = CCTKC.create_key(total_data, append=is_flat)
             performance_obj = performance_dict[key]
             PTD_obj.performance = performance_obj
             db_session.add(PTD_obj)

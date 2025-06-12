@@ -12,6 +12,7 @@ def match_ccomparison_query_creator(
         is_flat: bool | None = None,
         league_id: int | None = None,
         patch_id: int | None = None,
+        **kwargs
 ) -> tuple:
     models = ModelList()
     joins = JoinList()
@@ -69,6 +70,7 @@ def team_ccomparison_query_creator(
         is_flat: bool | None = None,
         league_id: int | None = None,
         patch_id: int | None = None,
+        **kwargs
 ) -> tuple:
     if patch_id:
         by_team_where = ByTeamType.patch_id == patch_id

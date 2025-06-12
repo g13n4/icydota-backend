@@ -1,21 +1,21 @@
-from itertools import product
-
 from celery import chain
 from celery.utils.log import get_task_logger
 
 from constants.aggregation import AggregationConstant
 from constants.calculation.cross_comparison import CrossComparisonTypeConstant
-from constants.calculation.game.calculation_types import WindowCalculations
 from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
-from tasks.aggregation.player.parallel.create_performance import create_aggregate_performance_player_task
-from tasks.aggregation.player.parallel.process_calculation import process_one_calculation_aggregate_player_task
-from tasks.aggregation.player.player import aggregate_league_player_task
-from tasks.aggregation.team.team import aggregate_league_team_task
+from tasks.aggregation.player import aggregate_league_player_task
+from tasks.aggregation.team import aggregate_league_team_task
 from tasks.approximate_positions import approximate_positions
 from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_cross_comparison_team
 from tasks.cross_comparison.match import cross_compare_player_task
 from tasks.cross_comparison.team import cross_compare_team_task
-from tasks.helpers import PROCESSING_COMPARISON_LIST
+from tasks.parallel.task_helper.player_aggregation_task_helper import player_aggregation_parallel_processor_task_helper
+from tasks.parallel.task_helper.player_cross_comparison_task_helper import \
+    player_cross_comparison_parallel_processor_task_helper
+from tasks.parallel.task_helper.team_aggregation_task_helper import team_aggregation_parallel_processor_task_helper
+from tasks.parallel.task_helper.team_cross_comparison_task_helper import \
+    team_cross_comparison_parallel_processor_task_helper
 from tasks.set_comparison_names import set_comparison_names
 
 
@@ -61,49 +61,12 @@ def aggregate_league_task_helper(
         all_tasks()
 
 
-def parallel_aggregate_league_player_task_helper(
+def parallel_aggregate_task_helper(
         league_id: int | None = None,
         patch_id: int | None = None,
 ) -> None:
-    for agg_type in AggregationConstant.VALUES:
-        # calculations
-        tasks = []
-        for calc_id, comp_data in product(
-                WindowCalculations.VALUES(only_field="db_id"),
-                PROCESSING_COMPARISON_LIST,
-        ):
-            is_comparison, is_flat = comp_data
-            tasks.append(
-                process_one_calculation_aggregate_player_task.si(
-                    league_id=league_id,
-                    patch_id=patch_id,
-                    calculation_id=calc_id,
-                    aggregation_type=agg_type,
-                    is_comparison=is_comparison,
-                    is_flat=is_flat,
-                )
-            )
-        # totals
-        for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
-            tasks.append(
-                process_one_calculation_aggregate_player_task.si(
-                    league_id=league_id,
-                    patch_id=patch_id,
-                    aggregation_type=agg_type,
-                    calculation_id=0,
-                    is_comparison=is_comparison,
-                    is_flat=is_flat,
-                )
-            )
-        # tasks creation
-        all_tasks = (
-                create_aggregate_performance_player_task.si(
-                    league_id=league_id,
-                    patch_id=patch_id,
-                    aggregation_type=agg_type,
-                ) | chain(*tasks)
-        )
-        all_tasks()
+    player_aggregation_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
+    team_aggregation_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
 
 
 def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
@@ -125,6 +88,14 @@ def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int
             ccomparison_tasks
     )
     all_tasks()
+
+
+def parallel_cross_comparison_task_helper(
+        league_id: int | None = None,
+        patch_id: int | None = None,
+) -> None:
+    player_cross_comparison_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
+    team_cross_comparison_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
 
 
 def set_comparison_names_helper() -> None:

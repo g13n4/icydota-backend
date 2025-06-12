@@ -8,7 +8,8 @@ def match_aggregation_query_creator(
         patch_id: int | None = None,
         calculation_type_id: int | None = None,
         is_comparison: bool = False,
-        is_flat: bool | None = None
+        is_flat: bool | None = None,
+        **kwargs
 ) -> tuple:
     models = ModelList()
     joins = JoinList()

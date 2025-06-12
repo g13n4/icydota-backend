@@ -6,7 +6,7 @@ from db import get_sync_db_session
 from models import League, Patch
 
 
-def processing_task_decorator(func):
+def validate_league_and_patch(func):
     """
     Decorates functions that require both league_id and patch_id.
     Checks if they exist in the db.

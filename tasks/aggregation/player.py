@@ -6,13 +6,13 @@ from modules.processors.totals import TotalPerformanceProcessor
 from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.match_aggregation_query_creator_function import match_aggregation_query_creator
 from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
-from tasks.task_decorator import processing_task_decorator
+from tasks.task_decorator import validate_league_and_patch
 from tasks.utils.performance_object_creation.player_aggregation_objects import \
     create_player_aggregation_performance_objs
 
 
 @shared_task(name="aggregate_league_player", ignore_result=True)
-@processing_task_decorator
+@validate_league_and_patch
 def aggregate_league_player_task(
         db_session,
         aggregation_type: int,

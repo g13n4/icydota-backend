@@ -1,9 +1,12 @@
+from sqlmodel import Session
+
 from models import ComparisonType, CrossComparisonType
 from models.performance import Performance
 from modules.key_creators.ccomparison_key_creator import CrossComparisonPlayerKeyCreator
 
 
 def create_player_cross_comparison_performance_objs(
+        db_session: Session,
         league_id: int | None,
         patch_id: int | None,
         data,
@@ -37,8 +40,9 @@ def create_player_cross_comparison_performance_objs(
             cross_comparison_type=ccomparison_obj,
         )
 
+        db_session.add(performance_obj)
         performance_dict[key_tuple] = performance_obj
 
-    if output:
+    if output is not None:
         output.update(performance_dict)
     return performance_dict

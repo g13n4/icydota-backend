@@ -7,13 +7,13 @@ from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.cross_comparison_query_creator_function import match_ccomparison_query_creator
 from tasks.cross_comparison.helpers import COMPARISON_TYPE_POSITION_MAP
 from tasks.helpers import process_data, get_query_data
-from tasks.task_decorator import processing_task_decorator
+from tasks.task_decorator import validate_league_and_patch
 from tasks.utils.performance_object_creation.player_cross_comparison_objects import \
     create_player_cross_comparison_performance_objs
 
 
 @shared_task(name="cross_compare_player", ignore_result=True)
-@processing_task_decorator
+@validate_league_and_patch
 def cross_compare_player_task(db_session, league_id: int | None, patch_id: int | None, ccomparison_type: int):
     CCKC = CrossComparisonPlayerKeyCreator(ccomparison_type)
     columns = CCKC.get_fields()
@@ -34,6 +34,7 @@ def cross_compare_player_task(db_session, league_id: int | None, patch_id: int |
 
                 if performance_dict is None:
                     performance_dict = create_player_cross_comparison_performance_objs(
+                        db_session=db_session,
                         league_id=league_id,
                         patch_id=patch_id,
                         data=data,

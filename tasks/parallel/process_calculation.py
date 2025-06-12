@@ -12,7 +12,7 @@ from tasks.parallel.decorators import parallel_processing_task_decorator
 @parallel_processing_task_decorator
 def process_one_calculation_aggregate_player_task(
         db_session,
-        CK,
+        KC,
         performance_map: dict,
         calculation_id: int,
         query_func: Callable,
@@ -22,7 +22,7 @@ def process_one_calculation_aggregate_player_task(
         is_flat: bool | None = None,
         **kwargs,
 ):
-    columns = CK.get_fields()
+    columns = KC.get_fields()
 
     is_window = bool(calculation_id)
 
@@ -37,7 +37,7 @@ def process_one_calculation_aggregate_player_task(
     data = get_query_data(db_session=db_session, query=query, names=names)
 
     for processed_data in process_data(data=data, group_by=columns, is_window=is_window):
-        key = CK.create_key(processed_data, append=is_flat)
+        key = KC.create_key(processed_data, append=is_flat)
         if is_window:
             obj = WindowsPerformanceProcessor.get_pwd_from_iterable(processed_data, calculation_id)
             obj.performance_id = performance_map[key]

@@ -9,7 +9,7 @@ def create_team_aggregation_performance_objs(
         db_session,
         league_id: int | None,
         patch_id: int | None,
-        CK: AggregationTeamKeyCreator,
+        KC: AggregationTeamKeyCreator,
 ) -> dict[tuple, Performance]:
     output = dict()
     query, names = team_aggregation_league_participants_query_creator(league_id=league_id, patch_id=patch_id)
@@ -19,7 +19,7 @@ def create_team_aggregation_performance_objs(
         row_data = { name: value for name, value in zip(names, row) }
 
         for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
-            row_key = CK.create_key(row_data, append=is_flat)
+            row_key = KC.create_key(row_data, append=is_flat)
 
             type_obj = ByTeamType(
                 patch_id=patch_id,  # either aggregate or choose one

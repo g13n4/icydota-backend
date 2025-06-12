@@ -8,13 +8,13 @@ from modules.query_creators.cross_comparison_query_creator_function import (
     team_ccomparison_query_creator,
 )
 from tasks.helpers import process_data, get_query_data
-from tasks.task_decorator import processing_task_decorator
+from tasks.task_decorator import validate_league_and_patch
 from tasks.utils.performance_object_creation.team_cross_comparison_objects import \
     create_team_cross_comparison_performance_objs
 
 
 @shared_task(name="cross_compare_team", ignore_result=True)
-@processing_task_decorator
+@validate_league_and_patch
 def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = None):
     CCTKC = CrossComparisonTeamKeyCreator()
 
@@ -31,11 +31,12 @@ def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = N
 
             if performance_dict is None:
                 performance_dict = create_team_cross_comparison_performance_objs(
+                    db_session=db_session,
                     league_id=league_id,
                     patch_id=patch_id,
                     data=data,
                     is_flat=is_flat,
-                    CK=CCTKC,
+                    KC=CCTKC,
                 )
 
             for window_data in process_data(data=data, group_by=CCTKC.fields, is_window=True):

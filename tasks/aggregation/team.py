@@ -8,7 +8,7 @@ from modules.processors.windows import WindowsPerformanceProcessor
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 from tasks.aggregation.helpers import team_aggregation_league_participants_query_creator
 from tasks.helpers import PROCESSING_COMPARISON_LIST, process_data, get_query_data
-from tasks.task_decorator import processing_task_decorator
+from tasks.task_decorator import validate_league_and_patch
 
 
 def _get_key(data: dict, is_flat: bool | None) -> tuple[int, bool | None]:
@@ -52,7 +52,7 @@ def create_performance_objs(
 
 
 @shared_task(name="aggregate_league_team", ignore_result=True)
-@processing_task_decorator
+@validate_league_and_patch
 def aggregate_league_team_task(db_session, league_id: int | None = None, patch_id: int | None = None):
     columns = ['team_id']
 

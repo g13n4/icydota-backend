@@ -28,6 +28,7 @@ class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             self.models.add(getattr(PerformanceTotalData, field), "value")
 
         self.joins.add(Performance, self.data_model.performance_id == Performance.id)
+        self.where.append(Performance.outdated == False)
 
 
     def _set_cross_comparison_match_data(

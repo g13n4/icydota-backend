@@ -109,8 +109,7 @@ def download_json(match_id: int, file_path: Path) -> str:
                 json.dump(game_data, match_json)
 
             return replay_url
-    else:
-        raise ConnectionError(f"Can't access open dota. Code: {r.status_code} {r.text}")
+    raise ConnectionError(f"Can't access open dota. Code: {r.status_code} {r.text}")
 
 
 def download_dem_bz2(url: str, bz2_path: Path):

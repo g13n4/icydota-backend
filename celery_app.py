@@ -77,14 +77,14 @@ def setup_task_post_run(task, *args, **kwargs):
 def setup_periodic_tasks(sender, **kwargs):
     # Process league games
     sender.add_periodic_task(
-        crontab(minute='0', hour='*/6'),
-        task='process_league_games_(cron)',
+        schedule=crontab(minute='0', hour='*/6'),
+        sig='process_league_games_(cron)',
         name='process league games every 6 hours',
     )
 
     # Update leagues dates
     sender.add_periodic_task(
-        crontab(minute='0', hour='12', day_of_week='1,4'),
-        task='update_leagues_date_(cron)',
+        schedule=crontab(minute='0', hour='12', day_of_week='1,4'),
+        sig='update_leagues_date_(cron)',
         name='update leagues start and end date every 3-4 days',
     )

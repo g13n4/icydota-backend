@@ -8,10 +8,13 @@ from modules.query_creators.match_aggregation_query_creator_function import matc
 from modules.query_creators.team_aggregation_query_creator_function import team_aggregation_query_creator
 
 
-T = AggregationPlayerKeyCreator | AggregationTeamKeyCreator | CrossComparisonPlayerKeyCreator | CrossComparisonTeamKeyCreator
+KCType = AggregationPlayerKeyCreator | AggregationTeamKeyCreator | CrossComparisonPlayerKeyCreator | CrossComparisonTeamKeyCreator
 
 
-def get_parallel_helpers(with_query: bool = False, **kwargs) -> tuple[T, str] | tuple[T, str, Callable]:
+def get_parallel_processing_helpers(
+        with_query: bool = False,
+        **kwargs
+) -> tuple[KCType, str] | tuple[KCType, str, Callable]:
     processing_type: Literal["aggregation", "cross-comparison"] = kwargs.get("processing_type")
     PoT: Literal["player", "team"] = kwargs.get("PoT")
 

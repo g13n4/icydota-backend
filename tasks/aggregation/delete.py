@@ -1,4 +1,5 @@
 from celery import shared_task
+from sqlalchemy import update
 from sqlmodel import delete, select, Session, col
 
 from db import get_sync_db_session
@@ -8,7 +9,7 @@ from models.performance_data_type import ByTeamType
 
 
 @shared_task(name="delete_aggregation_match", ignore_result=True)
-def delete_aggregation_match(league_id: int | None, patch_id: int | None):
+def delete_aggregation_match(league_id: int | None, patch_id: int | None, only_mark: bool = True):
     db_session: Session = get_sync_db_session(expire=False)
     if patch_id:
         where = [AggregationType.patch_id == patch_id]
@@ -30,14 +31,20 @@ def delete_aggregation_match(league_id: int | None, patch_id: int | None):
             )
         ))
 
-    db_session.exec(
-        delete(Performance).where(col(Performance.id).in_(select_performance_ids))
-    )
+    if only_mark:
+        db_session.execute(
+            update(Performance).where(col(Performance.id).in_(select_performance_ids)).values(outdated=True)
+        )
+    else:
+        db_session.exec(
+            delete(Performance).where(col(Performance.id).in_(select_performance_ids))
+        )
+
     db_session.commit()
 
 
 @shared_task(name="delete_aggregation_team", ignore_result=True)
-def delete_aggregation_team(league_id: int | None, patch_id: int | None):
+def delete_aggregation_team(league_id: int | None, patch_id: int | None, only_mark: bool = True):
     db_session: Session = get_sync_db_session(expire=False)
     if patch_id:
         where = [ByTeamType.patch_id == patch_id]
@@ -58,7 +65,12 @@ def delete_aggregation_team(league_id: int | None, patch_id: int | None):
         )
     ))
 
-    db_session.exec(
-        delete(Performance).where(col(Performance.id).in_(select_performance_ids))
-    )
+    if only_mark:
+        db_session.execute(
+            update(Performance).where(col(Performance.id).in_(select_performance_ids)).values(outdated=True)
+        )
+    else:
+        db_session.exec(
+            delete(Performance).where(col(Performance.id).in_(select_performance_ids))
+        )
     db_session.commit()

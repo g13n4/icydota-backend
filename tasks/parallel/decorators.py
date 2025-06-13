@@ -6,7 +6,7 @@ from sqlmodel import Session
 from db import get_sync_db_session
 from redis_app import get_redis_single
 from tasks.cross_comparison.helpers import COMPARISON_TYPE_POSITION_MAP
-from tasks.parallel.parallel_helpers import get_parallel_helpers
+from tasks.parallel.parallel_helpers import get_parallel_processing_helpers
 
 
 def performance_creator_task_decorator(func):
@@ -29,7 +29,7 @@ def performance_creator_task_decorator(func):
             else:
                 data[k] = obj.id
 
-        r.set(rkey, pickle.dumps(data))
+        r.set(rkey, pickle.dumps(data), ex=60 * 60 * 12)
 
 
     return wrapper
@@ -46,7 +46,7 @@ def parallel_processing_task_decorator(func):
         ccomp_pos_id = kwargs.pop("ccomp_pos_id", None)
         enemies = COMPARISON_TYPE_POSITION_MAP.get(ccomp_pos_id, None)
 
-        KC, KEY, query = get_parallel_helpers(with_query=True, ccomp_pos_id=ccomp_pos_id, **kwargs)
+        KC, KEY, query = get_parallel_processing_helpers(with_query=True, ccomp_pos_id=ccomp_pos_id, **kwargs)
 
         output_pickled = r.get(KEY)
         output = pickle.loads(output_pickled)

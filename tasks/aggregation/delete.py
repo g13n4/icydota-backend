@@ -9,7 +9,12 @@ from models.performance_data_type import ByTeamType
 
 
 @shared_task(name="delete_aggregation_match", ignore_result=True)
-def delete_aggregation_match(league_id: int | None, patch_id: int | None, only_mark: bool = True):
+def delete_aggregation_match(
+        league_id: int | None,
+        patch_id: int | None,
+        aggregation_type: int | None = None,
+        only_mark: bool = True,
+):
     db_session: Session = get_sync_db_session(expire=False)
     if patch_id:
         where = [AggregationType.patch_id == patch_id]
@@ -17,6 +22,9 @@ def delete_aggregation_match(league_id: int | None, patch_id: int | None, only_m
         where = [AggregationType.league_id == league_id]
     else:
         raise ValueError("No league_id value or patch_id value provided for delete_aggregation_match task")
+
+    if aggregation_type:
+        where.append(AggregationType.type_id == aggregation_type)
 
     select_performance_ids = (
         select(Performance.id)

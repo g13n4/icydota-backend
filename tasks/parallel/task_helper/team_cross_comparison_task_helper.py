@@ -3,6 +3,7 @@ from itertools import product
 from celery import chain
 
 from constants.calculation.game.calculation_types import WindowCalculations
+from tasks.cross_comparison.delete import delete_cross_comparison_team
 from tasks.helpers import PROCESSING_COMPARISON_LIST
 from tasks.parallel.create_performance.team_cross_comparison_performance import \
     create_cross_comparison_team_performance_task
@@ -42,6 +43,7 @@ def team_cross_comparison_parallel_processor_task_helper(
         )
     # tasks creation
     all_tasks = (
+            delete_cross_comparison_team.si(league_id=league_id, patch_id=patch_id) |
             create_cross_comparison_team_performance_task.si(
                 league_id=league_id,
                 patch_id=patch_id,

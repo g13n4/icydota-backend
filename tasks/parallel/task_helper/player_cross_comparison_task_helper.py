@@ -4,6 +4,7 @@ from celery import chain
 
 from constants.calculation.cross_comparison import CrossComparisonTypeConstant
 from constants.calculation.game.calculation_types import WindowCalculations
+from tasks.cross_comparison.delete import delete_cross_comparison_match
 from tasks.cross_comparison.helpers import COMPARISON_TYPE_POSITION_MAP
 from tasks.helpers import PROCESSING_COMPARISON_LIST
 from tasks.parallel.create_performance.player_cross_comparison_performance import \
@@ -51,6 +52,7 @@ def player_cross_comparison_parallel_processor_task_helper(
                 )
             # tasks creation
             all_tasks = (
+                    delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id) |
                     create_cross_comparison_player_performance_task.si(
                         league_id=league_id,
                         patch_id=patch_id,

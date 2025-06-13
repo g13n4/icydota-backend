@@ -3,6 +3,7 @@ from itertools import product
 from celery import chain
 
 from constants.calculation.game.calculation_types import WindowCalculations
+from tasks.aggregation.delete import delete_aggregation_team
 from tasks.helpers import PROCESSING_COMPARISON_LIST
 from tasks.parallel.create_performance.team_aggregation_performance import create_aggregate_team_performance_task
 from tasks.parallel.task_helper.helpers import create_partial_task
@@ -41,6 +42,7 @@ def team_aggregation_parallel_processor_task_helper(
         )
     # tasks creation
     all_tasks = (
+            delete_aggregation_team.si(league_id=league_id, patch_id=patch_id) |
             create_aggregate_team_performance_task.si(
                 league_id=league_id,
                 patch_id=patch_id,

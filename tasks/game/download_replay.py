@@ -125,14 +125,14 @@ def unzip_dem(bz2_path: Path, dem_path: Path):
             file_output.write(data)
 
 
-def parse_replay(dem_file: Path, replay_file: Path, port: int = 5600):
+def parse_replay(dem_file: Path, replay_file: Path, port: str | int):
     command = f'curl localhost:{port} --data-binary ' + f'"@{str(dem_file)}" > "{str(replay_file)}"'
     curl_reponse = subprocess.run(command, shell=True, check=True, capture_output=True)
     return curl_reponse
 
 
 @shared_task(name='get_match_replay', retries=3, default_retry_delay=7)
-def get_match_replay(match_id: int, first_parser: bool = True) -> int:
+def get_match_replay(match_id: int, parser_port: int | str) -> int:
     logger.info(f'Download replay for {match_id}')
 
     folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}/'))
@@ -154,10 +154,6 @@ def get_match_replay(match_id: int, first_parser: bool = True) -> int:
     is_valid = _any_file_exists(dem_file)
     if not is_valid:
         unzip_dem(bz2_path=dem_bz2_file, dem_path=dem_file)
-
-    parser_port = 5600
-    if not first_parser:
-        parser_port = 5700
 
     jsonl_file = Path(os.path.join(folder_path, f'./{match_id}.jsonl'))
     is_valid = _jsonl_exists_and_valid(jsonl_file)

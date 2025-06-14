@@ -11,28 +11,28 @@ from tasks.approximate_positions import approximate_positions
 from tasks.game.download_replay import get_match_replay
 from tasks.game.process_game import process_game_data
 from tasks.league.create_league import get_or_create_league, update_league_obj_dates
-from utils import bool_pool
+from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 
 
 logger = get_task_logger(__name__)
 
 
 def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
-    first_parser = next(bool_pool)
-
-    match_chain = (get_match_replay.si(match_id=match_id, first_parser=first_parser) |
+    port = next(AVAILABLE_PARSERS_PORT)
+    match_chain = (get_match_replay.si(match_id=match_id, first_parser=port) |
                    process_game_data.si(match_id=match_id, league_id=league_id))
     if get_chain:
         return match_chain
 
     match_chain.apply_async()
+    return None
 
 
 def process_league(
         league_obj: League | None = None,
         league_id: int | None = None,
         overwrite: bool = False
-        ):
+):
     db_session: Session = get_sync_db_session()
 
     league_obj = get_or_create_league(league_id, db_session, league_obj)

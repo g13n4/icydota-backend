@@ -4,13 +4,11 @@ from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from enum import EnumType
-from itertools import cycle
 from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
 
 import numpy as np
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
-
 
 
 T = TypeVar('T')
@@ -122,9 +120,6 @@ def get_or_create(logger, *args, **kwargs):
     return output
 
 
-bool_pool = cycle([True, False])
-
-
 def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) -> List[str] | Set[str]:
     schema = model.schema()
     fields = schema['properties']
@@ -150,8 +145,6 @@ def get_positions_approximations(db_session: Session, model, league_id) -> Dict[
     )
 
     return { pid: poid for pid, poid in objs }
-
-
 
 
 def is_na_decimal(value: Any) -> bool:

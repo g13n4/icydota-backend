@@ -1,5 +1,6 @@
 class GamePerformanceTypeConstant:
     MATCH_DATA: int = 101
+
     MATCH_DATA_COMPARISON: int = 102
 
     AGGREGATION: int = 103

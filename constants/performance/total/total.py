@@ -339,6 +339,38 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True
     )
+    # first pick
+    first_pick_pos_1: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=73,
+        availability=FieldOption(player=False),
+        pseudo_bool=True
+    )
+    first_pick_pos_2: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=74,
+        availability=FieldOption(player=False),
+        pseudo_bool=True
+    )
+    first_pick_pos_3: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=75,
+        availability=FieldOption(player=False),
+        pseudo_bool=True
+    )
+    first_pick_pos_4: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=76,
+        availability=FieldOption(player=False),
+        pseudo_bool=True
+    )
+    first_pick_pos_5: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=77,
+        availability=FieldOption(player=False),
+        pseudo_bool=True
+    )
+
 
     _VALUES: ClassVar[list[GameTotal]]
     VALUES: GameTotalsIterator

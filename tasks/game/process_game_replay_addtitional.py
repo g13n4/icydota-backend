@@ -258,6 +258,7 @@ def process_additional_replay_data(
 
 
         hero_id = this_player_data['hero_id']
+        position_id = this_player_data['position_id']
 
         first_pick = pick_dict[hero_id] == 1
         last_pick = pick_dict[hero_id] == 10
@@ -272,6 +273,11 @@ def process_additional_replay_data(
 
         this_total_perf_obj.first_pick_hero = int(first_pick)
         this_total_perf_obj.last_pick_hero = int(last_pick)
+
+        for x in range(1, 6):
+            attrib_name = f"first_pick_pos_{x}"
+            value = int(first_pick and position_id == x)
+            setattr(this_total_perf_obj, attrib_name, value)
 
         db_session.add(this_total_perf_obj)
 

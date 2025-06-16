@@ -1,8 +1,8 @@
 import requests
 from sqlmodel import Session
 
-from helpers import get_id_dict
 from models import Player, Team
+from scripts.populate.helpers import get_id_dict
 
 
 def create_players_and_teams(db_session: Session, ) -> None:

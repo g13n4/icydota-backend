@@ -3,7 +3,7 @@ from typing import Callable, TypeVar, Any
 from pydantic import BaseModel
 
 from constants.helpers import Item
-from helpers import UniqueIndexChecker
+from modules.unique_index_checker import UniqueIndexChecker
 
 
 CalculationType = TypeVar('CalculationType')

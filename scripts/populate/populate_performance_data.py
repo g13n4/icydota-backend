@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
-from helpers import get_id_dict
 from models.performance import PerformanceWindowCalculationCategory, PerformanceWindowCalculationType
+from scripts.populate.helpers import get_id_dict
 
 
 def create_performance_data(db_session: Session, ) -> None:

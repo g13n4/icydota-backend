@@ -1,8 +1,8 @@
 import requests
-from sqlmodel import Session, select
+from sqlmodel import Session
 
-from helpers import get_id_dict
 from models import Hero
+from scripts.populate.helpers import get_id_dict
 
 
 def create_heroes(db_session: Session) -> list[Hero]:

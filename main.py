@@ -240,7 +240,6 @@ if not LIGHT_MODE:
         process_game_helper(match_id=match_id)
         return { 'status': 'processing' }
 
-
     # AGGREGATION
     @icydota_api.delete(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=204)
     async def delete_aggregation_api(lop: LoPEnum, lop_value: int):

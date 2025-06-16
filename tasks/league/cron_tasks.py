@@ -19,7 +19,7 @@ logger = get_task_logger(__name__)
 
 def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
-    match_chain = (get_match_replay.si(match_id=match_id, first_parser=port) |
+    match_chain = (get_match_replay.si(match_id=match_id, parser_port=port) |
                    process_game_data.si(match_id=match_id, league_id=league_id))
     if get_chain:
         return match_chain
@@ -29,6 +29,7 @@ def process_game_helper(match_id: int, league_id: int | None = None, get_chain: 
 
 
 def process_league(
+
         league_obj: League | None = None,
         league_id: int | None = None,
         overwrite: bool = False
@@ -48,7 +49,8 @@ def process_league(
         else:
             process_game_helper(
                 match_id=game['match_id'],
-                league_id=league_obj.id, )
+                league_id=league_obj.id,
+            )
 
             new_games_found += 1
 

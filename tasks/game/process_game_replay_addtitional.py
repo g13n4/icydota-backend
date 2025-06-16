@@ -260,10 +260,18 @@ def process_additional_replay_data(
         hero_id = this_player_data['hero_id']
         position_id = this_player_data['position_id']
 
+        is_dire = this_player_data['slot'] > 4
+        is_sent = this_player_data['slot'] < 5
+
         first_pick = pick_dict[hero_id] == 1
         last_pick = pick_dict[hero_id] == 10
         win = this_total_perf_obj.win == True
         lose = this_total_perf_obj.win == False
+
+
+        this_total_perf_obj.win_dire = int(win and is_dire)
+        this_total_perf_obj.win_sent = int(win and is_sent)
+
 
         this_total_perf_obj.first_pick_win = int(first_pick and win)
         this_total_perf_obj.first_pick_lose = int(first_pick and lose)

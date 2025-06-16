@@ -4,11 +4,11 @@ from typing import Any, ClassVar, Optional, Literal
 from pydantic import condecimal, BaseModel
 
 from constants.performance.total.field_option import FieldOption
-from helpers import to_proper_name, UniqueIndexChecker
+from helpers import to_proper_name
+from modules.unique_index_checker import UniqueIndexChecker
 
 
 MINUTE = 60
-
 
 FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[FieldOption.__match_args__]
 
@@ -24,6 +24,8 @@ class GameTotal(BaseModel):
     optional: bool = False
     sort_offset: int = 0
     normalization: None | FieldOption = None
+    category: None = None
+
 
 def set_total_name(klass: object):
     values = []
@@ -343,34 +345,45 @@ class GameTotals:
     first_pick_pos_1: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=73,
-        availability=FieldOption(player=False),
+        availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True
     )
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=74,
-        availability=FieldOption(player=False),
+        availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True
     )
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=75,
-        availability=FieldOption(player=False),
+        availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True
     )
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=76,
-        availability=FieldOption(player=False),
+        availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True
     )
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=77,
-        availability=FieldOption(player=False),
+        availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True
     )
-
+    win_dire: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=78,
+        availability=FieldOption(match=False, player=False, for_one_field=False),
+        pseudo_bool=True
+    )
+    win_sent: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=79,
+        availability=FieldOption(match=False, player=False, for_one_field=False),
+        pseudo_bool=True
+    )
 
     _VALUES: ClassVar[list[GameTotal]]
     VALUES: GameTotalsIterator

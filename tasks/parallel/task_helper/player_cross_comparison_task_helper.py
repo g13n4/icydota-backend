@@ -52,7 +52,7 @@ def player_cross_comparison_parallel_processor_task_helper(
                 )
             # tasks creation
             all_tasks = (
-                    delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id) |
+                    delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id, ccomp_type=ccomparison_type) |
                     create_cross_comparison_player_performance_task.si(
                         league_id=league_id,
                         patch_id=patch_id,

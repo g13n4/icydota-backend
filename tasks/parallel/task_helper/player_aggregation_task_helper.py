@@ -47,7 +47,7 @@ def player_aggregation_parallel_processor_task_helper(
             )
         # tasks creation
         all_tasks = (
-                delete_aggregation_match.si(league_id=league_id, patch_id=patch_id) |
+                delete_aggregation_match.si(league_id=league_id, patch_id=patch_id, aggregation_type=agg_type) |
                 create_aggregate_player_performance_task.si(
                     league_id=league_id,
                     patch_id=patch_id,

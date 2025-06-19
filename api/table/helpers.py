@@ -80,7 +80,7 @@ def process_db_output(
         req_type: str,
         data_model_name: str,
         game_stage: str | None = None,
-) -> Tuple[list, list, bool]:
+) -> Tuple[list, dict, bool]:
     TMMF = TableMinMaxFinder()
     output = []
 
@@ -112,3 +112,35 @@ def process_db_output(
         output.append(row_data)
 
     return output, TMMF.get_minmax_values(), TMMF.has_totals()
+
+
+def extract_formatted_columns(data: list, pinned_columns: list[str], header_name_map: dict) -> list[dict]:
+    item = next(iter(data))
+    output = []
+    for name in item.keys():
+        this_dict = dict()
+        this_dict["field"] = name
+        this_dict["headerName"] = header_name_map.get(name, name)
+        if name in pinned_columns:
+            this_dict["pinned"] = "left"
+
+        output.append(this_dict)
+    return output
+
+
+def format_formatted_columns(pinned_column: str, columns: list[str]) -> list[dict]:
+    output = list()
+    output.append(
+        {
+            "field": pinned_column,
+            "headerName": pinned_column,
+            "pinned": "left",
+
+        }
+    )
+    for name in columns:
+        this_dict = dict()
+        this_dict["field"] = name
+        this_dict["headerName"] = name
+        output.append(this_dict)
+    return output

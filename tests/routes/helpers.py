@@ -19,7 +19,7 @@ ADDRESS = "http://127.0.0.1:3333"
 
 # FUNC
 def test_output(output_data):
-    for name in ["table_data", "value_mapping"]:
+    for name in ["data", "columns", "valueMapping"]:
         if not (name in output_data):
             return False
     return True

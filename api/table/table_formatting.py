@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from api.table.helpers import extract_formatted_columns, format_formatted_columns
 from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.total.total import GameTotals
 from constants.performance.window import AllWindows
@@ -20,43 +21,12 @@ def to_table_format(
         sum_total: Optional[bool] = None,
 ) -> dict:
 
-    if not data:
-        return { }
-
-    item = data[0]
-    if columns is None:
-        columns = []
-
-    values = sorted(
-        [key_name for key_name in item.keys() if key_name not in rows],
-    )
-
-    fields = {
-        'rows': rows,
-        'columns': columns,
-        'values': values,
-        'valueInCols': True,
-    }
-
-    meta = [
-        {
-            'field': x,
-            'name': ALL_CALCULATION_FIELDS.get(x, x),
-        } for x in item.keys()
-    ]
+    header_columns = extract_formatted_columns(data, rows, ALL_CALCULATION_FIELDS)
 
     return {
-        "table_data": {
-            'fields': fields,
-            'meta': meta,
-            'data': data,
-        },
-        "table_options": {
-            "style": {
-                "layoutWidthType": 'colAdaptive',
-            },
-        },
-        "value_mapping": value_mapping,
+        "data": data,
+        "columns": header_columns,
+        "valueMapping": value_mapping,
     }
 
 
@@ -66,17 +36,11 @@ def to_table_format_cross_comparison(
         header_name: str,
         columns: list[str],
 ) -> dict:
-    fields = {
-        'rows': [header_name],  # hero/pos/player | l2/g2/etc
-        'columns': [],
-        'values': columns,  # classic windows/ total_values
-        'valueInCols': True,
-    }
+
+    header_columns = format_formatted_columns(header_name, columns)
 
     return {
-        "table_data": {
-            'fields': fields,
-            'windows_data': data,
-        },
-        "value_mapping": values_info,
+        "data": data,
+        "columns": header_columns,
+        "valueMapping": values_info,
     }

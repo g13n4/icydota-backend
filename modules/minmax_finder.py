@@ -119,6 +119,6 @@ class TableMinMaxFinder:
         return None
 
 
-    def get_minmax_values(self, use_alias: bool = False) -> List[dict]:
-        return [{ 'col': (self.alias.get(col, col) if use_alias else col), **col_data }
-                for col, col_data in self.data.items()]
+    def get_minmax_values(self, use_alias: bool = False) -> dict:
+        return { (self.alias.get(col, col) if use_alias else col): col_data
+                 for col, col_data in self.data.items() }

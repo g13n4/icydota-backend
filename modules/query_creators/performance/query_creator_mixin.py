@@ -43,7 +43,8 @@ class PerformanceQueryCreatorMixin:
                 True
             )
             self.where.append(PerformanceWindowData.calc_type_id == calculation_type_id)
-        self.where.append(Performance.outdated == False)
+        # TODO: uncomment
+        # self.where.append(Performance.outdated == False)
 
     def _set_comparison_model(self, is_flat: bool, basic: bool | None = None, name: None | str = None):
         self.models.add(ComparisonType.cps_name_short, name or 'opponent', True)

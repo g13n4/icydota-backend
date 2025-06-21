@@ -21,11 +21,13 @@ async def _create_player_hero_dict(players_select_data) -> dict:
 def _sort_func(item: dict):
     return item['position_id']
 
+
 async def get_games_all(
         db_session: AsyncSession,
         league_id: int | None = None,
         patch_id: int | None = None,
-        offset: int = 0
+        limit: int = 48,
+        offset: int = 0,
 ):
     if league_id is None and patch_id is None:
         raise TypeError("Parameter should be provided! League and Patch ids are empty!")
@@ -41,28 +43,32 @@ async def get_games_all(
     if patch_id:
         select_objs.append(League.name)
 
-
-    select_query = (select(*select_objs)
-                    .join(sent_side, onclause=sent_side.game_id == Game.id)
-                    .join(dire_side, onclause=dire_side.game_id == Game.id))
+    select_query = (
+        select(*select_objs)
+        .join(sent_side, onclause=sent_side.game_id == Game.id)
+        .join(dire_side, onclause=dire_side.game_id == Game.id)
+        .filter(sent_side.dire == False, dire_side.dire == True)
+    )
 
     if patch_id:
         select_query.join(League, onclause=Game.league_id == League.id).where(where_condition)
     else:
         select_query.where(where_condition)
 
-    match_objs = await db_session.exec(select_query.order_by(Game.id.desc()).offset(offset))
+    match_objs = await db_session.exec(select_query.order_by(Game.id.desc()).offset(offset).limit(limit))
 
-    players_select = (select(
-        Game.id,
-        PlayerGameData.dire,
-        PlayerGameData.hero_id,
-        Player.nickname,
-        PlayerGameData.position_id,
-    ).join(Player, onclause=PlayerGameData.player_id == Player.account_id)
-                      .join(Game, onclause=Game.id == PlayerGameData.game_id)
-                      .where(where_condition).order_by(Game.id.desc()).offset(offset * 10)
-                      )
+    players_select = (
+        select(
+            Game.id,
+            PlayerGameData.dire,
+            PlayerGameData.hero_id,
+            Player.nickname,
+            PlayerGameData.position_id,
+        ).join(Player, onclause=PlayerGameData.player_id == Player.account_id)
+        .join(Game, onclause=Game.id == PlayerGameData.game_id)
+        .where(where_condition).order_by(Game.id.desc()).offset(offset * 10).limit(limit * 10)
+    )
+    print(players_select)
 
     players_objs = await db_session.exec(players_select)
     hero_data = await _create_player_hero_dict(players_objs)
@@ -84,10 +90,7 @@ async def get_games_all(
                 (sent_side_obj, sent_side_dict),
             ]:
                 value = getattr(side_obj, item.name)
-                side_dict[item.name] = {
-                    "label": item.description,
-                    "value": value if item.value_type is not bool else to_front_bool(value),
-                }
+                side_dict[item.name] = str(value) if item.value_type is not bool else to_front_bool(value)
 
         data = {
             "id": str(game_obj.id),

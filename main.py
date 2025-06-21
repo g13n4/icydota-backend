@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
@@ -16,6 +17,17 @@ from api.table.table_formatting import to_table_format_cross_comparison, to_tabl
 from celery_app import celery_app
 from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
 from db import get_async_db_session
+from scripts.create_initial_name_map import create_initial_redis_name_map
+
+
+RECREATE_HASH = os.getenv('RECREATE_HASH', default=False)
+
+
+@asynccontextmanager
+async def lifespan_hook(app: FastAPI):
+    create_initial_redis_name_map(on_startup=True)
+    yield
+    return
 
 
 __all__ = ['celery_app']
@@ -41,7 +53,7 @@ else:
     print(LIGHT_MODE)
 
 # FASTAPI
-icydota_api = FastAPI()
+icydota_api = FastAPI(lifespan=lifespan_hook)
 
 # CORS
 origins = [
@@ -90,11 +102,16 @@ async def get_league_matches_route(
         lop: LoPEnum,
         lod_id: int,
         db_session: AsyncSession = Depends(get_async_db_session),
+        limit: int = 48,
+        offset: int = 0,
 ) -> dict:
     if lop == LoPEnum.league:
-        output = await get_games_all(db_session=db_session, league_id=lod_id)
+        output = await get_games_all(db_session=db_session, league_id=lod_id, limit=limit, offset=offset)
     else:
-        output = await get_games_all(db_session=db_session, patch_id=lod_id)
+        output = await get_games_all(db_session=db_session, patch_id=lod_id, limit=limit, offset=offset)
+
+    if not output:
+        raise HTTPException(status_code=204)
 
     return output
 
@@ -239,6 +256,7 @@ if not LIGHT_MODE:
     async def process_match_api(match_id: int):
         process_game_helper(match_id=match_id)
         return { 'status': 'processing' }
+
 
     # AGGREGATION
     @icydota_api.delete(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=204)

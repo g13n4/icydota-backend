@@ -16,7 +16,7 @@ class SPItem(BaseModel):
     description: str | None = None
 
 
-def set_total_name(klass: object):
+def set_values_and_name(klass: object):
     values = []
     for name, type_ in klass.__annotations__.items():
         if type_ is SPItem:
@@ -34,7 +34,7 @@ def set_total_name(klass: object):
     return klass
 
 
-@set_total_name
+@set_values_and_name
 class SidePerformance:
     gold: SPItem = SPItem(value_type=int, index=1)
     xp: SPItem = SPItem(value_type=int, index=2, description="XP")

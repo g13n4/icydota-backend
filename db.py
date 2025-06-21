@@ -1,11 +1,11 @@
 import os
 
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import create_engine, Session
-from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
+
 
 load_dotenv()
 
@@ -27,11 +27,13 @@ SYNC_DATABASE_URI = "postgresql://" + DB_URI
 
 sync_engine = create_engine(SYNC_DATABASE_URI, echo=False, future=True)
 
+
 # SYNC SESSION
 def get_sync_db_sessionmaker(expire: bool):
     return sessionmaker(
         sync_engine, class_=Session, expire_on_commit=expire
     )
+
 
 def get_sync_db_session(expire: bool = False) -> Session:
     sync_session = get_sync_db_sessionmaker(expire=expire)
@@ -42,6 +44,7 @@ def get_sync_db_session(expire: bool = False) -> Session:
 # DB CHECK
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -51,20 +54,29 @@ def get_db():
 
 
 # ASYNC SESSION
-async_engine = create_async_engine(ASYNC_DATABASE_URI,
-                                   pool_size=POOL_SIZE,
-                                   max_overflow=POOL_SIZE,
-                                   pool_use_lifo=True,
-                                   pool_pre_ping=True,
-                                   echo=False,
-                                   future=True)
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URI,
+    pool_size=POOL_SIZE,
+    max_overflow=POOL_SIZE,
+    pool_use_lifo=True,
+    pool_pre_ping=True,
+    echo=False,
+    future=True
+)
+
+async_session_maker = sessionmaker(
+    async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+)
 
 
 async def get_async_db_session() -> AsyncSession:
-    async_session = sessionmaker(
-        async_engine, class_=AsyncSession, expire_on_commit=False
-    )
-    async with async_session() as session:
-        yield session
-
-
+    async with async_session_maker() as session:
+        try:
+            yield session
+        except:
+            await session.rollback()
+            raise

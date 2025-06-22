@@ -17,17 +17,6 @@ from api.table.table_formatting import to_table_format_cross_comparison, to_tabl
 from celery_app import celery_app
 from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
 from db import get_async_db_session
-from scripts.create_initial_name_map import create_initial_redis_name_map
-
-
-RECREATE_HASH = os.getenv('RECREATE_HASH', default=False)
-
-
-@asynccontextmanager
-async def lifespan_hook(app: FastAPI):
-    create_initial_redis_name_map(on_startup=True)
-    yield
-    return
 
 
 __all__ = ['celery_app']
@@ -53,7 +42,7 @@ else:
     print(LIGHT_MODE)
 
 # FASTAPI
-icydota_api = FastAPI(lifespan=lifespan_hook)
+icydota_api = FastAPI()
 
 # CORS
 origins = [

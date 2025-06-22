@@ -14,7 +14,7 @@ async def _create_player_hero_dict(players_select_data) -> dict:
         if key_ not in output:
             output[key_] = []
 
-        output[key_].append({ "hero_id": hero_id, "position_id": position })
+        output[key_].append({ "hero_id": str(hero_id), "position_id": str(position) })
     return output
 
 
@@ -81,7 +81,7 @@ async def get_games_all(
         dire_heroes = hero_data[(game_obj.id, True)]
 
         sent_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
-        dire_heroes.sort(key=lambda hero_item: _sort_func(hero_item), reverse=True)
+        dire_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
 
         sent_name, dire_name = game_obj.name.split(' vs ')
         for item in SidePerformance.VALUES:
@@ -94,18 +94,18 @@ async def get_games_all(
 
         data = {
             "id": str(game_obj.id),
-            "dire_won": game_obj.dire_win,
-            "name_dire": dire_name,
-            "name_sent": sent_name,
+            "direWon": game_obj.dire_win,
+            "direName": dire_name,
+            "sentName": sent_name,
             "duration": f'{game_obj.duration // 60}:{game_obj.duration % 60:02}',
-            "sent_heroes": sent_heroes,
-            "dire_heroes": dire_heroes,
-            "dire_data": dire_side_dict,
-            "sent_data": sent_side_dict,
+            "sentHeroes": sent_heroes,
+            "direHeroes": dire_heroes,
+            "direData": dire_side_dict,
+            "sentData": sent_side_dict,
         }
         if league:
             data['league_name'] = league[0]
 
         output.append(data)
 
-    return { "games": output }
+    return { "data": output }

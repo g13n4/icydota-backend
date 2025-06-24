@@ -34,7 +34,9 @@ if not sys.warnoptions:
 
 
 def create_game_data_objs(
-        totals: Dict[int, PerformanceTotalData]
+        totals: Dict[int, PerformanceTotalData],
+        sent_side: SidePerformanceData | None = None,
+        dire_side: SidePerformanceData | None = None,
 ) -> tuple[SidePerformanceData, SidePerformanceData]:
     dict_sides = {
         'sent': { 'first_blood_claimed': False },
@@ -60,7 +62,10 @@ def create_game_data_objs(
     dict_sides['sent']['dire'] = False
     dict_sides['dire']['dire'] = True
 
-    return SidePerformanceData(**dict_sides['sent']), SidePerformanceData(**dict_sides['dire'])
+    if sent_side and dire_side:
+        return sent_side.splmodel_update(**dict_sides['sent']), dire_side.sqlmodel_update(**dict_sides['dire'])
+    else:
+        return SidePerformanceData(**dict_sides['sent']), SidePerformanceData(**dict_sides['dire'])
 
 
 def process_teams(db_session, dire_data: dict, radiant_data: dict) -> Dict[str, Team]:
@@ -226,7 +231,6 @@ def process_game_data(match_id: int, league_id: int | None = None):
         }
         check_for_manual_fix_inplace(game_id=match_id, data=player_data)
 
-
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
             lane=player_info['lane'],
@@ -317,6 +321,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(
         totals={ slot: player_data_dict[slot]['performance_total_data'] for slot in player_data_dict }
+
     )
     db_session.add(game_data_sent_obj)
     db_session.add(game_data_dire_obj)

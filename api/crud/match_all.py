@@ -39,7 +39,7 @@ async def get_games_all(
 
     where_condition = Game.league_id == league_id if league_id else Game.patch_id == patch_id
 
-    select_objs = [Game, dire_side, sent_side]
+    select_objs = [Game.id, Game.name, Game.dire_win, Game.duration, dire_side, sent_side]
     if patch_id:
         select_objs.append(League.name)
 
@@ -74,16 +74,26 @@ async def get_games_all(
     hero_data = await _create_player_hero_dict(players_objs)
 
     output = []
-    for game_obj, dire_side_obj, sent_side_obj, *league in match_objs.all():
+    counter = 1
+    for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, *league in match_objs.all():
         dire_side_dict = { }
         sent_side_dict = { }
-        sent_heroes = hero_data[(game_obj.id, False)]
-        dire_heroes = hero_data[(game_obj.id, True)]
-
+        try:
+            sent_heroes = hero_data[(game_id, False)]
+            dire_heroes = hero_data[(game_id, True)]
+        except KeyError:
+            print(f"counter: {counter}")
+            print(f"{game_id} not in {list(hero_data)[:10]}")
+            print(f"sent side in dict: {(game_id, False) in hero_data}")
+            print(f"dire side in dict: {(game_id, True) in hero_data}")
+            print(f"total dict size {len(hero_data)} so {len(hero_data) / 2} games")
+            print(f"wrong dict size {[k for k, v in hero_data.items() if len(v) != 5]} games")
+            raise
+        counter += 1
         sent_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
         dire_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
 
-        sent_name, dire_name = game_obj.name.split(' vs ')
+        sent_name, dire_name = game_name.split(' vs ')
         for item in SidePerformance.VALUES:
             for side_obj, side_dict in [
                 (dire_side_obj, dire_side_dict),
@@ -93,11 +103,11 @@ async def get_games_all(
                 side_dict[item.name] = str(value) if item.value_type is not bool else to_front_bool(value)
 
         data = {
-            "id": str(game_obj.id),
-            "direWon": game_obj.dire_win,
+            "id": str(game_id),
+            "direWon": game_dire_win,
             "direName": dire_name,
             "sentName": sent_name,
-            "duration": f'{game_obj.duration // 60}:{game_obj.duration % 60:02}',
+            "duration": f'{game_duration // 60}:{game_duration % 60:02}',
             "sentHeroes": sent_heroes,
             "direHeroes": dire_heroes,
             "direData": dire_side_dict,

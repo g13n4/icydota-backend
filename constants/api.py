@@ -43,11 +43,12 @@ class FieldTypesEnum(CaseInsensitiveEnum):
 
 class ComparisonTypeEnum(CaseInsensitiveEnum):
     player = "player"
+    basic = "basic"
     general = "general"
 
 
     def to_value(self) -> bool:
-        if self == self.player:
+        if self == self.player or self == self.basic:
             return False
         elif self == self.general:
             return True

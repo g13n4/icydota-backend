@@ -113,17 +113,19 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=20,
         description="FB",
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     first_kill_time: GameTotal = GameTotal(value_type=Optional[int], index=24)
 
     died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=21, pseudo_bool=True)
     died_first_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
 
+    # FIRST T1 TOWER
     lost_tower_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=22,
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First to lose a tower",
     )
     lost_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=27)
     lost_tower_lane: GameTotal = GameTotal(
@@ -135,7 +137,8 @@ class GameTotals:
     destroyed_tower_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=23,
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First to destroy a tower",
     )
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
@@ -148,13 +151,13 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
         availability=FieldOption(match=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
         availability=FieldOption(match=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
 
     no_death: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=32, pseudo_bool=True)
@@ -167,19 +170,23 @@ class GameTotals:
     denies: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=37)
 
     gold_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=38)
-    xp_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=39)
+    xp_per_min: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=6, decimal_places=2),
+        index=39,
+        description="XP per minute",
+    )
     level: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=40)
     net_worth: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=41)
 
     aghanims_scepter: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=42,
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     aghanims_shard: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=43,
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     moonshard: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=44, pseudo_bool=True)
 
@@ -191,198 +198,222 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
         availability=FieldOption(match=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
-    # first tower
+    # FIRST T3 TOWER
     first_tower_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be destroyed - mid",
     )
     first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be destroyed - top",
     )
     first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be destroyed - bot",
     )
     first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be lost - mid",
     )
     first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be lost - top",
     )
     first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First tower to be lost - bot",
     )
-    # picks
+    # PICKS
     first_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=55,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     first_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=56,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     last_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=57,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     last_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=58,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     last_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=59,
         availability=FieldOption(team=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     first_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=60,
         availability=FieldOption(team=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
-    # first lane
+    # FIRST T3 TOWER
     first_tower_lane_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=61,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First T3 tower destroyed - mid",
     )
     first_tower_lane_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=62,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First T3 tower destroyed - top",
     )
     first_tower_lane_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=63,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First T3 tower destroyed - bot",
     )
     first_tower_lane_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=64,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First lost T3 tower - mid",
     )
     first_tower_lane_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=65,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First lost T3 tower - top",
     )
     first_tower_lane_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=66,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        description="First lost T3 tower - bot",
+        pseudo_bool=True,
     )
-    # first barracks
+    # FIRST RAX SET
     first_barracks_set_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=67,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set destroyed - mid",
     )
     first_barracks_set_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=68,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set destroyed - top",
     )
     first_barracks_set_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=69,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set destroyed - bot",
     )
     first_barracks_set_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=70,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set lost - mid",
     )
     first_barracks_set_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=71,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set lost - top",
     )
     first_barracks_set_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=72,
         availability=FieldOption(player=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First rax set lost - bot",
     )
-    # first pick
+    # FIRST PICK POSITION
     first_pick_pos_1: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=73,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First pick - pos 1",
     )
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=74,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First pick - pos 2",
     )
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=75,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First pick - pos 3",
     )
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=76,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First pick - pos 4",
     )
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=77,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+        description="First pick - pos 5",
     )
     win_dire: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=78,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
     )
     win_sent: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=79,
         availability=FieldOption(match=False, player=False, for_one_field=False),
-        pseudo_bool=True
+        pseudo_bool=True,
+
     )
 
     _VALUES: ClassVar[list[GameTotal]]

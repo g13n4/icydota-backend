@@ -1,6 +1,7 @@
 import re
 from math import floor
 from typing import Any, Optional, List
+from utils.helpers import is_invalid_value
 
 
 class IncorrectDataCombination(Exception):
@@ -23,7 +24,7 @@ class TableMinMaxFinder:
 
 
     def add(self, column: str, value: int | float | None) -> None:
-        if not value:
+        if is_invalid_value(value):
             return
 
         if column not in self.data.keys():

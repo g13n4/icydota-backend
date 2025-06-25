@@ -11,6 +11,7 @@ from api.crud.cross_comparison_field import get_cross_comparison_fields
 from api.crud.initial_data import get_initial_data
 from api.crud.match import get_games
 from api.crud.match_all import get_games_all
+from api.table.match_name import get_match_name_data
 from api.table.table_data import get_performance_data, get_performance_data_comparison, get_aggregated_performance_data, \
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
@@ -112,13 +113,15 @@ async def get_performance_data_api(
         match_id: int,
         data_type: int,
         # qparams
-        stage: GameStageEnum,
+        stage: GameStageEnum | None = None,
         comp: ComparisonEnum = ComparisonEnum.none,
         ctype: ComparisonTypeEnum = ComparisonTypeEnum.player,
         db=Depends(get_async_db_session)
 ):
     flat = comp.to_value()
     ctype = ctype.to_value()
+    stage = stage and stage.value
+    name_data_dict = await get_match_name_data(adb_session=db, match_id=match_id)
 
     if flat is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
@@ -126,7 +129,7 @@ async def get_performance_data_api(
             pot=pot,
             match_id=match_id,
             data_type=data_type,
-            game_stage=stage.value,
+            game_stage=stage,
         )
     else:
         items, value_mapping, sum_total, rows = await get_performance_data_comparison(
@@ -134,7 +137,7 @@ async def get_performance_data_api(
             pot=pot,
             match_id=match_id,
             calculation_type_id=data_type,
-            game_stage=stage.value,
+            game_stage=stage,
             basic=ctype,
             flat=flat,
         )
@@ -143,6 +146,7 @@ async def get_performance_data_api(
         raise HTTPException(status_code=404)
 
     output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
+    output["matchName"] = name_data_dict
 
     return output
 

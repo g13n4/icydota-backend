@@ -18,7 +18,7 @@ async def get_performance_data(
         pot: PoTEnum,
         match_id: int,
         data_type: int,
-        game_stage: str,
+        game_stage: str | None,
 ):
 
     PQC = APIMatchPerformanceQueryCreator()
@@ -43,7 +43,7 @@ async def get_performance_data_comparison(
         pot: PoTEnum,
         match_id: int,
         calculation_type_id: int,
-        game_stage: str,
+        game_stage: str | None,
         basic: bool,
         flat: bool | None,
 ):

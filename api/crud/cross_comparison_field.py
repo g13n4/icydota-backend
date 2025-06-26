@@ -7,7 +7,7 @@ async def get_cross_comparison_fields() -> dict[str, list]:
 
     return {
         "totals": await to_field_list(GameTotals.VALUES),
-        "Lwindows": await to_field_list(LaneStageWindows.VALUES),
-        "Gwindows": await to_field_list(GameStageWindows.VALUES),
+        "lWindows": await to_field_list(LaneStageWindows.VALUES),
+        "gWindows": await to_field_list(GameStageWindows.VALUES),
 
     }

@@ -120,7 +120,7 @@ class GameTotals:
     died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=21, pseudo_bool=True)
     died_first_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
 
-    # FIRST T1 TOWER
+    # FIRST T1 TOWER (NOT FOR AGGREGATION)
     lost_tower_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=22,
@@ -200,7 +200,7 @@ class GameTotals:
         availability=FieldOption(match=False),
         pseudo_bool=True,
     )
-    # FIRST T3 TOWER
+    # FIRST T1 TOWER (FOR AGGREGATION)
     first_tower_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,

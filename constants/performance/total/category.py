@@ -2,7 +2,7 @@ from constants.helpers import Item, update_description, get_only_names, GetItemH
 
 
 @update_description
-class WindowCategories(GetItemHelper):
+class GameTotalsCategory(GetItemHelper):
     GENERAL: Item = Item(
         value=1,
         name="General data",
@@ -13,14 +13,19 @@ class WindowCategories(GetItemHelper):
         name="First kill and death",
         description="Data regarding first kill, death and time of the event",
     )
-    TOWERS_LANES: Item = Item(
+    T1_TOWERS: Item = Item(
         value=3,
-        name="Towers and lanes",
+        name="First T3 towers",
         description="Data regarding towers, lanes and time of the event",
     )
-    STATS: Item = Item(value=4, name="Stats", description="Statistical game data")
-    PICKS: Item = Item(value=5, name="Picks", description="Data regarding game picks")
+    T3_TOWERS_AND_LANES: Item = Item(
+        value=4,
+        name="Towers and lanes",
+        description="Data regarding T3 towers and barracks",
+    )
+    STATS: Item = Item(value=5, name="Stats", description="Statistical game data")
+    PICKS: Item = Item(value=6, name="Picks", description="Data regarding game picks")
 
 
-    VALUES: list = [GENERAL, FIRST_KILL_DEATH, TOWERS_LANES, STATS, PICKS]
+    VALUES: list = [GENERAL, FIRST_KILL_DEATH, T1_TOWERS, T3_TOWERS_AND_LANES, STATS, PICKS]
     VALUES_NAMES: list = get_only_names(VALUES)

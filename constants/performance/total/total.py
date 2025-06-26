@@ -3,6 +3,8 @@ from typing import Any, ClassVar, Optional, Literal
 
 from pydantic import condecimal, BaseModel
 
+from constants.helpers import Item
+from constants.performance.total.category import GameTotalsCategory
 from constants.performance.total.field_option import FieldOption
 from helpers import to_proper_name
 from modules.unique_index_checker import UniqueIndexChecker
@@ -24,7 +26,7 @@ class GameTotal(BaseModel):
     optional: bool = False
     sort_offset: int = 0
     normalization: None | FieldOption = None
-    category: None = None
+    category: None | Item = None
 
 
 def set_total_name(klass: object):
@@ -43,6 +45,9 @@ def set_total_name(klass: object):
 
             if item.availability is None:
                 item.optional = True
+
+            if item.category is None:
+                item.category = GameTotalsCategory.GENERAL
 
     setattr(klass, '_VALUES', values)
 
@@ -114,11 +119,25 @@ class GameTotals:
         index=20,
         description="FB",
         pseudo_bool=True,
+        category=GameTotalsCategory.FIRST_KILL_DEATH,
     )
-    first_kill_time: GameTotal = GameTotal(value_type=Optional[int], index=24)
+    first_kill_time: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=24,
+        category=GameTotalsCategory.FIRST_KILL_DEATH,
+    )
 
-    died_first: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=21, pseudo_bool=True)
-    died_first_time: GameTotal = GameTotal(value_type=Optional[int], index=25)
+    died_first: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=21,
+        pseudo_bool=True,
+        category=GameTotalsCategory.FIRST_KILL_DEATH,
+    )
+    died_first_time: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=25,
+        category=GameTotalsCategory.FIRST_KILL_DEATH,
+    )
 
     # FIRST T1 TOWER (NOT FOR AGGREGATION)
     lost_tower_first: GameTotal = GameTotal(
@@ -126,12 +145,18 @@ class GameTotals:
         index=22,
         pseudo_bool=True,
         description="First to lose a tower",
+        category=GameTotalsCategory.T1_TOWERS,
     )
-    lost_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=27)
+    lost_tower_time: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=27,
+        category=GameTotalsCategory.T1_TOWERS,
+    )
     lost_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=26,
         availability=FieldOption(aggregation=True, cross_comparison=True),
+        category=GameTotalsCategory.T1_TOWERS,
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -139,25 +164,33 @@ class GameTotals:
         index=23,
         pseudo_bool=True,
         description="First to destroy a tower",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
         availability=FieldOption(aggregation=True, cross_comparison=True),
+        category=GameTotalsCategory.T1_TOWERS,
     )
-    destroyed_tower_time: GameTotal = GameTotal(value_type=Optional[int], index=29)
+    destroyed_tower_time: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=29,
+        category=GameTotalsCategory.T1_TOWERS,
+    )
 
     win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
         availability=FieldOption(match=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
     )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
         availability=FieldOption(match=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
     )
 
     no_death: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=32, pseudo_bool=True)
@@ -207,6 +240,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be destroyed - mid",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -214,6 +248,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be destroyed - top",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -221,6 +256,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be destroyed - bot",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -228,6 +264,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be lost - mid",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -235,6 +272,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be lost - top",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -242,6 +280,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First tower to be lost - bot",
+        category=GameTotalsCategory.T1_TOWERS,
     )
     # PICKS
     first_pick_win: GameTotal = GameTotal(
@@ -249,36 +288,42 @@ class GameTotals:
         index=55,
         availability=FieldOption(player=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=56,
         availability=FieldOption(player=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     last_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=57,
         availability=FieldOption(player=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     last_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=58,
         availability=FieldOption(player=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     last_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=59,
         availability=FieldOption(team=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=60,
         availability=FieldOption(team=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.PICKS,
     )
     # FIRST T3 TOWER
     first_tower_lane_destroyed_mid: GameTotal = GameTotal(
@@ -287,6 +332,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First T3 tower destroyed - mid",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_tower_lane_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -294,6 +340,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First T3 tower destroyed - top",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_tower_lane_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -301,6 +348,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First T3 tower destroyed - bot",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_tower_lane_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -308,6 +356,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First lost T3 tower - mid",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_tower_lane_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -315,6 +364,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First lost T3 tower - top",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_tower_lane_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -322,6 +372,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         description="First lost T3 tower - bot",
         pseudo_bool=True,
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     # FIRST RAX SET
     first_barracks_set_destroyed_mid: GameTotal = GameTotal(
@@ -330,6 +381,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set destroyed - mid",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_barracks_set_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -337,6 +389,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set destroyed - top",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_barracks_set_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -344,6 +397,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set destroyed - bot",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_barracks_set_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -351,6 +405,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set lost - mid",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_barracks_set_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -358,6 +413,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set lost - top",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     first_barracks_set_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -365,6 +421,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         description="First rax set lost - bot",
+        category=GameTotalsCategory.T3_TOWERS_AND_LANES,
     )
     # FIRST PICK POSITION
     first_pick_pos_1: GameTotal = GameTotal(
@@ -373,6 +430,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
         description="First pick - pos 1",
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -380,6 +438,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
         description="First pick - pos 2",
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -387,6 +446,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
         description="First pick - pos 3",
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -394,6 +454,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
         description="First pick - pos 4",
+        category=GameTotalsCategory.PICKS,
     )
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -401,19 +462,21 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
         description="First pick - pos 5",
+        category=GameTotalsCategory.PICKS,
     )
     win_dire: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=78,
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
     )
     win_sent: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=79,
         availability=FieldOption(match=False, player=False, for_one_field=False),
         pseudo_bool=True,
-
+        category=GameTotalsCategory.STATS,
     )
 
     _VALUES: ClassVar[list[GameTotal]]

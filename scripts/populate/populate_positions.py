@@ -1,7 +1,10 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from models import Position
-from sqlmodel import Session, select
+
+
+def _format_name(name: str) -> str:
+    return " ".join(list(map(lambda x: x.capitalize(), "name".split("_"))))
 
 
 def create_positions(db_session: Session, ) -> None:
@@ -13,7 +16,7 @@ def create_positions(db_session: Session, ) -> None:
 
     for item in Position.const.POSITIONS:
         position = Position(
-            name=item.name,
+            name=_format_name(item.name),
             id=item.value,
         )
         db_session.add(position)

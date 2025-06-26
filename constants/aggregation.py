@@ -9,6 +9,7 @@ class AggregationConstant:
 
     BY_HERO_FACET_PLAYER: int = 7
     BY_PLAYER_HERO_FACET: int = 8
+    BY_POSITION_HERO: int = 9
 
     VALUES: list[int] = [
         BY_HERO,

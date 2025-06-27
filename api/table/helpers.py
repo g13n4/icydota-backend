@@ -114,18 +114,29 @@ def process_db_output(
     return output, TMMF.get_minmax_values(), TMMF.has_totals()
 
 
-def extract_formatted_columns(data: list, pinned_columns: list[str], header_name_map: dict) -> list[dict]:
-    item = next(iter(data))
-    output = []
-    for name in item.keys():
+def extract_formatted_columns(data: list, pinned_columns: list[str], item_map: dict) -> list[dict]:
+    first_item = next(iter(data))
+    header_columns = []
+    data_columns = []
+    for name in first_item.keys():
+        this_item = item_map.get(name, None)
         this_dict = dict()
         this_dict["field"] = name
-        this_dict["headerName"] = header_name_map.get(name, name)
+        this_dict["headerName"] = this_item and this_item.description or name
+
         if name in pinned_columns:
             this_dict["pinned"] = "left"
 
-        output.append(this_dict)
-    return output
+        if this_item is not None:
+            this_dict["colId"] = this_item.index
+            data_columns.append(this_dict)
+        else:
+            this_dict["colId"] = name
+            header_columns.append(this_dict)
+
+
+    data_columns.sort(key=lambda x: x["colId"])
+    return header_columns + [item for item in data_columns]
 
 
 def format_formatted_columns(pinned_column: str, columns: list[str]) -> list[dict]:

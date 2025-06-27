@@ -145,7 +145,7 @@ async def get_performance_data_api(
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, rows, sum_total=sum_total)
+    output = to_table_format(items, value_mapping, rows)
     output["matchName"] = name_data_dict
 
     return output
@@ -181,7 +181,7 @@ async def get_performance_aggregated_data_api(
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, header_fields, sum_total=sum_total)
+    output = to_table_format(items, value_mapping, header_fields)
 
     return output
 

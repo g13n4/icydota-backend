@@ -1,15 +1,13 @@
-from typing import List, Optional
+from typing import List
 
 from api.table.helpers import extract_formatted_columns, format_formatted_columns
-from constants.calculation.game.calculation_types import WindowCalculations
 from constants.performance.total.total import GameTotals
 from constants.performance.window import AllWindows
 
 
-ALL_CALCULATION_FIELDS = {
-    **{ item.name: item.description for item in GameTotals.VALUES },
-    **{ item.name: item.description for item in WindowCalculations.VALUES },
-    **{ item.name: item.description for item in AllWindows.VALUES },
+ALL_CALCULATION_MAP = {
+    **{ item.name: item for item in GameTotals.VALUES },
+    **{ item.name: item for item in AllWindows.VALUES },
 }
 
 
@@ -17,11 +15,9 @@ def to_table_format(
         data: List[dict],
         value_mapping: list,
         rows: list,
-        columns: Optional[list] = None,
-        sum_total: Optional[bool] = None,
 ) -> dict:
 
-    header_columns = extract_formatted_columns(data, rows, ALL_CALCULATION_FIELDS)
+    header_columns = extract_formatted_columns(data, rows, ALL_CALCULATION_MAP)
 
     return {
         "data": data,

@@ -1,3 +1,6 @@
+from fastapi import HTTPException
+
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output
@@ -136,23 +139,28 @@ async def get_cross_comparison_performance_data(
     )
     query_output = await db_session.exec(select_query)
     is_total = calculation_type_id == 0
-    # REFORMATTED _processing_db_output
     TMMF = TableMinMaxFinder()
     CCP = CrossComparisonProcessor(aggregation_type, TMMF, PQC.models.get_names()[1:])
     # hero/player name | id in db | id in db of the comparans player/hero
     data = { }
-    for value, *info in query_output.all():
-        if not is_total:
-            mask_value, *_ = info
-            field_index = WINDOWS_BY_FIELD[data_field].order
+    if is_total:
+        for value, *info in query_output.all():
+            key, inner_key = CCP.process_data_row(*info)
+            if key not in data:
+                data[key] = { inner_key: value }
+            else:
+                data[key][inner_key] = value
+    else:
+        field_index = WINDOWS_BY_FIELD[data_field].order
+        for value, mask_value, *info in query_output.all():
             if mask_value:
                 value = EmptyMaskConverter.extract_from_mask(mask=mask_value, index=field_index)
 
-        key, inner_key = CCP.process_data_row(*info)
-        if key not in data:
-            data[key] = { inner_key: value }
-        else:
-            data[key][inner_key] = value
+            key, inner_key = CCP.process_data_row(*info)
+            if key not in data:
+                data[key] = { inner_key: value }
+            else:
+                data[key][inner_key] = value
 
     ordered_headers, sorted_data = CCP.rearrange_dict(data)
     return sorted_data, CCP.name, ordered_headers, CCP.TMMF.get_minmax_values(use_alias=True)

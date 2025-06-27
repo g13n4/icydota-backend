@@ -1,5 +1,4 @@
 import os
-from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
@@ -167,7 +166,7 @@ async def get_performance_aggregated_data_api(
     flat = comp.to_value()
     game_stage = stage and stage.value
 
-    items, value_mapping, sum_total, header_fields = await get_aggregated_performance_data(
+    data, value_mapping, sum_total, header_fields = await get_aggregated_performance_data(
         db_session=db,
         pot=pot,
         league_id=league_id,
@@ -178,10 +177,10 @@ async def get_performance_aggregated_data_api(
         flat=flat
     )
 
-    if not items:
+    if not data or not all(data):
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, header_fields)
+    output = to_table_format(data, value_mapping, header_fields)
 
     return output
 
@@ -214,7 +213,7 @@ async def get_performance_cross_comparison_data_api(
         flat=flat,
     )
 
-    if not data:
+    if not data or not all(data):
         raise HTTPException(status_code=404)
 
     output = to_table_format_cross_comparison(

@@ -15,7 +15,7 @@ AggItem = namedtuple(
         'associated_field',
         "join_field",
     ]
-    )
+)
 
 HERO = AggItem(Hero, Hero.name, "Hero", 'hero_id', Hero.id)
 PLAYER = AggItem(Player, Player.nickname, "Nickname", 'player_id', Player.account_id)
@@ -54,10 +54,13 @@ CCOMPARISON_MODELS = {
         CComItem(ComparisonType.player_cps_id, 'player_cps_id', False),
     ],
     CrossComparisonTypeConstant.POSITION_HERO: [
+        CComItem(Hero.name, 'hero', True),
         CComItem(ComparisonType.hero_cpd_id, 'hero_cpd_id', False),
         CComItem(ComparisonType.hero_cps_id, 'hero_cps_id', False),
     ],
     CrossComparisonTypeConstant.POSITION_HERO_FACET: [
+        CComItem(Hero.name, 'hero', True),
+        CComItem(Facet.name, 'facet', True),
         CComItem(ComparisonType.hero_cpd_id, 'hero_cpd_id', False),
         CComItem(ComparisonType.hero_cps_id, 'hero_cps_id', False),
         CComItem(ComparisonType.facet_cpd_id, 'facet_cpd_id', False),
@@ -66,9 +69,15 @@ CCOMPARISON_MODELS = {
 }
 
 CCOMPARISON_JOIN = {
-    CrossComparisonTypeConstant.POSITION_HERO: [],
-    CrossComparisonTypeConstant.POSITION_PLAYER: [
-        (Player, ComparisonType.player_cpd_id == Player.account_id)
+    CrossComparisonTypeConstant.POSITION_HERO: [
+        (Hero, ComparisonType.hero_cpd_id == Hero.id),
     ],
-    CrossComparisonTypeConstant.POSITION_HERO_FACET: [],
+    CrossComparisonTypeConstant.POSITION_PLAYER: [
+        (Player, ComparisonType.player_cpd_id == Player.account_id),
+    ],
+    CrossComparisonTypeConstant.POSITION_HERO_FACET: [
+        (Hero, ComparisonType.hero_cpd_id == Hero.id),
+        (Facet, ComparisonType.facet_cpd_id == Facet.id),
+
+    ],
 }

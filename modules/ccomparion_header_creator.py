@@ -11,6 +11,8 @@ class CrossComparisonProcessor:
     REPLACEMENT_MAP = {
         "player_cpd_id": "player",
         "team_cpd_id": "team",
+        "hero_cpd_id": "hero",
+        "facet_cpd_id": "facet",
     }
 
 
@@ -61,11 +63,16 @@ class CrossComparisonProcessor:
                 value = self.replacement_values.get(player_id, player_id)
             case CrossComparisonTypeConstant.POSITION_HERO:
                 # can be replaced here if we have a global dict
-                value = key_values.pop("hero_cpd_id")
+                hero_cpd_id = key_values.pop("hero_cpd_id")
+                value = self.replacement_values.get(hero_cpd_id, hero_cpd_id)
             case CrossComparisonTypeConstant.POSITION_HERO_FACET:
                 # can be replaced here if we have a global dict
-                hero = key_values.pop("hero_cpd_id")
-                facet = key_values.pop("facet_cpd_id")
+                hero_id = key_values.pop("hero_cpd_id")
+                facet_id = key_values.pop("facet_cpd_id")
+
+                hero = self.replacement_values.get(hero_id, hero_id)
+                facet = self.replacement_values.get(facet_id, facet_id)
+
                 value = f"{hero}/{facet}"
             case _:
                 raise KeyError(f"No cross-comparison {self.ccomp_type} exists!")

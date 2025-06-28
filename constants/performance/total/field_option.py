@@ -12,7 +12,7 @@ class FieldOption(BaseModel):
     team: bool = True
     # weather availability rule works if any field is matched (or)
     # or all fields should be matched for a rule to be applied (and)
-    for_all_options: bool = True
+    for_any_option: bool = True
 
 
     def is_required(self, **kwargs) -> bool:
@@ -33,7 +33,7 @@ class FieldOption(BaseModel):
         :param args: names of the different types of calculations declared in FieldOption class
         :return: bool
         """
-        if self.for_all_options:
+        if self.for_any_option:
             for field in args:
                 if not getattr(self, field):
                     return False

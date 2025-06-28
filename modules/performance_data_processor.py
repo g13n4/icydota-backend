@@ -154,14 +154,14 @@ class PerformanceDataProcessor:
                     pos_cpd_id=comparandum_data['position_id'],
                     pos_cps_id=comparans_data['position_id'],
 
-                # todo: заполнить
-                # # position/hero
-                # cpd_name_short: Optional[str]
-                # cps_name_short: Optional[str]
-                #
-                # # position/hero/player
-                # cpd_name: Optional[str]
-                # cps_name: Optional[str]
+                    # todo: заполнить
+                    # # position/hero
+                    # cpd_name_short: Optional[str]
+                    # cps_name_short: Optional[str]
+                    #
+                    # # position/hero/player
+                    # cpd_name: Optional[str]
+                    # cps_name: Optional[str]
 
                 )
 
@@ -190,10 +190,9 @@ class PerformanceDataProcessor:
                 self.session.add(GP_obj)
                 self.game_performance[comparandum_slot].append(GP_obj)
 
-
         # Aggregated comparison by team
         windows_data_aggregation = reduce(operator.add, windows_data) / opponents_size
-        totals_data_aggregation = TotalPerformanceProcessor.reduce_total_objs(totals_data, mode="avg")
+        totals_data_aggregation = TotalPerformanceProcessor.reduce_total_objs(totals_data, comparison_mode=True)
 
         for is_flat in [True, False]:
 
@@ -263,7 +262,7 @@ class PerformanceDataProcessor:
             windows_df: np.ndarray = reduce(operator.add, total_windows)
 
             total_objs = [self.players_data[idx]["performance_total_data"] for idx in side_indexes]
-            total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs, mode="sum")
+            total_obj = TotalPerformanceProcessor.reduce_total_objs(total_objs, comparison_mode=False)
 
             GP_obj.total_data = total_obj
 
@@ -311,7 +310,6 @@ class PerformanceDataProcessor:
                 )
 
 
-
     def process_game_data(self):
         self.calculate_windows_totals_by_type()
         for slot in self.windows_data.keys():
@@ -349,6 +347,7 @@ class PerformanceDataProcessor:
             )
 
         self.windows_data[slot][calculation][window_index - OFFSET] = value
+
 
     def set_slice(self, slot: int, calculation: int | CalculationItem, slice_: Iterable):
         if isinstance(calculation, CalculationItem):

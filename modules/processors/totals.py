@@ -1,6 +1,7 @@
 import typing
 from decimal import Decimal
 
+from constants.performance.total.processing_options import TotalTeamProcessingOption
 from models.performance import PerformanceTotalData
 from modules.processors.helpers import decimal_division
 from utils import to_dec
@@ -36,31 +37,47 @@ class TotalPerformanceProcessor:
     def reduce_total_objs(
             total_objects: list[PerformanceTotalData],
             *,
-            mode: str = "avg",
+            comparison_mode: bool,
     ) -> PerformanceTotalData:
         PTD_obj = PerformanceTotalData()
 
         for field_item in PerformanceTotalData.const.VALUES:
+            field_name = field_item.name
             field_value = 0
             field_counter = 0
+            field_not_none = None
             for total_obj in total_objects:
-                this_obj_value = getattr(total_obj, field_item.name)
+                this_obj_value = getattr(total_obj, field_name)
                 if this_obj_value is None:
                     continue
                 else:
+                    if field_not_none is None:
+                        field_not_none = this_obj_value
+
                     field_value += this_obj_value
                     field_counter += 1
 
             if field_counter:
-                if field_item.pseudo_bool:
-                    # normalize it
-                    setattr(PTD_obj, field_item.name, decimal_division(field_value, field_counter, bool_normalize=True))
-                elif mode == "avg":
-                    setattr(PTD_obj, field_item.name, decimal_division(field_value, field_counter))
-                elif mode == "sum":
-                    setattr(PTD_obj, field_item.name, field_value)
+                if comparison_mode:
+                    setattr(PTD_obj, field_name, decimal_division(field_value, field_counter))
                 else:
-                    raise ValueError(f"{mode} mode does not exist for totals reducing!")
+                    match field_item.team_processing_option:
+                        case TotalTeamProcessingOption.FLOOR:
+                            field_value = 1 if field_value > 9 else 0
+                        case TotalTeamProcessingOption.FIRST_NOT_NONE:
+                            field_value = field_not_none
+                        case TotalTeamProcessingOption.AVERAGE:
+                            field_value = field_value / field_counter
+
+                    if field_item.pseudo_bool:
+                        # normalize it
+                        setattr(
+                            PTD_obj,
+                            field_name,
+                            decimal_division(field_value, field_counter, bool_normalize=True)
+                            )
+                    else:
+                        setattr(PTD_obj, field_name, field_value)
 
         return PTD_obj
 

@@ -427,7 +427,7 @@ class GameTotals:
     first_pick_pos_1: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=73,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         description="First pick - pos 1",
         category=GameTotalsCategory.PICKS,
@@ -435,7 +435,7 @@ class GameTotals:
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=74,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         description="First pick - pos 2",
         category=GameTotalsCategory.PICKS,
@@ -443,7 +443,7 @@ class GameTotals:
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=75,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         description="First pick - pos 3",
         category=GameTotalsCategory.PICKS,
@@ -451,7 +451,7 @@ class GameTotals:
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=76,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         description="First pick - pos 4",
         category=GameTotalsCategory.PICKS,
@@ -459,7 +459,7 @@ class GameTotals:
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=77,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         description="First pick - pos 5",
         category=GameTotalsCategory.PICKS,
@@ -467,15 +467,21 @@ class GameTotals:
     win_dire: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=78,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
     )
     win_sent: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=79,
-        availability=FieldOption(match=False, player=False, for_one_field=False),
+        availability=FieldOption(match=False, player=False, for_all_options=False),
         pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
+    )
+    duration: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=80,
+        availability=FieldOption(match=False, player=False, for_all_options=True),
         category=GameTotalsCategory.STATS,
     )
 

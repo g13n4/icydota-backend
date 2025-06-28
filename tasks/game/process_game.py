@@ -305,6 +305,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
             # use in aggregation
             win=int(player_info['win']),
             picked=1,
+            duration=game_data['duration'],
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field

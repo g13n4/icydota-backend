@@ -1,6 +1,3 @@
-from fastapi import HTTPException
-
-
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.table.helpers import process_db_output
@@ -23,7 +20,6 @@ async def get_performance_data(
         data_type: int,
         game_stage: str | None,
 ):
-
     PQC = APIMatchPerformanceQueryCreator()
     select_query = PQC.get_query(match_id=match_id, calculation_type_id=data_type, pot=pot)
     model_names = PQC.get_model_names()

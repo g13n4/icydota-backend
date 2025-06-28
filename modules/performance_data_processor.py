@@ -250,7 +250,7 @@ class PerformanceDataProcessor:
                 match_id=match_data["game_obj"].id,
                 patch_id=match_data["patch_id"],
                 team_id=match_data[side],
-
+                is_dire=side == self.DIRE,
             )
 
             GP_obj = Performance(

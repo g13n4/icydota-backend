@@ -4,7 +4,7 @@ from models import Position
 
 
 def _format_name(name: str) -> str:
-    return " ".join(list(map(lambda x: x.capitalize(), "name".split("_"))))
+    return " ".join(list(map(lambda x: x.capitalize(), name.split("_"))))
 
 
 def create_positions(db_session: Session, ) -> None:

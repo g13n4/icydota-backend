@@ -15,7 +15,7 @@ REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', default="127.0.0.1")
 
 tasks = [
     'tasks.aggregation',
-    'tasks.aggregation',
+    'tasks.cron',
     'tasks.parallel',
     'tasks.game',
     'tasks.league',
@@ -30,8 +30,8 @@ celery_app = Celery(
     result_backend=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
     celery_broker_url=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
     celery_result_backend=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
-    result_expires=60*60*24,
-    celery_result_expires=60*60*24,
+    result_expires=60 * 60 * 24,
+    celery_result_expires=60 * 60 * 24,
     celery_cache_backend='redis',
     broker_transport='redis',
     broker_connection_retry_on_startup=True,
@@ -73,18 +73,22 @@ def setup_task_post_run(task, *args, **kwargs):
     logger.info(f"{task.name}|{task.request.id}|args: {args}|kwargs: {kwargs['kwargs']}")
 
 
-@celery_app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    # Process league games
-    sender.add_periodic_task(
-        schedule=crontab(minute='0', hour='*/6'),
-        sig='process_league_games_(cron)',
-        name='process league games every 6 hours',
-    )
-
-    # Update leagues dates
-    sender.add_periodic_task(
-        schedule=crontab(minute='0', hour='12', day_of_week='1,4'),
-        sig='update_leagues_date_(cron)',
-        name='update leagues start and end date every 3-4 days',
-    )
+celery_app.conf.beat_schedule = {
+    # Executes every Monday morning at 7:30 a.m.
+    'update_leagues_date': {
+        'task': 'update_leagues_date(cron)',
+        'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
+    },
+    'find_leagues_to_process': {
+        'task': 'find_leagues_to_process_cron',
+        'schedule': crontab(minute='0', hour='*/6'),
+    },
+    'process_bad_league_games': {
+        'task': 'process_bad_league_games_cron',
+        'schedule': crontab(minute='0', hour='*/4'),
+    },
+    'start_aggregations_and_ccomparison': {
+        'task': 'process_bad_league_games_cron',
+        'schedule': crontab(minute='0', hour='*/12'),
+    },
+}

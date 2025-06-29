@@ -122,7 +122,7 @@ def extract_formatted_columns(data: list, pinned_columns: list[str], item_map: d
         this_item = item_map.get(name, None)
         this_dict = dict()
         this_dict["field"] = name
-        this_dict["headerName"] = this_item and this_item.description or name
+        this_dict["headerName"] = this_item and this_item.description or name.capitalize()
 
         if name in pinned_columns:
             this_dict["pinned"] = "left"

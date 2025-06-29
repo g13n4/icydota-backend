@@ -1,7 +1,7 @@
 from sqlalchemy.orm import aliased
 
 from constants.api import PoTEnum
-from models import PlayerGameData, Player, Position, ByTeamType, Team
+from models import PlayerGameData, Player, Position, ByTeamType, Team, Hero
 from models.performance import Performance
 from modules.query_creators.helpers import combine_select
 from modules.query_creators.performance.query_creator_mixin import PerformanceQueryCreatorMixin
@@ -21,7 +21,8 @@ class APIMatchPerformanceQueryCreator(PerformanceQueryCreatorMixin):
         self.models.add(Position.name, 'position', True)
         self.joins.add(Position, PlayerGameData.position_id == Position.id)
 
-        self.models.add(PlayerGameData.hero_id, 'hero_id', True)
+        self.models.add(Hero.name, 'hero', True)
+        self.joins.add(Hero, PlayerGameData.hero_id == Hero.id)
 
         self.models.add(Player.nickname, 'player', True)
         self.joins.add(Player, PlayerGameData.player_id == Player.account_id)

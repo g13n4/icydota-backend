@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import requests
-from sqlmodel import select, Session
+from sqlmodel import Session
 
 from models import League
 from utils import get_stratz_league_data
@@ -13,15 +13,17 @@ def _is_a_value(dict_: dict, key_: str, ) -> bool:
         return True
     return False
 
+
 def _same_dates(date_start: Optional[int], date_end: Optional[int], ) -> bool:
     if date_start is not None and (date_start == date_end):
         return True
     return False
 
 
-def _update_league_dates(league_obj: League,
-                         start_date: int | None = None,
-                         end_date: int | None = None, ) -> None:
+def _update_league_dates(
+        league_obj: League,
+        start_date: int | None = None,
+        end_date: int | None = None, ) -> None:
     unix_timestamp_now = int(time.time())
 
     league_obj.start_date = start_date

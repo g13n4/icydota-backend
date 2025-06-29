@@ -146,19 +146,19 @@ class GameStageWindows:
     gtotal_max: GameWindow = GameWindow(
         start_time=None,
         end_time=None,
-        description='by the game\'s end (max)',
+        description='By the game\'s end (max)',
         agg_func=np.max,
     )
     gtotal_min: GameWindow = GameWindow(
         start_time=None,
         end_time=None,
-        description='by the game\'s end (min)',
+        description='By the game\'s end (min)',
         agg_func=np.min,
     )
     gtotal_sum: GameWindow = GameWindow(
         start_time=None,
         end_time=None,
-        description='by the game\'s end (sum)',
+        description='By the game\'s end (sum)',
         agg_func=np.sum,
     )
 

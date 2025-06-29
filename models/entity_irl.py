@@ -54,18 +54,12 @@ class League(SQLModel, table=True):
     has_started: Optional[bool] = Field(default=None)
     has_ended: Optional[bool] = Field(default=None)
 
-    # UNIX TIME STAMP
-    last_parsing_date: Optional[int] = Field(
-        sa_column=db.Column(db.BIGINT, nullable=True, unique=False),
-    )
-    parsed_before: Optional[bool] = Field(default=False)
-    fully_parsed: bool = Field(default=False)
+    # if since_last_new_game > 7 we set null thus notifying that league gas ended
+    since_last_new_game: Optional[int] = Field(default=0)
 
-    # UNIX TIME STAMP
-    last_aggregation_date: Optional[int] = Field(
-        sa_column=db.Column(db.BIGINT, nullable=True, unique=False),
-    )
-    fully_aggregated: Optional[bool] = Field(default=False)
+    # we set these flags when we processed all new games
+    should_be_processed: Optional[bool] = Field(default=None)
+
 
     games: List["Game"] = Relationship(
         back_populates="league",

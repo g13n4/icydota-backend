@@ -63,7 +63,7 @@ class TotalPerformanceProcessor:
                 else:
                     match field_item.team_processing_option:
                         case TotalTeamProcessingOption.FLOOR:
-                            field_value = 1 if field_value > 9 else 0
+                            field_value = 1 if field_value > 0 else 0
                         case TotalTeamProcessingOption.FIRST_NOT_NONE:
                             field_value = field_not_none
                         case TotalTeamProcessingOption.AVERAGE:

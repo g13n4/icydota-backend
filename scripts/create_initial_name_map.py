@@ -5,6 +5,7 @@ import click
 
 from scripts.name_map.facets import FACETS_NAME, check_initial_facets_map
 from scripts.name_map.heroes import HEROES_NAME, check_initial_heroes_map
+from scripts.name_map.heroes_icons import HEROES_ICONS, check_initial_heroes_icons
 from scripts.name_map.side_calc import SIDE_CALC_NAME, check_initial_calc_fields_map
 
 
@@ -12,6 +13,7 @@ FUNCTION_MAP = {
     SIDE_CALC_NAME: check_initial_facets_map,
     FACETS_NAME: check_initial_calc_fields_map,
     HEROES_NAME: check_initial_heroes_map,
+    HEROES_ICONS: check_initial_heroes_icons,
 }
 
 
@@ -26,15 +28,12 @@ def create_initial_redis_name_map(on_startup: bool = False):
 
 
 def create_initial_json_name_map():
-    app_folder = Path(os.getcwd()).parent
+    app_folder = Path(os.path.abspath(__file__)).parent.parent
     data_folder_path = Path(app_folder) / "data"
     print(f"Data folder is set to {data_folder_path}")
 
     existing_map = {
-        SIDE_CALC_NAME: False,
-        FACETS_NAME: False,
-        HEROES_NAME: False,
-
+        func_name: False for func_name in FUNCTION_MAP.keys()
     }
     print(f"Set maps: {', '.join(existing_map.keys())}")
     with os.scandir(data_folder_path) as it:
@@ -69,8 +68,8 @@ def create_initial_json_name_map():
 
 
 @click.command()
-@click.option('--redis', default=None, help='Set files to redis')
-@click.option('--json', default=None, help='Save in json format in data folder')
+@click.option('--redis', is_flag=True, help='Set files to redis')
+@click.option('--json', is_flag=True, help='Save in json format in data folder')
 def create_initial_name_map(redis: bool | None, json: bool | None):
     if redis:
         print(f"Creation mode is set to redis")

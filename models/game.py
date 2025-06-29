@@ -98,6 +98,8 @@ class Game(SQLModel, table=True):
 
 
 class PlayerGameData(SQLModel, table=True):
+    __tablename__ = "players_game_data"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     invalid: Optional[bool]
 
@@ -139,7 +141,6 @@ class PlayerGameData(SQLModel, table=True):
         }
     )
 
-    __tablename__ = "players_game_data"
 
 
 class Patch(SQLModel, table=True):
@@ -148,4 +149,6 @@ class Patch(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: Optional[str]
     date: Optional[datetime] = Field(default=None, nullable=True)
+
     aggregation_allowed: bool = Field(default=False, nullable=False)
+    should_be_processed: Optional[bool] = Field(default=False)

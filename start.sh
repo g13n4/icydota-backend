@@ -7,7 +7,8 @@ echo "2 - celery app (2 threads (prefork))"
 echo "3 - celery app (4 threads)"
 echo "4 - celery app (8 threads)"
 echo "5 - celery app flower"
-echo "6 - celery purge queue"
+echo "6 - celery app beat"
+echo "7 - celery purge queue"
 while :
 do
   read -r INT_INPUT
@@ -37,6 +38,10 @@ do
 		break
 		;;
   6)
+    celery --app=celery_app beat
+		break
+		;;
+  7)
     celery --app=celery_app purge
 		break
 		;;

@@ -228,16 +228,16 @@ async def get_performance_cross_comparison_data_api(
 
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
-    from tasks.league.cron_tasks import process_league, process_game_helper
     from tasks.bulk_aggregation_process import process_full_cycle
     from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
         approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
         delete_cross_comparison_task_helper, parallel_cross_comparison_task_helper, parallel_aggregate_task_helper
+    from tasks.league.process_league import process_league, process_game_helper
 
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
-        new_games_number: int = process_league(league_id=league_id, overwrite=overwrite)
+        new_games_number, _ = process_league(league_id=league_id, overwrite=overwrite)
         if new_games_number:
             return { 'status': f'processing {new_games_number} games' }
 

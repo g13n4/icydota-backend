@@ -100,9 +100,9 @@ async def get_league_matches_route(
         output = await get_games_all(db_session=db_session, patch_id=lod_id, limit=limit, offset=offset)
 
     if not output:
-        raise HTTPException(status_code=204)
+        raise HTTPException(status_code=404)
 
-    return output
+    return { "data": output }
 
 
 # DATA

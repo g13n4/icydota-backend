@@ -28,7 +28,7 @@ async def get_games_all(
         patch_id: int | None = None,
         limit: int = 48,
         offset: int = 0,
-):
+) -> list[dict]:
     if league_id is None and patch_id is None:
         raise TypeError("Parameter should be provided! League and Patch ids are empty!")
     elif (league_id and patch_id):
@@ -101,10 +101,9 @@ async def get_games_all(
             "direHeroes": dire_heroes,
             "direData": dire_side_dict,
             "sentData": sent_side_dict,
-            'league_name': league_name,
-
+            'leagueName': league_name,
         }
 
         output.append(data)
 
-    return { "data": output }
+    return output

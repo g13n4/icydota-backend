@@ -39,24 +39,22 @@ async def get_games_all(
 
     where_condition = Game.league_id == league_id if league_id else Game.patch_id == patch_id
 
-    select_objs = [Game.id, Game.name, Game.dire_win, Game.duration, dire_side, sent_side]
-    if patch_id:
-        select_objs.append(League.name)
+    select_objs = [Game.id, Game.name, Game.dire_win, Game.duration, dire_side, sent_side, League.name]
 
     select_query = (
         select(*select_objs)
         .join(sent_side, onclause=sent_side.game_id == Game.id)
         .join(dire_side, onclause=dire_side.game_id == Game.id)
+        .join(League, onclause=Game.league_id == League.id)
         .filter(sent_side.dire == False, dire_side.dire == True)
+        .where(where_condition)
     )
 
-    if patch_id:
-        select_query.join(League, onclause=Game.league_id == League.id).where(where_condition)
-    else:
-        select_query.where(where_condition)
+    select_query = select_query.order_by(Game.id.desc()).offset(offset).limit(limit)
 
-    match_objs = await db_session.exec(select_query.order_by(Game.id.desc()).offset(offset).limit(limit))
+    match_objs = await db_session.exec(select_query)
 
+    # ten players per team
     players_select = (
         select(
             Game.id,
@@ -68,27 +66,18 @@ async def get_games_all(
         .join(Game, onclause=Game.id == PlayerGameData.game_id)
         .where(where_condition).order_by(Game.id.desc()).offset(offset * 10).limit(limit * 10)
     )
-    print(players_select)
 
     players_objs = await db_session.exec(players_select)
     hero_data = await _create_player_hero_dict(players_objs)
 
     output = []
     counter = 1
-    for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, *league in match_objs.all():
+    for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, league_name in match_objs.all():
         dire_side_dict = { }
         sent_side_dict = { }
-        try:
-            sent_heroes = hero_data[(game_id, False)]
-            dire_heroes = hero_data[(game_id, True)]
-        except KeyError:
-            print(f"counter: {counter}")
-            print(f"{game_id} not in {list(hero_data)[:10]}")
-            print(f"sent side in dict: {(game_id, False) in hero_data}")
-            print(f"dire side in dict: {(game_id, True) in hero_data}")
-            print(f"total dict size {len(hero_data)} so {len(hero_data) / 2} games")
-            print(f"wrong dict size {[k for k, v in hero_data.items() if len(v) != 5]} games")
-            raise
+        sent_heroes = hero_data[(game_id, False)]
+        dire_heroes = hero_data[(game_id, True)]
+
         counter += 1
         sent_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
         dire_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
@@ -112,9 +101,9 @@ async def get_games_all(
             "direHeroes": dire_heroes,
             "direData": dire_side_dict,
             "sentData": sent_side_dict,
+            'league_name': league_name,
+
         }
-        if league:
-            data['league_name'] = league[0]
 
         output.append(data)
 

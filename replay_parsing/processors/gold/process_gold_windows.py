@@ -46,5 +46,6 @@ def process_gold_windows(
 
                 calc, calc_pm = GOLD_REASON[gold_reason]
 
-                PDP.set_value(slot=slot, calculation=calc, window_index=window['index'], value=value)
-                PDP.set_value(slot=slot, calculation=calc_pm, window_index=window['index'], value=value)
+                abs_value = abs(value) if value else value
+                PDP.set_value(slot=slot, calculation=calc, window_index=window['index'], value=abs_value)
+                PDP.set_value(slot=slot, calculation=calc_pm, window_index=window['index'], value=abs_value)

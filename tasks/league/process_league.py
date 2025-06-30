@@ -7,6 +7,7 @@ from sqlmodel import Session
 
 from db import get_sync_db_session
 from models import Game, League
+from tasks import set_comparison_names
 from tasks.approximate_positions import approximate_positions
 from tasks.game.download_replay import get_match_replay
 from tasks.game.process_game import process_game_data
@@ -61,8 +62,8 @@ def process_league(
             new_games_found += 1
     if new_games_found_list:
         tasks = chord(
-            group(new_games_found_list) | approximate_positions.s(league_id=league_id)
-        ).on_error(approximate_positions.s(league_id=league_id))
+            group(new_games_found_list) | approximate_positions.s(league_id=league_id) | set_comparison_names.s()
+        ).on_error(approximate_positions.s(league_id=league_id) | set_comparison_names.s())
 
     if execute:
         if tasks:

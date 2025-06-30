@@ -45,16 +45,13 @@ else:
 icydota_api = FastAPI()
 
 # CORS
-origins = [
-    CORS_ADDRESS
-]
-
 icydota_api.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ADDRESS.split(","),
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"], )
+    allow_headers=["*"],
+)
 
 icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
 
@@ -303,19 +300,3 @@ if not LIGHT_MODE:
     async def set_comparison_names_api():
         set_comparison_names_helper()
 
-
-# if __name__ == "__main__":
-#     import uvicorn
-#
-#
-#     uvicorn.run("main:icydota_api", host='0.0.0.0', port=3333, reload=False, workers=1, use_colors=True)
-
-
-# blast - 17418
-# fissure universe - 17907
-# last dream league -
-
-# patch 7.39 - 58
-# patch 7.38 - 57
-
-# 8301659325,

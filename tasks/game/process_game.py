@@ -279,7 +279,6 @@ def process_game_data(match_id: int, league_id: int | None = None):
             sentry_uses=none_to_zero(player_info['sentry_uses']),
 
             lane_efficiency=none_to_zero(player_info.get('lane_efficiency', None)),
-            lane_efficiency_pct=none_to_zero(player_info.get('lane_efficiency_pct', None)),
 
             no_death=is_equals_to_zero(deaths, pseudo=True),
             no_kills=is_equals_to_zero(hero_kills, pseudo=True),

@@ -11,7 +11,7 @@ class CaseInsensitiveEnum(str, enum.Enum):
 
 
 class ProcessTypes(CaseInsensitiveEnum):
-    league = "league"
+    match = "match"
     aggregation = "aggregation"
     cross_comparison = "cross_comparison"
 

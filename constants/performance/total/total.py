@@ -116,11 +116,7 @@ class GameTotals:
     lane_efficiency: GameTotal = GameTotal(
         value_type=condecimal(max_digits=4, decimal_places=3),
         index=18,
-        team_processing_option=TotalTeamProcessingOption.AVERAGE,
-    )
-    lane_efficiency_pct: GameTotal = GameTotal(
-        value_type=condecimal(max_digits=6, decimal_places=2),
-        index=19,
+        pseudo_bool=True,
         team_processing_option=TotalTeamProcessingOption.AVERAGE,
     )
 
@@ -130,7 +126,7 @@ class GameTotals:
         description="First Blood",
         pseudo_bool=True,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_kill_time: GameTotal = GameTotal(
         value_type=Optional[int],
@@ -143,13 +139,13 @@ class GameTotals:
         index=21,
         pseudo_bool=True,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     died_first_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=25,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
 
     # FIRST T1 TOWER (NOT FOR AGGREGATION)
@@ -159,7 +155,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First to lose a tower",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     lost_tower_time: GameTotal = GameTotal(
         value_type=Optional[int],
@@ -193,7 +189,7 @@ class GameTotals:
         value_type=Optional[int],
         index=29,
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
 
     win: GameTotal = GameTotal(
@@ -263,7 +259,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be destroyed - mid",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -272,7 +268,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be destroyed - top",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -281,7 +277,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be destroyed - bot",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -290,7 +286,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be lost - mid",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -299,7 +295,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be lost - top",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -308,7 +304,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First tower to be lost - bot",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     # PICKS
     first_pick_win: GameTotal = GameTotal(
@@ -317,7 +313,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -325,7 +321,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     last_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -333,7 +329,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     last_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -341,7 +337,7 @@ class GameTotals:
         availability=FieldOption(player=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     last_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -349,7 +345,7 @@ class GameTotals:
         availability=FieldOption(team=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -357,7 +353,7 @@ class GameTotals:
         availability=FieldOption(team=False),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     # FIRST T3 TOWER
     first_tower_lane_destroyed_mid: GameTotal = GameTotal(
@@ -367,7 +363,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First T3 tower destroyed - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lane_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -376,7 +372,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First T3 tower destroyed - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lane_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -385,7 +381,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First T3 tower destroyed - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lane_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -394,7 +390,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First lost T3 tower - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lane_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -403,7 +399,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First lost T3 tower - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_tower_lane_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -412,7 +408,7 @@ class GameTotals:
         description="First lost T3 tower - bot",
         pseudo_bool=True,
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     # FIRST RAX SET
     first_barracks_set_destroyed_mid: GameTotal = GameTotal(
@@ -422,7 +418,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set destroyed - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_barracks_set_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -431,7 +427,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set destroyed - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_barracks_set_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -440,7 +436,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set destroyed - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_barracks_set_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -449,7 +445,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set lost - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_barracks_set_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -458,7 +454,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set lost - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_barracks_set_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -467,7 +463,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First rax set lost - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     # FIRST PICK POSITION
     first_pick_pos_1: GameTotal = GameTotal(
@@ -477,7 +473,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First pick - pos 1",
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -486,7 +482,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First pick - pos 2",
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -495,7 +491,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First pick - pos 3",
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -504,7 +500,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First pick - pos 4",
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -513,7 +509,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First pick - pos 5",
         category=GameTotalsCategory.PICKS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     win_dire: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -521,7 +517,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_any_option=False),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     win_sent: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
@@ -529,7 +525,7 @@ class GameTotals:
         availability=FieldOption(match=False, player=False, for_any_option=False),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
-        team_processing_option=TotalTeamProcessingOption.FLOOR,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     duration: GameTotal = GameTotal(
         value_type=Optional[int],

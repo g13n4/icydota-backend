@@ -18,15 +18,18 @@ from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 logger = get_task_logger(__name__)
 
 
-def process_game_helper(match_id: int, league_id: int | None = None, get_chain: bool = False) -> Optional[chain]:
+def process_game_helper(match_id: int, league_id: int | None = None, exectute: bool = False) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
-    match_chain = (get_match_replay.si(match_id=match_id, parser_port=port) |
-                   process_game_data.si(match_id=match_id, league_id=league_id))
-    if get_chain:
-        return match_chain
+    match_chain = (
+            get_match_replay.si(match_id=match_id, parser_port=port) |
+            process_game_data.si(match_id=match_id, league_id=league_id)
+    )
 
-    match_chain.apply_async()
-    return None
+    if exectute:
+        match_chain.apply_async()
+        return None
+    else:
+        return match_chain
 
 
 def process_league(
@@ -43,7 +46,6 @@ def process_league(
     league_match_data = r.json()
 
     db_league_games: Dict[int, Game] = { x.id: x for x in league_obj.games }
-    new_games_found = 0
     new_games_found_list = []
     tasks = None
 
@@ -55,20 +57,21 @@ def process_league(
                 process_game_helper(
                     match_id=game['match_id'],
                     league_id=league_obj.id,
-                    get_chain=True,
+                    exectute=False,
                 )
             )
 
-            new_games_found += 1
     if new_games_found_list:
-        tasks = chord(
-            group(new_games_found_list) | approximate_positions.s(league_id=league_id) | set_comparison_names.s()
-        ).on_error(approximate_positions.s(league_id=league_id) | set_comparison_names.s())
+        games_found = len(new_games_found_list)
+        tasks = (group(*new_games_found_list) | approximate_positions.si(league_id=league_id) | set_comparison_names.si()).on_error(
+            approximate_positions.si(league_id=league_id) | set_comparison_names.si()
+        )
 
-    if execute:
-        if tasks:
+        if execute:
             tasks.apply_async()
+            return games_found, None
+        else:
+            return games_found, new_games_found_list
 
-        return new_games_found, None
-
-    return new_games_found, new_games_found_list
+    else:
+        return 0, None

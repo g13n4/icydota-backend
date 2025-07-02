@@ -1,15 +1,14 @@
 from decimal import Decimal
+from functools import lru_cache
 from typing import Tuple
 
+from constants.api import PoTEnum
+from constants.performance.total.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
 from constants.performance.window import WINDOWS_BY_TYPE, WindowType, AllWindows
 from models.performance import PerformanceWindowData, PerformanceWindowTable
 from modules.empty_mask_converter import EmptyMaskConverter
 from modules.minmax_finder import TableMinMaxFinder
 from utils import is_na_decimal
-
-from constants.api import PoTEnum
-from constants.performance.total.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
-from functools import lru_cache
 
 
 @lru_cache(maxsize=6)
@@ -114,7 +113,11 @@ def process_db_output(
     return output, TMMF.get_minmax_values(), TMMF.has_totals()
 
 
-def extract_formatted_columns(data: list, pinned_columns: list[str], item_map: dict) -> list[dict]:
+def extract_formatted_columns(
+        data: list,
+        pinned_columns: list[str],
+        item_map: dict,
+) -> list[dict]:
     first_item = next(iter(data))
     header_columns = []
     data_columns = []
@@ -133,7 +136,6 @@ def extract_formatted_columns(data: list, pinned_columns: list[str], item_map: d
         else:
             this_dict["colId"] = name
             header_columns.append(this_dict)
-
 
     data_columns.sort(key=lambda x: x["colId"])
     return header_columns + [item for item in data_columns]

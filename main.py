@@ -234,7 +234,7 @@ if not LIGHT_MODE:
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
-        new_games_number, _ = process_league(league_id=league_id, overwrite=overwrite)
+        new_games_number, _ = process_league(league_id=league_id, overwrite=overwrite, execute=True)
         if new_games_number:
             return { 'status': f'processing {new_games_number} games' }
 
@@ -299,4 +299,3 @@ if not LIGHT_MODE:
     @icydota_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api():
         set_comparison_names_helper()
-

@@ -3,6 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.crud.helpers import to_basic_list
 from constants.calculation.game.calculation_types import WindowCalculations
+from constants.performance.total.total import GameTotals
 from models import League, Patch
 
 
@@ -37,6 +38,7 @@ async def get_initial_data(db: AsyncSession) -> dict:
     league_objs = await db.exec(select(League).order_by(League.id.desc()))
     return {
         "computations": await _build_computations(),
+        "totalPercentFields": GameTotals.VALUES(only_pseudo_bools=True, only_field="name"),
         "patch": await to_basic_list(patch_objs),
         "league": await to_basic_list(league_objs),
     }

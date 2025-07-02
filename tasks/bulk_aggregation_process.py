@@ -48,7 +48,7 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
 
     games = []
     for idx, game in enumerate(league_match_data):
-        match_chain: chain = process_game_helper(match_id=game['match_id'], league_id=league_obj.id, get_chain=True)
+        match_chain: chain = process_game_helper(match_id=game['match_id'], league_id=league_obj.id, exectute=False)
         games.append(match_chain)
 
     (
@@ -92,7 +92,7 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
                 match_chain: chain = process_game_helper(
                     match_id=game['match_id'],
                     league_id=league_id,
-                    get_chain=True
+                    exectute=False
                 )
                 games.append(match_chain)
 

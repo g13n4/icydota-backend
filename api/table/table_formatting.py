@@ -17,7 +17,11 @@ def to_table_format(
         rows: list,
 ) -> dict:
 
-    header_columns = extract_formatted_columns(data, rows, ALL_CALCULATION_MAP)
+    header_columns = extract_formatted_columns(
+        data=data,
+        pinned_columns=rows,
+        item_map=ALL_CALCULATION_MAP,
+    )
 
     return {
         "data": data,

@@ -131,7 +131,7 @@ def parse_replay(dem_file: Path, replay_file: Path, port: str | int):
     return curl_reponse
 
 
-@shared_task(name='get_match_replay', retries=3, default_retry_delay=7)
+@shared_task(name='get_match_replay', retries=3, default_retry_delay=7, ignore_result=True)
 def get_match_replay(match_id: int, parser_port: int | str) -> int:
     logger.info(f'Download replay for {match_id}')
 

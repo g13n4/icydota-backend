@@ -18,6 +18,16 @@ async def _create_player_hero_dict(players_select_data) -> dict:
     return output
 
 
+def _value_comparison(dire_value: float, dire_sent: float, ):
+    if dire_value == dire_sent:
+        return None
+    else:
+        if dire_value > dire_sent:
+            return True
+        else:
+            return False
+
+
 def _sort_func(item: dict):
     return item['position_id']
 
@@ -75,6 +85,7 @@ async def get_games_all(
     for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, league_name in match_objs.all():
         dire_side_dict = { }
         sent_side_dict = { }
+        comp_dict = { }
         sent_heroes = hero_data[(game_id, False)]
         dire_heroes = hero_data[(game_id, True)]
 
@@ -84,12 +95,13 @@ async def get_games_all(
 
         sent_name, dire_name = game_name.split(' vs ')
         for item in SidePerformance.VALUES:
-            for side_obj, side_dict in [
-                (dire_side_obj, dire_side_dict),
-                (sent_side_obj, sent_side_dict),
-            ]:
-                value = getattr(side_obj, item.name)
-                side_dict[item.name] = str(value) if item.value_type is not bool else to_front_bool(value)
+            dire_value = getattr(dire_side_obj, item.name)
+            dire_side_dict[item.name] = str(dire_value) if item.value_type is not bool else to_front_bool(dire_value)
+
+            sent_value = getattr(sent_side_obj, item.name)
+            sent_side_dict[item.name] = str(sent_value) if item.value_type is not bool else to_front_bool(sent_value)
+
+            comp_dict[item.name] = _value_comparison(dire_value, sent_value)
 
         data = {
             "id": str(game_id),
@@ -101,6 +113,7 @@ async def get_games_all(
             "direHeroes": dire_heroes,
             "direData": dire_side_dict,
             "sentData": sent_side_dict,
+            "compData": comp_dict,
             'leagueName': league_name,
         }
 

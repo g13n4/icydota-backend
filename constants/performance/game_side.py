@@ -38,7 +38,7 @@ def set_values_and_name(klass: object):
 class SidePerformance:
     gold: SPItem = SPItem(value_type=int, index=1)
     xp: SPItem = SPItem(value_type=int, index=2, description="XP")
-    hero_kills: SPItem = SPItem(value_type=int, index=3)
+    hero_kills: SPItem = SPItem(value_type=condecimal(max_digits=4, decimal_places=2), index=3)
     kills_per_min: SPItem = SPItem(value_type=int, index=4, description="KPM")
     neutral_kills: SPItem = SPItem(value_type=int, index=5)
 

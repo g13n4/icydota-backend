@@ -18,14 +18,14 @@ from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 logger = get_task_logger(__name__)
 
 
-def process_game_helper(match_id: int, league_id: int | None = None, exectute: bool = False) -> Optional[chain]:
+def process_game_helper(match_id: int, league_id: int | None = None, execute: bool = False) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
     match_chain = (
             get_match_replay.si(match_id=match_id, parser_port=port) |
             process_game_data.si(match_id=match_id, league_id=league_id)
     )
 
-    if exectute:
+    if execute:
         match_chain.apply_async()
         return None
     else:
@@ -57,7 +57,7 @@ def process_league(
                 process_game_helper(
                     match_id=game['match_id'],
                     league_id=league_obj.id,
-                    exectute=False,
+                    execute=False,
                 )
             )
 

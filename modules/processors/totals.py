@@ -51,7 +51,7 @@ class TotalPerformanceProcessor:
                 if this_obj_value is None:
                     continue
                 else:
-                    if field_not_none is None:
+                    if field_not_none is None or (field_not_none is not None and field_not_none < this_obj_value):
                         field_not_none = this_obj_value
 
                     field_value += this_obj_value
@@ -62,9 +62,9 @@ class TotalPerformanceProcessor:
                     setattr(PTD_obj, field_name, decimal_division(field_value, field_counter))
                 else:
                     match field_item.team_processing_option:
-                        case TotalTeamProcessingOption.FLOOR:
+                        case TotalTeamProcessingOption.CEIL:
                             field_value = 1 if field_value > 0 else 0
-                        case TotalTeamProcessingOption.FIRST_NOT_NONE:
+                        case TotalTeamProcessingOption.BIGGEST:
                             field_value = field_not_none
                         case TotalTeamProcessingOption.AVERAGE:
                             field_value = field_value / field_counter

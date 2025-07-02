@@ -27,4 +27,4 @@ def reprocess_bad_league_games_cron() -> None:
     logger.info(f"Found {len(games_to_process_again)} bad games")
 
     for game_id, league_id in games_to_process_again:
-        process_game_helper(match_id=game_id, league_id=league_id, exectute=True)
+        process_game_helper(match_id=game_id, league_id=league_id, execute=True)

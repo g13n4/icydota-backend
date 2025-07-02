@@ -243,7 +243,7 @@ if not LIGHT_MODE:
 
     @icydota_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
     async def process_match_api(match_id: int):
-        process_game_helper(match_id=match_id)
+        process_game_helper(match_id=match_id, execute=True)
         return { 'status': 'processing' }
 
 

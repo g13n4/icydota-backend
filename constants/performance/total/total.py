@@ -132,6 +132,7 @@ class GameTotals:
         value_type=Optional[int],
         index=24,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
     died_first: GameTotal = GameTotal(
@@ -145,7 +146,7 @@ class GameTotals:
         value_type=Optional[int],
         index=25,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
-        team_processing_option=TotalTeamProcessingOption.CEIL,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
     # FIRST T1 TOWER (NOT FOR AGGREGATION)
@@ -155,7 +156,7 @@ class GameTotals:
         pseudo_bool=True,
         description="First to lose a tower",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.CEIL,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
     lost_tower_time: GameTotal = GameTotal(
         value_type=Optional[int],
@@ -167,7 +168,7 @@ class GameTotals:
         index=26,
         availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True),
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FIRST_NOT_NONE,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -176,20 +177,20 @@ class GameTotals:
         pseudo_bool=True,
         description="First to destroy a tower",
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FIRST_NOT_NONE,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
         availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True ),
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.FIRST_NOT_NONE,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
     destroyed_tower_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=29,
         category=GameTotalsCategory.T1_TOWERS,
-        team_processing_option=TotalTeamProcessingOption.CEIL,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
     win: GameTotal = GameTotal(
@@ -532,7 +533,7 @@ class GameTotals:
         index=80,
         availability=FieldOption(match=False, player=False, for_any_option=True),
         category=GameTotalsCategory.STATS,
-        team_processing_option=TotalTeamProcessingOption.FIRST_NOT_NONE,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
     _VALUES: ClassVar[list[GameTotal]]

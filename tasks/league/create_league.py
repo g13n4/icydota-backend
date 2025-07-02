@@ -64,7 +64,9 @@ def create_league(league_id: int, **kwargs) -> League:
         league_obj = League(
             id=league_id,
             name=league_data['displayName'],
-            **kwargs, )
+            should_be_processed=True,
+            **kwargs,
+        )
 
         update_league_obj_dates(league_obj, league_data)
     except ConnectionError:
@@ -82,7 +84,7 @@ def create_league(league_id: int, **kwargs) -> League:
     return league_obj
 
 
-def get_or_create_league(league_id: int, db_session: Session, league_obj: League = None, ) -> League:
+def get_or_create_league(league_id: int, db_session: Session, league_obj: League | None = None, ) -> League:
     if league_obj is None:
         league_q = db_session.get(League, league_id)
         if not league_q:

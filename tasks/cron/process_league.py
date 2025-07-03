@@ -12,7 +12,7 @@ from tasks.league.process_league import process_league
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='set_leagues_and_patch_flags_cron')
+@shared_task(name='set_leagues_and_patch_flags_(cron)')
 def set_leagues_and_patch_flags_cron(league_id: int) -> None:
     db_session: Session = get_sync_db_session()
 
@@ -35,7 +35,7 @@ def set_leagues_and_patch_flags_cron(league_id: int) -> None:
     db_session.close()
 
 
-@shared_task(name='find_leagues_to_process_cron')
+@shared_task(name='find_leagues_to_process_(cron)')
 def find_leagues_to_process_cron() -> None:
     db_session: Session = get_sync_db_session()
     logger.info(f'Processing leagues: start')

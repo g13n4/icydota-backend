@@ -21,7 +21,7 @@ LoPItem = namedtuple(
 )
 
 
-@shared_task(name='start_aggregations_and_ccomparison_cron')
+@shared_task(name='start_aggregations_and_ccomparison_(cron)')
 def start_aggregations_and_ccomparison_cron() -> None:
     db_session: Session = get_sync_db_session()
 

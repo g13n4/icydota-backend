@@ -12,7 +12,7 @@ from tasks.league.create_league import update_league_obj_dates
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='update_leagues_date(cron)')
+@shared_task(name='update_leagues_date_(cron)')
 def update_leagues_dates_cron() -> None:
     db_session: Session = get_sync_db_session()
     logger.info(f'Updating leagues dates: start')

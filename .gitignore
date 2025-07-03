@@ -175,3 +175,6 @@ temp_data/
 # GIT MODULES
 /dotaconstants/
 /data
+
+# LOGS
+logs/*

@@ -76,19 +76,19 @@ def setup_task_post_run(task, *args, **kwargs):
 celery_app.conf.beat_schedule = {
     # Executes every Monday morning at 7:30 a.m.
     'update_leagues_date': {
-        'task': 'update_leagues_date(cron)',
+        'task': 'update_leagues_date_(cron)',
         'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
     },
     'find_leagues_to_process': {
-        'task': 'find_leagues_to_process_cron',
+        'task': 'find_leagues_to_process_(cron)',
         'schedule': crontab(minute='0', hour='*/6'),
     },
     'process_bad_league_games': {
-        'task': 'process_bad_league_games_cron',
+        'task': 'process_bad_league_games_(cron)',
         'schedule': crontab(minute='0', hour='*/4'),
     },
     'start_aggregations_and_ccomparison': {
-        'task': 'process_bad_league_games_cron',
+        'task': 'process_bad_league_games_(cron)',
         'schedule': crontab(minute='0', hour='*/12'),
     },
 }

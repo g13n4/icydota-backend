@@ -170,7 +170,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     if not league_id:
         league_id = game_data['league']['leagueid']
-    league_obj = get_or_create_league(league_id=league_id, db_session=db_session)
+    league_obj = get_or_create_league(db_session=db_session, league_id=league_id)
 
     fix_odota_data(game_data)
 

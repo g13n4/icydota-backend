@@ -87,23 +87,16 @@ def create_league(league_id: int, **kwargs) -> League:
     return league_obj
 
 
-def get_or_create_league(league_id: int, db_session: Session, league_obj: League | None = None, ) -> League:
-    if league_obj is None:
-        league_q = db_session.get(League, league_id)
-        if not league_q:
+def get_or_create_league(db_session: Session, league_id: int, existing_obj: League | None = None, ) -> League:
+    if existing_obj is None:
+        league_obj = db_session.get(League, league_id)
+        if league_obj is None:
             league_obj = create_league(league_id)
             db_session.add(league_obj)
             db_session.commit()
             db_session.refresh(league_obj)
         else:
-            league_obj: League = league_q
+            return league_obj
 
-    if not league_obj.has_dates or _same_dates(league_obj.start_date, league_obj.end_date):
-        try:
-            if (update_league_obj_dates(league_obj)):
-                db_session.add(league_obj)
-                db_session.commit()
-        except ConnectionError:
-            pass
 
-    return league_obj
+    return existing_obj

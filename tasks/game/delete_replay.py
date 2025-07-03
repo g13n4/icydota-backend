@@ -19,9 +19,9 @@ DELETE_REPLAY = os.getenv('DELETE_REPLAY', default='true')
 @shared_task(name='delete_replay_folder', ignore_result=True)
 def delete_replay_folder(match_id: int):
     if DELETE_REPLAY == "true":
-        logger.info(f'Deleting match {match_id} replay folder ... ')
+        logger.info(f'Deleting match {match_id} replay folder')
 
-        folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}/'))
+        folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}'))
         try:
             shutil.rmtree(folder_path)
         except:

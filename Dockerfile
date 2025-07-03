@@ -3,6 +3,8 @@ LABEL authors="joey-hzpfywtd@hotmail.com"
 WORKDIR /app
 
 COPY . /app/
+
+RUN mkdir -p /app/logs
 RUN python3 -m pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 ENV PYTHONDONTWRITEBYTECODE 1

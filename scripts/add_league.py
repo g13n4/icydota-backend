@@ -5,7 +5,7 @@ from tasks.league.create_league import get_or_create_league
 
 
 @click.command()
-@click.option('--league', help='League id to add')
+@click.option('--league_id', '-l', help='League id to add')
 def add_league(league_id: int):
     db_session = get_sync_db_session(expire=False)
     obj = get_or_create_league(league_id=league_id, db_session=db_session)

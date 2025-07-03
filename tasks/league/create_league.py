@@ -46,11 +46,13 @@ def update_league_obj_dates(league_obj: League, league_data: dict | None = None)
     start_date = league_data.get('startDateTime', None) and int(league_data['startDateTime'])
     end_date = league_data.get('endDateTime', None) and int(league_data['endDateTime'])
 
-    if (league_obj.start_date != start_date
+    if (
+            league_obj.start_date != start_date
             or league_obj.end_date != end_date
             or (_same_dates(league_obj.start_date, league_obj.end_date)
                 and start_date
-                and not _same_dates(date_start=start_date, date_end=end_date))):
+                and not _same_dates(date_start=start_date, date_end=end_date))
+    ):
         _update_league_dates(league_obj=league_obj, start_date=start_date, end_date=end_date)
         updated_dates = True
 
@@ -76,7 +78,8 @@ def create_league(league_id: int, **kwargs) -> League:
             data = r.json()
             league_obj = League(
                 id=league_id,
-                name=data['name'], )
+                name=data['name'],
+            )
 
         else:
             raise ConnectionError("STRATZ and OPENDOTA don't respond. Connection problems?")

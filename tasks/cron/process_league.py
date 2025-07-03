@@ -1,6 +1,6 @@
 from typing import List
 
-from celery import shared_task, chord
+from celery import shared_task, chord, group
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
 
@@ -50,9 +50,11 @@ def find_leagues_to_process_cron() -> None:
 
         if found_games:
             league_obj.since_last_new_game = 0
-            chord(
-                processing_group | set_leagues_and_patch_flags_cron.si(league_id=league_obj.id),
+            task = (
+                group(*processing_group) | set_leagues_and_patch_flags_cron.si(league_id=league_obj.id)
             ).on_error(set_leagues_and_patch_flags_cron.si(league_id=league_obj.id))
+
+            task.apply_async()
 
         elif league_obj.since_last_new_game > 7:
             league_obj.since_last_new_game = None

@@ -92,6 +92,7 @@ def get_or_create_league(db_session: Session, league_id: int, existing_obj: Leag
         league_obj = db_session.get(League, league_id)
         if league_obj is None:
             league_obj = create_league(league_id)
+            league_obj.should_be_processed = True
             db_session.add(league_obj)
             db_session.commit()
             db_session.refresh(league_obj)

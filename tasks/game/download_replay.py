@@ -9,6 +9,7 @@ from typing import Callable
 import requests
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from dotenv import load_dotenv
 
 
 CURRENT_DIR = Path(__file__).parent.parent.parent.absolute()
@@ -16,6 +17,10 @@ BASE_REPLAY_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
 assert Path(BASE_REPLAY_PATH).is_dir() == True
 
 logger = get_task_logger(__name__)
+
+load_dotenv()
+
+PARSER_ADDRESS = os.getenv('PARSER_ADDRESS', default='localhost')
 
 
 class ReplayDataError(Exception):
@@ -126,7 +131,7 @@ def unzip_dem(bz2_path: Path, dem_path: Path):
 
 
 def parse_replay(dem_file: Path, replay_file: Path, port: str | int):
-    command = f'curl localhost:{port} --data-binary ' + f'"@{str(dem_file)}" > "{str(replay_file)}"'
+    command = f'curl {PARSER_ADDRESS}:{port} --data-binary ' + f'"@{str(dem_file)}" > "{str(replay_file)}"'
     curl_reponse = subprocess.run(command, shell=True, check=True, capture_output=True)
     return curl_reponse
 

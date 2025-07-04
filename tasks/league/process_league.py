@@ -1,8 +1,10 @@
+import os
 from typing import Dict, Optional
 
 import requests
 from celery import chain, group
 from celery.utils.log import get_task_logger
+from dotenv import load_dotenv
 from sqlmodel import Session
 
 from db import get_sync_db_session
@@ -12,20 +14,30 @@ from tasks.approximate_positions import approximate_positions
 from tasks.game.delete_replay import delete_replay_folder
 from tasks.game.download_replay import get_match_replay
 from tasks.game.process_game import process_game_data
+from tasks.game.single_task_match_processing import single_task_process_game
 from tasks.league.create_league import get_or_create_league
 from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 
 
 logger = get_task_logger(__name__)
 
+load_dotenv()
+
+MATCH_ONE_TASK = os.getenv('MATCH_ONE_TASK', default='true')
+
 
 def process_game_helper(match_id: int, league_id: int | None = None, execute: bool = False) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
-    match_chain = (
-            get_match_replay.si(match_id=match_id, parser_port=port) |
-            process_game_data.si(match_id=match_id, league_id=league_id) |
+    if MATCH_ONE_TASK == "true":
+        match_chain = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port).on_error(
             delete_replay_folder.si(match_id=match_id)
-    )
+        )
+    else:
+        match_chain = (
+                get_match_replay.si(match_id=match_id, parser_port=port) |
+                process_game_data.si(match_id=match_id, league_id=league_id) |
+                delete_replay_folder.si(match_id=match_id)
+        ).on_error(delete_replay_folder.si(match_id=match_id))
 
     if execute:
         match_chain.apply_async()

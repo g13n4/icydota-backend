@@ -66,7 +66,6 @@ def create_league(league_id: int, **kwargs) -> League:
         league_obj = League(
             id=league_id,
             name=league_data['displayName'],
-            should_be_processed=True,
             **kwargs,
         )
 
@@ -84,6 +83,7 @@ def create_league(league_id: int, **kwargs) -> League:
         else:
             raise ConnectionError("STRATZ and OPENDOTA don't respond. Connection problems?")
 
+    league_obj.should_be_processed = True
     return league_obj
 
 

@@ -1,10 +1,12 @@
 import os
+import shutil
 from pathlib import Path
 
 from celery import shared_task
-from dotenv import load_dotenv
 from celery.utils.log import get_task_logger
-import shutil
+from dotenv import load_dotenv
+
+
 load_dotenv()
 
 CURRENT_DIR = Path(__file__).parent.parent.parent.absolute()
@@ -22,12 +24,6 @@ def delete_replay_folder(match_id: int):
         logger.info(f'Deleting match {match_id} replay folder')
 
         folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}'))
-        try:
-            shutil.rmtree(folder_path)
-        except:
-            logger.error(f'Something went wrong when deleting match {match_id} ')
-            raise
+        shutil.rmtree(folder_path)
 
     return None
-
-

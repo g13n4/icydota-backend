@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 
 from redis_app import get_redis_single

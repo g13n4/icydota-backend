@@ -91,9 +91,5 @@ celery_app.conf.beat_schedule = {
         'task': 'process_bad_league_games_(cron)',
         'schedule': crontab(minute='0', hour='*/12'),
     },
-    'test_match': {
-        'task': 'test_match_processing',
-        'schedule': crontab(minute='*/2'),
-    },
 }
 

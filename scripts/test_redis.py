@@ -22,7 +22,7 @@ def test_redis():
     r.set(key, value, ex=60)
 
     output = r.get(key)
-    assert output == key
+    assert output == value
     r.delete(key)
 
 

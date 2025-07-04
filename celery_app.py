@@ -93,7 +93,7 @@ celery_app.conf.beat_schedule = {
     },
     'test_match': {
         'task': 'test_match_processing',
-        'schedule': crontab(minute='1'),
+        'schedule': crontab(minute='*/2'),
     },
 }
 

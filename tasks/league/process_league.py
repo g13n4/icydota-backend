@@ -29,21 +29,21 @@ MATCH_ONE_TASK = os.getenv('MATCH_ONE_TASK', default='true')
 def process_game_helper(match_id: int, league_id: int | None = None, execute: bool = False) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
     if MATCH_ONE_TASK == "true":
-        match_chain = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port).on_error(
-            delete_replay_folder.si(match_id=match_id)
-        )
+        task = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port)
     else:
-        match_chain = (
+        task = (
                 get_match_replay.si(match_id=match_id, parser_port=port) |
                 process_game_data.si(match_id=match_id, league_id=league_id) |
                 delete_replay_folder.si(match_id=match_id)
-        ).on_error(delete_replay_folder.si(match_id=match_id))
+        )
+
+    task = task.on_error(delete_replay_folder.si(match_id=match_id))
 
     if execute:
-        match_chain.apply_async()
+        task.apply_async()
         return None
     else:
-        return match_chain
+        return task
 
 
 def process_league(
@@ -54,7 +54,7 @@ def process_league(
 ):
     db_session: Session = get_sync_db_session()
 
-    league_obj = get_or_create_league(league_id, db_session, league_obj)
+    league_obj = get_or_create_league(db_session=db_session, league_id=league_id, existing_obj=league_obj)
 
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_obj.id}/matches')
     league_match_data = r.json()

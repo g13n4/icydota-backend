@@ -87,7 +87,7 @@ def create_league(league_id: int, **kwargs) -> League:
     return league_obj
 
 
-def get_or_create_league(db_session: Session, league_id: int, existing_obj: League | None = None, ) -> League:
+def get_or_create_league(db_session: Session, league_id: int, existing_obj: League | None = None) -> League:
     if existing_obj is None:
         league_obj = db_session.get(League, league_id)
         if league_obj is None:

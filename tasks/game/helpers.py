@@ -1,4 +1,7 @@
-from typing import Dict, Any
+import time
+from collections.abc import Iterable
+from functools import wraps
+from typing import Callable, Dict, Any
 
 from modules.odota_position_normaliser import ODOTAPositionNormaliser
 
@@ -22,10 +25,13 @@ def fix_odota_data(odota_data: Dict[str, Any]) -> None:
         side = 'radiant' if player['isRadiant'] else 'dire'
 
         position_tester[side].add(player['lane_role'])  # KeyError: 'lane_role' 7248385188
-        position_data[side].append({
-            'hero_id': player['hero_id'],
-            'neutral_kills': player['neutral_kills'],
-            'lane_role': player['lane_role'], })
+        position_data[side].append(
+            {
+                'hero_id': player['hero_id'],
+                'neutral_kills': player['neutral_kills'],
+                'lane_role': player['lane_role'],
+            }
+        )
 
     # SLOTS
     if slots_are_broken:
@@ -66,3 +72,27 @@ def fix_odota_data(odota_data: Dict[str, Any]) -> None:
             }
 
     return None
+
+
+def error_exception_wrapper(tries: int, delay: int, *, exceptions=Iterable[Exception]):
+    def outer_error_wrapper(func: Callable):
+        @wraps(func)
+        def inner_error_wrapper(*args, **kwargs):
+            for current_try in range(1, tries + 1):
+                try:
+                    output = func(*args, **kwargs)
+                    break
+                except tuple(exceptions) as e:
+                    if current_try == tries:
+                        raise e
+                    else:
+                        time.sleep(delay)
+                        continue
+
+            return output
+
+
+        return inner_error_wrapper
+
+
+    return outer_error_wrapper

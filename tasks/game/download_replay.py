@@ -11,6 +11,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from dotenv import load_dotenv
 
+from tasks.game.helpers import error_exception_wrapper
+
 
 CURRENT_DIR = Path(__file__).parent.parent.parent.absolute()
 BASE_REPLAY_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
@@ -117,6 +119,7 @@ def download_json(match_id: int, file_path: Path) -> str:
     raise ConnectionError(f"Can't access open dota. Code: {r.status_code} {r.text}")
 
 
+@error_exception_wrapper(tries=2, delay=60, exceptions=[ConnectionError])
 def download_dem_bz2(url: str, bz2_path: Path):
     r = requests.get(url, stream=True)
     with open(bz2_path, 'wb') as fd:

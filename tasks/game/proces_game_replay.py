@@ -26,7 +26,7 @@ def process_game_replay(db_session,
 
     # MATCH PARSING
     match = MatchAnalyser(pathlib.Path(match_path), match_id=match_info['match_id'])
-    match_data = match.get_match_data()
+    match_data, additional_options = match.get_match_data()
     match.players.set_player_data_from_dict(additional_player_data)
 
     PDP = PerformanceDataProcessor(
@@ -42,6 +42,7 @@ def process_game_replay(db_session,
         match=match,
         match_data=match_data,
         PDP=PDP,
+        paring_options=additional_options,
     )
 
     logger.info('Processing main replay windows_data')

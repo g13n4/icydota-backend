@@ -2,9 +2,8 @@ from typing import Dict, List
 
 import pandas as pd
 
-from models import HeroDeath, PerformanceTotalData
-from models import Building, BuildingDestroyed, BuildingNotDestroyed
-from models import RoshanDeath, BuildingData
+from models import HeroDeath, PerformanceTotalData, Building, BuildingDestroyed, BuildingNotDestroyed, RoshanDeath, \
+    BuildingData
 from modules.match_analyser import MatchPlayersData, MatchAnalyser
 from modules.performance_data_processor import PerformanceDataProcessor
 from replay_parsing.processors.buildings import process_building
@@ -187,7 +186,8 @@ def process_additional_replay_data(
         match: MatchAnalyser,
         match_data: Dict[str, pd.DataFrame],
         PDP: PerformanceDataProcessor,
-        ):
+        paring_options: dict[str, bool],
+):
     avg_rosh_death_time, roshan_deaths = process_roshan_deaths(
         match_data['roshan_deaths'],
         players_to_slot=match.players.get_name_slot_dict(),
@@ -206,7 +206,7 @@ def process_additional_replay_data(
     )
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
-    pick_dict = _get_pick_data(match_data['draft'])
+    pick_dict = _get_pick_data(match_data['draft']) if not paring_options["no_cm_hero_picks"] else dict()
 
     for player_slot in range(10):
         this_player_data = PDP.get_player_data(player_slot)
@@ -256,22 +256,19 @@ def process_additional_replay_data(
         this_total_perf_obj.first_barracks_set_lost_top = hero_building_data['first_barracks_set_lost_top']
         this_total_perf_obj.first_barracks_set_lost_bot = hero_building_data['first_barracks_set_lost_bot']
 
-
         hero_id = this_player_data['hero_id']
         position_id = this_player_data['position_id']
 
         is_dire = this_player_data['slot'] > 4
         is_sent = this_player_data['slot'] < 5
 
-        first_pick = pick_dict[hero_id] == 1
-        last_pick = pick_dict[hero_id] == 10
+        first_pick = pick_dict.get(hero_id, None) == 1
+        last_pick = pick_dict.get(hero_id, None) == 10
         win = this_total_perf_obj.win == True
         lose = this_total_perf_obj.win == False
 
-
         this_total_perf_obj.win_dire = int(win and is_dire)
         this_total_perf_obj.win_sent = int(win and is_sent)
-
 
         this_total_perf_obj.first_pick_win = int(first_pick and win)
         this_total_perf_obj.first_pick_lose = int(first_pick and lose)

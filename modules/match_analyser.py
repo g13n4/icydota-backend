@@ -328,7 +328,7 @@ class MatchAnalyser:
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
 
 
-    def get_match_data(self) -> dict[str, pd.DataFrame]:
+    def get_match_data(self) -> tuple[dict[str, pd.DataFrame], dict]:
         interval = []  # interval
         pings = []  # pings
         wards = []  # obs / sen / sen_left / obs_left
@@ -382,6 +382,10 @@ class MatchAnalyser:
 
         total_game_length = float("-inf")
 
+        additional_options = {
+            "no_cm_hero_picks": False,
+        }
+
         with open(self.path, 'r') as file:
             for line in file.readlines():
                 for pattern in [
@@ -398,6 +402,10 @@ class MatchAnalyser:
                 p_line = json.loads(line)
                 line_type: str = p_line['type']
                 line_time: int = p_line['time']
+
+                # cm mode is value = 3
+                if p_line["type"] == "DOTA_COMBATLOG_GAME_STATE" and p_line["value"] == 10:
+                    additional_options["no_cm_hero_picks"] = True
 
                 # in new games the end games sets time to -855
                 total_game_length = max(total_game_length, line_time)
@@ -490,4 +498,4 @@ class MatchAnalyser:
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
             'draft': pd.DataFrame(draft)
-        }
+        }, additional_options

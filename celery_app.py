@@ -87,9 +87,9 @@ celery_app.conf.beat_schedule = {
     #     'task': 'update_leagues_date_(cron)',
     #     'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
     # },
-    **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=6),
+    **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=7),
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=3, time_step=3),
-    **strict_cron_time('aggregate_and_ccomp_league_and_patch_(cron)', time_start=6, time_step=12),
+    **strict_cron_time('aggregate_and_ccomp_league_and_patch_(cron)', time_start=0, time_step=12),
     'attempt_to_process_bad_games_[at_18]': {
         'task': 'attempt_to_process_bad_games_(cron)',
         'schedule': crontab(minute='0', hour='18', day_of_week='1,3,5'),

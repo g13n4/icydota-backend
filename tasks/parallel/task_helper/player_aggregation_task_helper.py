@@ -16,8 +16,20 @@ def player_aggregation_parallel_processor_task_helper(
 ):
     ONE_CALC_TASK = create_partial_task("aggregation", "player")
     for agg_type in AggregationConstant.VALUES:
-        # calculations
         tasks = []
+        # totals
+        for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
+            tasks.append(
+                ONE_CALC_TASK(
+                    league_id=league_id,
+                    patch_id=patch_id,
+                    aggregation_type=agg_type,
+                    calculation_id=0,
+                    is_comparison=is_comparison,
+                    is_flat=is_flat,
+                )
+            )
+        # calculations
         for calc_id, comp_data in product(
                 WindowCalculations.VALUES(only_field="db_id"),
                 PROCESSING_COMPARISON_LIST,
@@ -29,18 +41,6 @@ def player_aggregation_parallel_processor_task_helper(
                     patch_id=patch_id,
                     calculation_id=calc_id,
                     aggregation_type=agg_type,
-                    is_comparison=is_comparison,
-                    is_flat=is_flat,
-                )
-            )
-        # totals
-        for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
-            tasks.append(
-                ONE_CALC_TASK(
-                    league_id=league_id,
-                    patch_id=patch_id,
-                    aggregation_type=agg_type,
-                    calculation_id=0,
                     is_comparison=is_comparison,
                     is_flat=is_flat,
                 )

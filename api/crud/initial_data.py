@@ -35,7 +35,7 @@ async def _build_computations() -> list[dict]:
 
 async def get_initial_data(db: AsyncSession) -> dict:
     patch_objs = await db.exec(select(Patch).where(Patch.aggregation_allowed == True).order_by(Patch.id.desc()))
-    league_objs = await db.exec(select(League).order_by(League.id.desc()))
+    league_objs = await db.exec(select(League).order_by(League.id.asc()))
     return {
         "computations": await _build_computations(),
         "totalPercentFields": GameTotals.VALUES(only_pseudo_bools=True, only_field="name"),

@@ -19,8 +19,22 @@ def player_cross_comparison_parallel_processor_task_helper(
     ONE_CALC_TASK = create_partial_task("cross-comparison", "player")
     for ccomparison_type in CrossComparisonTypeConstant.VALUES:
         for ccomp_pos_id in COMPARISON_TYPE_POSITION_MAP.keys():
-            # calculations
             tasks = []
+            # totals
+            for is_comparison, is_flat in PROCESSING_COMPARISON_LIST[1:]:
+                tasks.append(
+                    ONE_CALC_TASK(
+                        league_id=league_id,
+                        patch_id=patch_id,
+                        ccomparison_type=ccomparison_type,
+                        ccomp_pos_id=ccomp_pos_id,
+                        calculation_id=0,
+                        is_comparison=is_comparison,
+                        is_flat=is_flat,
+                    )
+                )
+
+            # calculations
             for calc_id, comp_data in product(
                     WindowCalculations.VALUES(only_field="db_id"),
                     PROCESSING_COMPARISON_LIST[1:],
@@ -37,19 +51,7 @@ def player_cross_comparison_parallel_processor_task_helper(
                         is_flat=is_flat,
                     )
                 )
-            # totals
-            for is_comparison, is_flat in PROCESSING_COMPARISON_LIST[1:]:
-                tasks.append(
-                    ONE_CALC_TASK(
-                        league_id=league_id,
-                        patch_id=patch_id,
-                        ccomparison_type=ccomparison_type,
-                        ccomp_pos_id=ccomp_pos_id,
-                        calculation_id=0,
-                        is_comparison=is_comparison,
-                        is_flat=is_flat,
-                    )
-                )
+
             # tasks creation
             all_tasks = (
                     delete_cross_comparison_match.si(league_id=league_id, patch_id=patch_id, ccomp_type=ccomparison_type) |

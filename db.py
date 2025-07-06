@@ -35,16 +35,20 @@ def get_sync_db_sessionmaker(expire: bool):
     )
 
 
-def full_commit(self):
-    self.flush()
-    self.commit()
-    self.close()
+def full_commit(session):
+    def _do_full_commit():
+        session.flush()
+        session.commit()
+        session.close()
+
+
+    return _do_full_commit
 
 
 def get_sync_db_session(expire: bool = False) -> Session:
     sync_session = get_sync_db_sessionmaker(expire=expire)
     with sync_session() as session:
-        session.full_commit = full_commit
+        session.full_commit = full_commit(session)
         return session
 
 

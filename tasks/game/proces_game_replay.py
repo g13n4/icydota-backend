@@ -12,9 +12,6 @@ from tasks.game.process_game_replay_addtitional import process_additional_replay
 from tasks.game.process_game_replay_main import set_processor_data
 
 
-CURRENT_DIR = Path.cwd().parent.parent.absolute()
-
-
 def process_game_replay(db_session,
                         match_info: dict[str, Any],
                         match_replay_folder_path: Path,

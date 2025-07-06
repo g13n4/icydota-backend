@@ -13,7 +13,7 @@ def _format_name(name: str | None, game_id: int) -> str:
 async def get_games(db_session: AsyncSession, league_id: int):
     match_objs = await (db_session.exec(
         select(Game)
-        .where(Game.league_id == league_id)
+        .where(Game.league_id == league_id, Game.is_broken == False)
         .order_by(Game.id)
     ))
 

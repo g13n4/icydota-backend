@@ -73,23 +73,25 @@ def setup_task_post_run(task, *args, **kwargs):
     logger.info(f"{task.name}|{task.request.id}|args: {args}|kwargs: {kwargs['kwargs']}")
 
 
-celery_app.conf.beat_schedule = {
-    # Executes every Monday morning at 7:30 a.m.
-    'update_leagues_date': {
-        'task': 'update_leagues_date_(cron)',
-        'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
-    },
-    'find_leagues_to_process': {
-        'task': 'find_leagues_to_process_(cron)',
-        'schedule': crontab(minute='0', hour='*/6'),
-    },
-    'process_bad_league_games': {
-        'task': 'process_bad_league_games_(cron)',
-        'schedule': crontab(minute='0', hour='*/4'),
-    },
-    'start_aggregations_and_ccomparison': {
-        'task': 'process_bad_league_games_(cron)',
-        'schedule': crontab(minute='0', hour='*/12'),
-    },
-}
+def strict_cron_time(task_name: str, time_start: int, time_step: int):
+    return {
+        f'{task_name}_[at {x}]': {
+            'task': task_name,
+            'schedule': crontab(minute='0', hour=str(x)),
+        } for x in range(time_start, 24, time_step)
+    }
 
+
+celery_app.conf.beat_schedule = {
+    # 'update_leagues_date': {
+    #     'task': 'update_leagues_date_(cron)',
+    #     'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
+    # },
+    **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=6),
+    **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=3, time_step=3),
+    **strict_cron_time('aggregate_and_ccomp_league_and_patch_(cron)', time_start=6, time_step=12),
+    'attempt_to_process_bad_games_[at_18]': {
+        'task': 'attempt_to_process_bad_games_(cron)',
+        'schedule': crontab(minute='0', hour='18', day_of_week='1,3,5'),
+    }
+}

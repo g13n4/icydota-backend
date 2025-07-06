@@ -13,9 +13,9 @@ from tasks.league.process_league import process_league
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='find_leagues_to_process_(cron)', ignore_result=True)
+@shared_task(name='attempt_to_process_bad_games_(cron)', ignore_result=True)
 def find_leagues_to_process_cron() -> None:
-    db_session: Session = get_sync_db_session(expire=False)
+    db_session: Session = get_sync_db_session(expire=True)
     logger.info(f'Processing leagues: start')
 
     sel_res = db_session.exec(
@@ -29,22 +29,9 @@ def find_leagues_to_process_cron() -> None:
             execute=False,
         )
 
-        if found_games:
-            league_obj.since_last_new_game = 0
-            task = (
-                    group(*processing_group) | set_leagues_and_patch_flags_cron.si(league_id=league_obj.id)
-            ).on_error(set_leagues_and_patch_flags_cron.si(league_id=league_obj.id))
+        for game_task in found_games:
+            chain_task = game_task | set_leagues_and_patch_flags_cron.si(league_id=league_obj.id)
 
-            task.apply_async()
+            chain_task.apply_async()
 
-        elif league_obj.since_last_new_game > 7:
-            league_obj.since_last_new_game = None
-
-        else:
-            league_obj.since_last_new_game += 1
-
-        db_session.add(league_obj)
-
-    db_session.commit()
     db_session.close()
-    logger.info(f'Processing leagues: end')

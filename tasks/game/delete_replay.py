@@ -6,12 +6,10 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from dotenv import load_dotenv
 
+from file_path import BASE_REPLAY_PATH
+
 
 load_dotenv()
-
-CURRENT_DIR = Path(__file__).parent.parent.parent.absolute()
-BASE_REPLAY_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
-assert Path(BASE_REPLAY_PATH).is_dir() == True
 
 logger = get_task_logger(__name__)
 

@@ -39,7 +39,7 @@ def post_process_league_id(
 
 
 def process_full_cycle(league_obj: League | None = None, league_id: int | None = None):
-    db_session: Session = get_sync_db_session()
+    db_session: Session = get_sync_db_session(expire=True)
 
     league_obj = get_or_create_league(league_id, db_session, league_obj)
 
@@ -69,12 +69,13 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
 
     logger.info(f"PARSING FOR LEAGUE {league_obj.id} IS DONE")
 
+    db_session.close()
     return
 
 
 # MASS PROCESS
 def mass_process(process_type: str, league_ids: List[int]) -> None:
-    db_session: Session = get_sync_db_session()
+    db_session: Session = get_sync_db_session(expire=True)
 
     if process_type == 'process_league':
         all_leagues = []
@@ -123,3 +124,6 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
                 celery_helper(league_id=league_id)
             else:
                 logger.warning('League {} doesn\'t exist in the database')
+
+
+    db_session.close()

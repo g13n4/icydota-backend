@@ -3,6 +3,7 @@ from pathlib import Path
 
 import click
 
+from file_path import BASE_REPLAY_PATH
 from scripts.name_map.facets import FACETS_NAME, check_initial_facets_map
 from scripts.name_map.heroes import HEROES_NAME, check_initial_heroes_map
 from scripts.name_map.heroes_icons import HEROES_ICONS, check_initial_heroes_icons
@@ -28,7 +29,7 @@ def create_initial_redis_name_map(on_startup: bool = False):
 
 
 def create_initial_json_name_map():
-    app_folder = Path(os.path.abspath(__file__)).parent.parent
+    app_folder = Path(BASE_REPLAY_PATH).parent.parent
     data_folder_path = Path(app_folder) / "data"
     print(f"Data folder is set to {data_folder_path}")
 

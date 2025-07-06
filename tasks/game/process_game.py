@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 import warnings
 from pathlib import Path
@@ -11,6 +10,7 @@ from sqlmodel import Session
 
 from constants.performance.game_side import SidePerformance
 from db import get_sync_db_session
+from file_path import BASE_REPLAY_PATH
 from models import Player, Team, SidePerformanceData, PlayerGameData, Game, PositionApproximation
 from models.game import Patch
 from models.performance import PerformanceTotalData
@@ -21,11 +21,6 @@ from tasks.league.create_league import get_or_create_league
 from utils import none_to_zero, get_or_create, get_positions_approximations
 from utils.helpers import is_equals_to_zero
 
-
-CURRENT_DIR = Path.cwd().absolute()
-BASE_PATH = os.path.join(CURRENT_DIR, Path('./replays'))
-
-assert Path(BASE_PATH).is_dir() == True
 
 logger = get_task_logger(__name__)
 
@@ -141,7 +136,7 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 def process_game_data(match_id: int, league_id: int | None = None):
     logger.info(f'Process replay for {match_id}')
 
-    db_session: Session = get_sync_db_session()
+    db_session: Session = get_sync_db_session(expire=False)
 
     game = db_session.get(Game, match_id)
     processed_counter = 1
@@ -151,8 +146,8 @@ def process_game_data(match_id: int, league_id: int | None = None):
         db_session.delete(game)
         db_session.commit()
 
-    match_folder_path = Path(f'{BASE_PATH}/{match_id}/')
-    json_path = Path(f'{BASE_PATH}/{match_id}/{match_id}.json')
+    match_folder_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/')
+    json_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/{match_id}.json')
 
     with open(json_path, "r") as match_json:
         game_data = json.load(match_json)
@@ -350,6 +345,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
         game_start_time=game_data['start_time'],
         duration=game_data['duration'],
         replay_url=game_data['replay_url'],
+        is_broken=False,
     )
 
     match_meta_info['game_obj'] = game_ibj
@@ -377,6 +373,5 @@ def process_game_data(match_id: int, league_id: int | None = None):
     game_ibj.sent_building_status_id = additional_data['sent_building_status_id']
 
     db_session.add(game_ibj)
-    db_session.commit()
-    db_session.close()
+    db_session.full_commit()
     logger.info("Parsing complete")

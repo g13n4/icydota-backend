@@ -1,4 +1,3 @@
-from tasks.cron.process_aggregations import start_aggregations_and_ccomparison_cron
-from tasks.cron.process_bad_league_games import reprocess_bad_league_games_cron
+from tasks.cron.process_aggregations import aggregate_and_ccomp_league_and_patch_cron
+from tasks.cron.process_mispositioned_games import reprocess_mispositioned_league_games_cron
 from tasks.cron.process_league import find_leagues_to_process_cron
-

@@ -7,7 +7,7 @@ from scripts.populate import create_buildings, create_heroes, create_performance
 
 def populate_all(db_session: Session | None = None):
     if db_session is None:
-        db_session = get_sync_db_session(expire=True)
+        db_session = get_sync_db_session(expire=False)
 
     print("Adding...")
     create_patches(db_session)
@@ -18,7 +18,7 @@ def populate_all(db_session: Session | None = None):
     create_players_and_teams(db_session)
     create_positions(db_session)
 
-    db_session.commit()
+    db_session.full_commit()
 
     print("Done!")
 

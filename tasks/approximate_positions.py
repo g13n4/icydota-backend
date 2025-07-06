@@ -1,12 +1,14 @@
-import pandas as pd
+from typing import Dict, List
+
 import numpy as np
+import pandas as pd
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select, col
-from celery import shared_task
-from typing import Dict, List
 
 from db import get_sync_db_session
 from models import PlayerGameData, Game, PositionApproximation
+
 
 logger = get_task_logger(__name__)
 
@@ -34,39 +36,59 @@ def approximate_positions(league_id: int) -> None:
     game_start_time = 0
 
     logger.info('Removing old position windows_data')
-    old_positions_obj = (db_session.exec(select(PositionApproximation)
-                                         .where(PositionApproximation.league_id == league_id)))
+    old_positions_obj = (
+        db_session.exec(
+            select(PositionApproximation)
+            .where(PositionApproximation.league_id == league_id)
+        )
+    )
 
-    old_positions_data: List[tuple[dict, PositionApproximation]] = [(obj.model_dump(), obj) for obj in old_positions_obj]
-    old_positions_data: Dict[tuple, PositionApproximation] = {(item['league_id'], item['player_id']): obj
-                                                              for item, obj in old_positions_data}
+    old_positions_data: List[tuple[dict, PositionApproximation]] = [
+        (obj.model_dump(), obj) for obj in old_positions_obj
+    ]
+    old_positions_data: Dict[tuple, PositionApproximation] = {
+        (item['league_id'], item['player_id']): obj for item, obj in old_positions_data
+    }
 
     logger.info('Getting windows_data from new games')
-    players_raw_data = db_session.exec(select(PlayerGameData.player_id,
-                                              PlayerGameData.team_id,
-                                              PlayerGameData.position_id,
-                                              Game.game_start_time)
-                                       .join(Game)
-                                       .where(Game.id == PlayerGameData.game_id,
-                                              Game.league_id == league_id)).all()
+    players_raw_data = db_session.exec(
+        select(
+            PlayerGameData.player_id,
+            PlayerGameData.team_id,
+            PlayerGameData.position_id,
+            Game.game_start_time
+        )
+        .join(Game)
+        .where(
+            Game.id == PlayerGameData.game_id,
+            Game.league_id == league_id
+        )
+    ).all()
 
     teams_set = set()
     players_data = []
     for player, team, position, start_time in players_raw_data:
-        players_data.append({
-            'position': position,
-            'player': player,
-            'team': team,
-        })
+        players_data.append(
+            {
+                'position': position,
+                'player': player,
+                'team': team,
+            }
+        )
         teams_set.add(team)
         game_start_time = max(game_start_time, start_time)
 
     logger.info('Calculating average positions...')
     df = pd.DataFrame(players_data)
-    agg = (df.groupby(['team', 'player'])
-           .agg(mode=pd.NamedAgg(column="position", aggfunc=pd.Series.mode),
-                mean=pd.NamedAgg(column="position", aggfunc='mean'),
-                median=pd.NamedAgg(column="position", aggfunc="median"), ))
+    agg = (
+        df
+        .groupby(['team', 'player'])
+        .agg(
+            mode=pd.NamedAgg(column="position", aggfunc=pd.Series.mode),
+            mean=pd.NamedAgg(column="position", aggfunc='mean'),
+            median=pd.NamedAgg(column="position", aggfunc="median"),
+        )
+    )
 
     output = dict()
     # CHECKING CORRECT MODE POSITIONS
@@ -94,7 +116,6 @@ def approximate_positions(league_id: int) -> None:
 
         irregular_mode = ((agg['mode'] % 1) > 0)
         median_eq_mode = ((agg['mode'] * 1.0 == agg['median']) & ~irregular_mode)
-
 
         agg_not_eq = agg[~median_eq_mode].copy()
 
@@ -126,18 +147,28 @@ def approximate_positions(league_id: int) -> None:
             remaining_players = cannot_be_calculated.reset_index()[['player', 'median']]
             remaining_players_ids = remaining_players['player'].to_list()
 
-            pos_slice = db_session.exec(select(PlayerGameData.player_id,
-                                               PlayerGameData.position_id, )
-                                        .join(Game)
-                                        .where(col(PlayerGameData.player_id).in_(remaining_players_ids),
-                                               Game.game_start_time < game_start_time + TIMESTAMP_1_MONTHS,
-                                               Game.game_start_time > game_start_time - TIMESTAMP_3_MONTHS, )
-                                        ).all()
+            pos_slice = db_session.exec(
+                select(
+                    PlayerGameData.player_id,
+                    PlayerGameData.position_id, )
+                .join(Game)
+                .where(
+                    col(PlayerGameData.player_id).in_(remaining_players_ids),
+                    Game.game_start_time < game_start_time + TIMESTAMP_1_MONTHS,
+                    Game.game_start_time > game_start_time - TIMESTAMP_3_MONTHS,
+                )
+            ).all()
 
-            pos_slice_dict = {player_id: pos_id for player_id, pos_id in pos_slice}
+            pos_slice_dict = { player_id: pos_id for player_id, pos_id in pos_slice }
 
-            pos_slice_df = pd.DataFrame([{'player': player_id,
-                                        'position': pos_id} for player_id, pos_id in pos_slice])
+            pos_slice_df = pd.DataFrame(
+                [
+                    {
+                        'player': player_id,
+                        'position': pos_id
+                    } for player_id, pos_id in pos_slice
+                ]
+            )
             pos_slice_agg = (pos_slice_df.groupby(['player']).
                              agg(median=pd.NamedAgg(column="position", aggfunc="median"))).reset_index()
 
@@ -163,6 +194,6 @@ def approximate_positions(league_id: int) -> None:
                 obj.position_id = position_id
 
         db_session.add(obj)
-    db_session.commit()
 
+    db_session.full_commit()
     logger.info(f"Approximated positions added to the DB")

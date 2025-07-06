@@ -38,7 +38,7 @@ do
 		break
 		;;
   6)
-    celery --app=celery_app beat
+    celery --app=celery_app beat -l DEBUG
 		break
 		;;
   7)

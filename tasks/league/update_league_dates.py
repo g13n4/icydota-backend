@@ -12,9 +12,9 @@ from tasks.league.create_league import update_league_obj_dates
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='update_leagues_date_(cron)')
+@shared_task(name='update_leagues_date_(cron)', ignore_result=True)
 def update_leagues_dates_cron() -> None:
-    db_session: Session = get_sync_db_session()
+    db_session: Session = get_sync_db_session(expire=True)
     logger.info(f'Updating leagues dates: start')
 
     sel_res = db_session.exec(select(League).where(League.since_last_new_game != None))
@@ -26,6 +26,5 @@ def update_leagues_dates_cron() -> None:
             logger.info(f'Updating dates of league {league_obj.id}')
             db_session.add(league_obj)
 
-    db_session.commit()
-    db_session.close()
+    db_session.full_commit()
     logger.info(f'Updating leagues dates: complete')

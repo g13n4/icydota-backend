@@ -10,9 +10,9 @@ from tasks.league.process_league import process_game_helper
 logger = get_task_logger(__name__)
 
 
-@shared_task(name='process_bad_league_games_(cron)')
-def reprocess_bad_league_games_cron() -> None:
-    db_session: Session = get_sync_db_session()
+@shared_task(name='reprocess_mispositioned_league_games_(cron)', ignore_result=True)
+def reprocess_mispositioned_league_games_cron() -> None:
+    db_session: Session = get_sync_db_session(expire=True)
 
     select_query = (
         select(Game.id, Game.league_id)
@@ -30,3 +30,5 @@ def reprocess_bad_league_games_cron() -> None:
 
     for game_id, league_id in games_to_process_again:
         process_game_helper(match_id=game_id, league_id=league_id, execute=True)
+
+    db_session.close()

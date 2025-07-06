@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import create_engine, Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from sqlmodel import SQLModel # it's used by alembic
 
 load_dotenv()
 
@@ -26,7 +25,7 @@ ASYNC_DATABASE_URI = "postgresql+asyncpg://" + DB_URI
 # SYNC SESSION
 SYNC_DATABASE_URI = "postgresql://" + DB_URI
 
-sync_engine = create_engine(SYNC_DATABASE_URI, echo=False, future=True)
+sync_engine = create_engine(SYNC_DATABASE_URI, echo=False, future=True, pool_recycle=60 * 30)
 
 
 # SYNC SESSION
@@ -36,9 +35,16 @@ def get_sync_db_sessionmaker(expire: bool):
     )
 
 
+def full_commit(self):
+    self.flush()
+    self.commit()
+    self.close()
+
+
 def get_sync_db_session(expire: bool = False) -> Session:
     sync_session = get_sync_db_sessionmaker(expire=expire)
     with sync_session() as session:
+        session.full_commit = full_commit
         return session
 
 
@@ -62,7 +68,8 @@ async_engine = create_async_engine(
     pool_use_lifo=True,
     pool_pre_ping=True,
     echo=False,
-    future=True
+    future=True,
+    pool_recycle=60 * 15,
 )
 
 async_session_maker = sessionmaker(

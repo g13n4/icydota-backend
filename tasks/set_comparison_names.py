@@ -18,7 +18,7 @@ def set_names(pos_id: int, hero_name: str, player_name: str) -> Tuple[str, str]:
 def set_comparison_names() -> None:
     logger.info('Filling names for comparison values')
 
-    db_session: Session = get_sync_db_session()
+    db_session: Session = get_sync_db_session(expire=True)
 
     db_session.execute(
         text(
@@ -41,4 +41,5 @@ def set_comparison_names() -> None:
         )
     )
 
+    db_session.full_commit()
     logger.info(f"Comparison name values filled")

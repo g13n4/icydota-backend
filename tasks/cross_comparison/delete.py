@@ -14,7 +14,7 @@ def delete_cross_comparison_match(
         ccomp_type: int | None = None,
         only_mark: bool = True,
 ):
-    db_session: Session = get_sync_db_session(expire=False)
+    db_session: Session = get_sync_db_session(expire=True)
     if patch_id:
         where = [CrossComparisonType.patch_id == patch_id]
     elif league_id:
@@ -48,7 +48,7 @@ def delete_cross_comparison_match(
 
 @shared_task(name="delete_cross_comparison_team", ignore_result=True)
 def delete_cross_comparison_team(league_id: int, patch_id: int, only_mark: bool = True):
-    db_session: Session = get_sync_db_session(expire=False)
+    db_session: Session = get_sync_db_session(expire=True)
     if patch_id:
         where = [ByTeamType.patch_id == patch_id]
     elif league_id:

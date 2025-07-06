@@ -50,7 +50,7 @@ class Game(SQLModel, table=True):
 
     sent_team_id: int = _fk("teams")
     dire_team_id: int = _fk("teams")
-    dire_win: bool
+    dire_win: Optional[bool]
 
     players_game_data: List["PlayerGameData"] = Relationship(
         back_populates="game",
@@ -87,14 +87,12 @@ class Game(SQLModel, table=True):
     )
 
     game_start_time: int = Field(
-        sa_column=db.Column(db.BIGINT, nullable=False, unique=False),
+        sa_column=db.Column(db.BIGINT, nullable=True, unique=False),
     )  # unix timestamp
-    duration: int
+    duration: Optional[int]
     replay_url: str
 
-    broken_replay: Optional[bool]
-    assumed_positions: Optional[bool]
-    final_processing: Optional[bool]
+    is_broken: Optional[bool] = Field(default=False)
 
 
 class PlayerGameData(SQLModel, table=True):

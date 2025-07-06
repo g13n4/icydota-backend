@@ -1,5 +1,3 @@
-from sqlmodel import Session
-
 from models import Building
 from sqlmodel import Session, select
 

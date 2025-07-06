@@ -21,9 +21,9 @@ LoPItem = namedtuple(
 )
 
 
-@shared_task(name='start_aggregations_and_ccomparison_(cron)')
-def start_aggregations_and_ccomparison_cron() -> None:
-    db_session: Session = get_sync_db_session()
+@shared_task(name='aggregate_and_ccomp_league_and_patch_(cron)', ignore_result=True)
+def aggregate_and_ccomp_league_and_patch_cron() -> None:
+    db_session: Session = get_sync_db_session(expire=True)
 
     logger.info(f"Processing league and patch for aggregation and cross-comparison")
 

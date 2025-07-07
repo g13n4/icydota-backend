@@ -38,18 +38,18 @@ def set_values_and_name(klass: object):
 class SidePerformance:
     gold: SPItem = SPItem(value_type=int, index=1)
     xp: SPItem = SPItem(value_type=int, index=2, description="XP")
-    hero_kills: SPItem = SPItem(value_type=condecimal(max_digits=4, decimal_places=2), index=3)
-    kills_per_min: SPItem = SPItem(value_type=int, index=4, description="KPM")
+    hero_kills: SPItem = SPItem(value_type=int, index=3)
+    kills_per_min: SPItem = SPItem(value_type=condecimal(max_digits=4, decimal_places=2), index=4, description="KPM")
     neutral_kills: SPItem = SPItem(value_type=int, index=5)
 
     roshan_kills: SPItem = SPItem(value_type=int, index=6, description="Roshan")
     runes_picked_up: SPItem = SPItem(value_type=int, index=7, description="Runes")
 
-    observer_kills: SPItem = SPItem(value_type=int, index=8, description="Observers killed")
     observer_uses: SPItem = SPItem(value_type=int, index=9, description="Observers placed")
+    observer_kills: SPItem = SPItem(value_type=int, index=8, description="Observers killed")
 
-    sentry_kills: SPItem = SPItem(value_type=int, index=10, description="Sentries killed")
     sentry_uses: SPItem = SPItem(value_type=int, index=11, description="Sentries placed")
+    sentry_kills: SPItem = SPItem(value_type=int, index=10, description="Sentries killed")
 
     first_blood_claimed: SPItem = SPItem(value_type=bool, index=12, description="FB")
 

@@ -84,7 +84,7 @@ def create_league(league_id: int, **kwargs) -> League:
         else:
             raise ConnectionError("STRATZ and OPENDOTA don't respond. Connection problems?")
 
-    league_obj.new_game_found = datetime.datetime.now()
+    league_obj.new_game_found_at = datetime.datetime.now()
     league_obj.should_be_processed = True
     return league_obj
 

@@ -6,7 +6,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import create_engine, Session
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from sqlmodel import SQLModel # it's used by alembic
+# it's used by alembic
+# noinspection PyUnresolvedReferences
+from sqlmodel import SQLModel
 
 
 load_dotenv()

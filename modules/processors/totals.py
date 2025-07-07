@@ -69,7 +69,7 @@ class TotalPerformanceProcessor:
                         case TotalTeamProcessingOption.AVERAGE:
                             field_value = field_value / field_counter
 
-                    if field_item.pseudo_bool:
+                    if field_item.pseudo_bool and not field_item.team_processing_option:
                         # normalize it
                         setattr(
                             PTD_obj,

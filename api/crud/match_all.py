@@ -4,17 +4,28 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.crud.helpers import to_front_bool
 from constants.performance.game_side import SidePerformance
-from models import Game, SidePerformanceData, League, PlayerGameData, Player
+from models import Game, SidePerformanceData, League, PlayerGameData, Player, Performance, PerformanceTotalData
+
+
+def _to_kda_format(value: float) -> str:
+    return str(int(value)) if value is not None else "-"
 
 
 async def _create_player_hero_dict(players_select_data) -> dict:
     output = dict()
-    for game_id, is_dire, hero_id, nickname, position, *other in players_select_data:
+    for game_id, is_dire, hero_id, nickname, position, kill, death, assist, *other in players_select_data:
         key_ = (game_id, is_dire)
         if key_ not in output:
             output[key_] = []
 
-        output[key_].append({ "hero_id": str(hero_id), "position_id": str(position) })
+        output[key_].append(
+            {
+                "hero_id": str(hero_id),
+                "position_id": str(position),
+                "nickname": nickname,
+                "kda": "/".join(map(_to_kda_format, [kill, death, assist])),
+            }
+        )
     return output
 
 
@@ -72,9 +83,17 @@ async def get_games_all(
             PlayerGameData.hero_id,
             Player.nickname,
             PlayerGameData.position_id,
-        ).join(Player, onclause=PlayerGameData.player_id == Player.account_id)
+            PerformanceTotalData.hero_kills,
+            PerformanceTotalData.deaths,
+            PerformanceTotalData.assists,
+        )
+        .join(Player, onclause=PlayerGameData.player_id == Player.account_id)
         .join(Game, onclause=Game.id == PlayerGameData.game_id)
-        .where(where_condition).order_by(Game.id.desc()).offset(offset * 10).limit(limit * 10)
+        .join(Performance, onclause=Performance.player_game_data_id == PlayerGameData.id)
+        .filter(Performance.type_id == Performance.const.game.MATCH_DATA)
+        .join(PerformanceTotalData, onclause=PerformanceTotalData.performance_id == Performance.id)
+        .where(where_condition)
+        .order_by(Game.id.desc()).offset(offset * 10).limit(limit * 10)
     )
 
     players_objs = await db_session.exec(players_select)

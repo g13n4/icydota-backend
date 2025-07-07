@@ -40,12 +40,9 @@ def process_game_helper(match_id: int, league_id: int | None = None, execute: bo
         )
 
     task = task.on_error(
-        (
-            create_bad_game_on_error
-            .si(match_id=match_id, league_id=league_id)
-            .on_error(delete_replay_folder.si(match_id=match_id))
-        ) |
-        delete_replay_folder.si(match_id=match_id)
+        create_bad_game_on_error
+        .si(match_id=match_id, league_id=league_id)
+        .on_error(delete_replay_folder.si(match_id=match_id)) | delete_replay_folder.si(match_id=match_id)
     )
 
     if execute:
@@ -99,7 +96,7 @@ def process_league_task_group(
                 group(*tasks) |
                 approximate_positions.si(league_id=league_id) |
                 set_comparison_names.si()
-                ).on_error(
+        ).on_error(
             approximate_positions.si(league_id=league_id) | set_comparison_names.si()
         )
         if execute:

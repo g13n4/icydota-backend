@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from celery import shared_task
@@ -17,7 +18,9 @@ def update_leagues_dates_cron() -> None:
     db_session: Session = get_sync_db_session(expire=True)
     logger.info(f'Updating leagues dates: start')
 
-    sel_res = db_session.exec(select(League).where(League.since_last_new_game != None))
+    found_in_last_8_days = datetime.datetime.now() - datetime.timedelta(days=8)
+
+    sel_res = db_session.exec(select(League).where(League.new_game_found_at > found_in_last_8_days))
     league_objs: List[League] = sel_res.all()
 
     for league_obj in league_objs:

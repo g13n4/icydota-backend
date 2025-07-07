@@ -14,6 +14,7 @@ from api.table.match_name import get_match_name_data
 from api.table.table_data import get_performance_data, get_performance_data_comparison, get_aggregated_performance_data, \
     get_cross_comparison_performance_data
 from api.table.table_formatting import to_table_format_cross_comparison, to_table_format
+from api.task_helpres.process_mispositioned import process_mispositioned_games
 from celery_app import celery_app
 from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
 from db import get_async_db_session
@@ -229,15 +230,21 @@ if not LIGHT_MODE:
     from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
         approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
         delete_cross_comparison_task_helper, parallel_cross_comparison_task_helper, parallel_aggregate_task_helper
-    from tasks.league.process_league import process_league, process_game_helper
+    from tasks.league.process_league import process_league_task_group, process_game_helper
 
 
     @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
-        new_games_number, _ = process_league(league_id=league_id, overwrite=overwrite, execute=True)
+        new_games_number, _ = process_league_task_group(league_id=league_id, overwrite=overwrite, execute=True)
         if new_games_number:
             return { 'status': f'processing {new_games_number} games' }
 
+        return { 'status': 'processed' }
+
+
+    @icydota_api.post(API_PREFIX + '/process/all-mispositioned', status_code=202)
+    async def process_all_mispositioned_api():
+        process_mispositioned_games()
         return { 'status': 'processed' }
 
 

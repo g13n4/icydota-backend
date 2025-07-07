@@ -1,6 +1,7 @@
 import os
 from typing import Dict, Optional
 
+import celery
 import requests
 from celery import chain, group
 from celery.utils.log import get_task_logger
@@ -11,8 +12,8 @@ from db import get_sync_db_session
 from models import Game, League
 from tasks import set_comparison_names
 from tasks.approximate_positions import approximate_positions
-from tasks.game.delete_replay import delete_replay_folder
 from tasks.game.create_bad_game import create_bad_game_on_error
+from tasks.game.delete_replay import delete_replay_folder
 from tasks.game.download_replay import get_match_replay
 from tasks.game.process_game import process_game_data
 from tasks.game.single_task_match_processing import single_task_process_game
@@ -54,12 +55,11 @@ def process_game_helper(match_id: int, league_id: int | None = None, execute: bo
         return task
 
 
-def process_league(
+def get_league_games_tasks(
         league_obj: League | None = None,
         league_id: int | None = None,
         overwrite: bool = False,
-        execute: bool = True,
-):
+) -> list:
     db_session: Session = get_sync_db_session(expire=False)
 
     league_obj = get_or_create_league(db_session=db_session, league_id=league_id, existing_obj=league_obj)
@@ -83,22 +83,30 @@ def process_league(
             )
 
     db_session.full_commit()
+    return new_games_found_list
 
-    if new_games_found_list:
-        games_found = len(new_games_found_list)
-        tasks = (
-                group(*new_games_found_list) | approximate_positions.si(
-            league_id=league_id
-        ) | set_comparison_names.si()
-        ).on_error(
+
+def process_league_task_group(
+        league_obj: League | None = None,
+        league_id: int | None = None,
+        overwrite: bool = False,
+        execute: bool = True,
+) -> tuple[int, None | celery.group]:
+    tasks = get_league_games_tasks(league_obj=league_obj, league_id=league_id, overwrite=overwrite)
+
+    if tasks:
+        task = (
+                group(*tasks) |
+                approximate_positions.si(league_id=league_id) |
+                set_comparison_names.si()
+                ).on_error(
             approximate_positions.si(league_id=league_id) | set_comparison_names.si()
         )
-
         if execute:
-            tasks.apply_async()
-            return games_found, None
-        else:
-            return games_found, new_games_found_list
+            task.apply_async()
+            return len(tasks), None
+
+        return len(tasks), task
 
     else:
         return 0, None

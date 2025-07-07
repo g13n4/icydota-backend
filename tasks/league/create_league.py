@@ -1,3 +1,4 @@
+import datetime
 import time
 from typing import Optional
 
@@ -83,7 +84,7 @@ def create_league(league_id: int, **kwargs) -> League:
         else:
             raise ConnectionError("STRATZ and OPENDOTA don't respond. Connection problems?")
 
-    league_obj.since_last_new_game = 0
+    league_obj.new_game_found = datetime.datetime.now()
     league_obj.should_be_processed = True
     return league_obj
 

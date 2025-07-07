@@ -63,11 +63,11 @@ def approximate_positions(league_id: int) -> None:
             Game.id == PlayerGameData.game_id,
             Game.league_id == league_id
         )
-    ).all()
+    )
 
     teams_set = set()
     players_data = []
-    for player, team, position, start_time in players_raw_data:
+    for player, team, position, start_time in players_raw_data.all():
         players_data.append(
             {
                 'position': position,
@@ -77,6 +77,9 @@ def approximate_positions(league_id: int) -> None:
         )
         teams_set.add(team)
         game_start_time = max(game_start_time, start_time)
+
+    if not players_data:
+        return None
 
     logger.info('Calculating average positions...')
     df = pd.DataFrame(players_data)

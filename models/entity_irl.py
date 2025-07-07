@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
@@ -54,8 +55,8 @@ class League(SQLModel, table=True):
     has_started: Optional[bool] = Field(default=None)
     has_ended: Optional[bool] = Field(default=None)
 
-    # if since_last_new_game > 7 we set null thus notifying that league gas ended
-    since_last_new_game: Optional[int] = Field(default=0)
+    # if it's more than 8 days we stop checking
+    new_game_found_at: Optional[datetime.datetime] = Field(default=None)
 
     # we set these flags when we processed all new games
     should_be_processed: Optional[bool] = Field(default=None)

@@ -4,7 +4,21 @@ from typing import Any
 from constants.performance.total.total import GameTotals
 from models import PerformanceTotalData
 
+
 TOTAL_EXCLUDE_FIELDS = { "id", "performance_id" }
+
+
+async def to_league_list(leagues: Iterable) -> list[dict[str, str]]:
+    data = [(league_id, name, match_id) for league_id, name, match_id in leagues]
+    data.sort(key=lambda item: (item[2] is None, item[0]))
+
+    return [
+        {
+            "label": name,
+            "value": str(league_id),
+        } for league_id, name, _ in data
+    ]
+
 
 async def to_basic_list(objs: Iterable) -> list[dict[str, str]]:
     return [
@@ -29,7 +43,6 @@ async def process_total_output(data: PerformanceTotalData, **kwargs) -> dict:
             data[game_total.name] = value * 100
 
     return data
-
 
 
 def to_front_bool(value: Any) -> str:

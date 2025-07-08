@@ -21,7 +21,7 @@ def set_leagues_and_patch_flags_cron(league_id: int) -> None:
     patch_select = db_session.exec(
         select(Patch)
         .join(Game, onclause=Patch.id == Game.patch_id)
-        .join(League, onclause=League.id == Game.id)
+        .join(League, onclause=League.id == Game.league_id)
         .where(League.id == league_id)
     )
 

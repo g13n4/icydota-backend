@@ -281,12 +281,22 @@ def process_additional_replay_data(
         this_total_perf_obj.first_pick_hero = int(first_pick)
         this_total_perf_obj.last_pick_hero = int(last_pick)
 
+        has_megas = building_stats_objs['dire'].megacreeps if is_dire else building_stats_objs['sentinel'].megacreeps
+        opponent_has_megas = building_stats_objs['sentinel'].megacreeps if is_dire else building_stats_objs['dire'].megacreeps
+
+        this_total_perf_obj.win_with_megas = has_megas and win
+        this_total_perf_obj.lose_with_megas = has_megas and lose
+
+        this_total_perf_obj.win_and_opponent_with_megas = opponent_has_megas and win
+        this_total_perf_obj.lose_and_opponent_with_megas = opponent_has_megas and lose
+
         for x in range(1, 6):
             attrib_name = f"first_pick_pos_{x}"
             value = int(first_pick and position_id == x)
             setattr(this_total_perf_obj, attrib_name, value)
 
         db_session.add(this_total_perf_obj)
+
 
     return dict(
         average_roshan_window_time=avg_rosh_death_time,
@@ -297,6 +307,6 @@ def process_additional_replay_data(
 
         dire_lost_first_tower=dire_lost_first_tower,
 
-        dire_building_status_id=building_stats_objs['dire'].id,
-        sent_building_status_id=building_stats_objs['sentinel'].id,
+        dire_building_status=building_stats_objs['dire'],
+        sent_building_status=building_stats_objs['sentinel'],
     )

@@ -536,6 +536,42 @@ class GameTotals:
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
 
+    win_with_megas: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=81,
+        availability=FieldOption(match=False, player=False, for_any_option=False),
+        pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
+    )
+
+    lose_with_megas: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=82,
+        availability=FieldOption(match=False, player=False, for_any_option=False),
+        pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
+    )
+
+    win_and_opponent_with_megas: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=83,
+        availability=FieldOption(match=False, player=False, for_any_option=False),
+        pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
+    )
+    lose_and_opponent_with_megas: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=84,
+        availability=FieldOption(match=False, player=False, for_any_option=False),
+        pseudo_bool=True,
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.CEIL,
+    )
+
+
     _VALUES: ClassVar[list[GameTotal]]
     VALUES: GameTotalsIterator
     VALUES_NAMES: list[str]

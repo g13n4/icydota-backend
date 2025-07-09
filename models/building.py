@@ -24,7 +24,6 @@ class Building(SQLModel, table=True):
     is_rax: Optional[bool]
     melee: Optional[bool]
 
-
     __tablename__ = "in_game_buildings"
 
 
@@ -116,4 +115,7 @@ class BuildingData(SQLModel, table=True):
         default=None, foreign_key="in_game_buildings_not_destroyed.id"
     )
 
-
+    game_id: Optional[int] = Field(default=None, foreign_key="games.id", ondelete="CASCADE", )
+    game: Optional["Game"] = Relationship(
+        back_populates="building_data",
+    )

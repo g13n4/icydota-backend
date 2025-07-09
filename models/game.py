@@ -70,15 +70,10 @@ class Game(SQLModel, table=True):
     )
 
     dire_lost_first_tower: Optional[bool]
-    dire_building_status_id: Optional[int] = Field(
-        default=None,
-        foreign_key="buildings_data.id",
-        ondelete="CASCADE",
-    )
-    sent_building_status_id: Optional[int] = Field(
-        default=None,
-        foreign_key="buildings_data.id",
-        ondelete="CASCADE",
+
+    building_data: List["BuildingData"] = Relationship(
+        back_populates="game",
+        cascade_delete=True,
     )
 
     sides_performance: List[SidePerformanceData] = Relationship(

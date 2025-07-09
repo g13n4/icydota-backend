@@ -325,7 +325,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     # GAME OBJECT
 
-    game_ibj = Game(
+    game_obj = Game(
         id=match_id,
 
         processed_counter=processed_counter,
@@ -348,9 +348,9 @@ def process_game_data(match_id: int, league_id: int | None = None):
         is_broken=False,
     )
 
-    match_meta_info['game_obj'] = game_ibj
+    match_meta_info['game_obj'] = game_obj
 
-    db_session.add(game_ibj)
+    db_session.add(game_obj)
 
     # PARSING
     PGD_objs, additional_data = process_game_replay(
@@ -363,15 +363,15 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     logger.info("Creating Game object...")
 
-    game_ibj.players_game_data = PGD_objs
-    game_ibj.average_roshan_window_time = additional_data['average_roshan_window_time']
-    game_ibj.roshan_death = additional_data['roshan_death']
-    game_ibj.first_ten_kills_dire = additional_data['first_ten_kills_dire']
-    game_ibj.hero_death = additional_data['hero_death']
-    game_ibj.dire_lost_first_tower = additional_data['dire_lost_first_tower']
-    game_ibj.dire_building_status_id = additional_data['dire_building_status_id']
-    game_ibj.sent_building_status_id = additional_data['sent_building_status_id']
+    game_obj.players_game_data = PGD_objs
+    game_obj.average_roshan_window_time = additional_data['average_roshan_window_time']
+    game_obj.roshan_death = additional_data['roshan_death']
+    game_obj.first_ten_kills_dire = additional_data['first_ten_kills_dire']
+    game_obj.hero_death = additional_data['hero_death']
+    game_obj.dire_lost_first_tower = additional_data['dire_lost_first_tower']
 
-    db_session.add(game_ibj)
+    game_obj.building_data = [additional_data['sent_building_status'], additional_data['dire_building_status']]
+
+    db_session.add(game_obj)
     db_session.full_commit()
     logger.info("Parsing complete")

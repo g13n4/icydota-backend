@@ -10,7 +10,7 @@ TOTAL_EXCLUDE_FIELDS = { "id", "performance_id" }
 
 async def to_league_list(leagues: Iterable) -> list[dict[str, str]]:
     data = [(league_id, name, match_id) for league_id, name, match_id in leagues]
-    data.sort(key=lambda item: (item[2] is None, item[0]))
+    data.sort(key=lambda item: (item[2] is None, item[2], item[0]), reverse=True)
 
     return [
         {

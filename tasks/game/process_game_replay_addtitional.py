@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import pandas as pd
 
@@ -85,11 +85,24 @@ def _get_building_dict(db_session, ) -> dict:
     return igb_dict
 
 
-def _get_pick_data(df: pd.DataFrame) -> dict[int, int]:
+def _get_pick_data(df: pd.DataFrame, pick_data: list | None = None) -> dict[int, int]:
     output = dict()
-    counter = 1
     # I have no idea why values are this way but they have to halved
+    # It's the same for open dota and parsed replay (jsonl)
     # Ursa: id 70 - draft Id 140
+    counter = 1
+    if pick_data:
+        for item in pick_data:
+            if item["pick"]:
+                hero_id = item["hero_id"] // 2
+                output[hero_id] = counter
+                counter += 1
+        return output
+
+    if df.empty:
+        return output
+
+    counter = 1
     df['hero_id'] = df['hero_id'] / 2
     df_filtered = df[df['pick'] == True]
 
@@ -185,6 +198,7 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
 
 def process_additional_replay_data(
         db_session,
+        opendota_data: dict[str, Any],
         match: MatchAnalyser,
         match_data: Dict[str, pd.DataFrame],
         PDP: PerformanceDataProcessor,
@@ -208,7 +222,7 @@ def process_additional_replay_data(
     )
     building_stats_objs = _fill_building_kill(db_session=db_session, building_kill=building_kill, )
 
-    pick_dict = _get_pick_data(match_data['draft']) if not paring_options["no_cm_hero_picks"] else dict()
+    pick_dict = _get_pick_data(match_data['draft'], opendota_data.get("draft_timings", None))
 
     for player_slot in range(10):
         this_player_data = PDP.get_player_data(player_slot)
@@ -266,6 +280,7 @@ def process_additional_replay_data(
 
         first_pick = pick_dict.get(hero_id, None) == 1
         last_pick = pick_dict.get(hero_id, None) == 10
+
         win = this_total_perf_obj.win == True
         lose = this_total_perf_obj.win == False
 
@@ -282,7 +297,8 @@ def process_additional_replay_data(
         this_total_perf_obj.last_pick_hero = int(last_pick)
 
         has_megas = building_stats_objs['dire'].megacreeps if is_dire else building_stats_objs['sentinel'].megacreeps
-        opponent_has_megas = building_stats_objs['sentinel'].megacreeps if is_dire else building_stats_objs['dire'].megacreeps
+        opponent_has_megas = building_stats_objs['sentinel'].megacreeps if is_dire else building_stats_objs[
+            'dire'].megacreeps
 
         this_total_perf_obj.win_with_megas = int(has_megas and win)
         this_total_perf_obj.lose_with_megas = int(has_megas and lose)
@@ -296,7 +312,6 @@ def process_additional_replay_data(
             setattr(this_total_perf_obj, attrib_name, value)
 
         db_session.add(this_total_perf_obj)
-
 
     return dict(
         average_roshan_window_time=avg_rosh_death_time,

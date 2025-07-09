@@ -355,6 +355,7 @@ def process_game_data(match_id: int, league_id: int | None = None):
     # PARSING
     PGD_objs, additional_data = process_game_replay(
         db_session=db_session,
+        opendota_data=game_data,
         match_info=match_meta_info,
         match_replay_folder_path=match_folder_path,
         additional_player_data=player_data_dict,

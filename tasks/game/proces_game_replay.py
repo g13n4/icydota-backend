@@ -13,6 +13,7 @@ from tasks.game.process_game_replay_main import set_processor_data
 
 
 def process_game_replay(db_session,
+                        opendota_data: dict[str, Any],
                         match_info: dict[str, Any],
                         match_replay_folder_path: Path,
                         additional_player_data: Dict[int, Dict[str, Any]],
@@ -36,6 +37,7 @@ def process_game_replay(db_session,
     logger.info('Processing additional windows_data')
     additional_data = process_additional_replay_data(
         db_session=db_session,
+        opendota_data=opendota_data,
         match=match,
         match_data=match_data,
         PDP=PDP,

@@ -30,7 +30,6 @@ class GameTotal(BaseModel):
     category: None | Item = None
     team_processing_option: None | int = None
 
-
 def set_total_name(klass: object):
     values = []
     checker = UniqueIndexChecker()
@@ -116,7 +115,6 @@ class GameTotals:
     lane_efficiency: GameTotal = GameTotal(
         value_type=condecimal(max_digits=4, decimal_places=3),
         index=18,
-        pseudo_bool=True,
         team_processing_option=TotalTeamProcessingOption.AVERAGE,
     )
 

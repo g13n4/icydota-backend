@@ -405,7 +405,8 @@ class MatchAnalyser:
 
                 # cm mode is value = 3
                 if p_line["type"] == "DOTA_COMBATLOG_GAME_STATE" and p_line["value"] == 10:
-                    additional_options["no_cm_hero_picks"] = True
+                    pass
+#                    additional_options["no_cm_hero_picks"] = True
 
                 # in new games the end games sets time to -855
                 total_game_length = max(total_game_length, line_time)

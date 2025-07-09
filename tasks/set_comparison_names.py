@@ -33,8 +33,8 @@ def set_comparison_names() -> None:
             INNER JOIN heroes h_cps ON comp_data.hero_cps_id = h_cps.id
             INNER JOIN players p_cpd ON comp_data.player_cpd_id = p_cpd.account_id
             INNER JOIN players p_cps ON comp_data.player_cps_id = p_cps.account_id
-            INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = p_cpd.id
-            INNER JOIN positions pos_cps ON comp_data.pos_cps_id = p_cps.id
+            INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = pos_cpd.id
+            INNER JOIN positions pos_cps ON comp_data.pos_cps_id = pos_cpd.id
             WHERE c_main.hero_cps_id IS NOT NULL
               AND c_main.id = comp_data.id
                     """

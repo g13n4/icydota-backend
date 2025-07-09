@@ -284,11 +284,11 @@ def process_additional_replay_data(
         has_megas = building_stats_objs['dire'].megacreeps if is_dire else building_stats_objs['sentinel'].megacreeps
         opponent_has_megas = building_stats_objs['sentinel'].megacreeps if is_dire else building_stats_objs['dire'].megacreeps
 
-        this_total_perf_obj.win_with_megas = has_megas and win
-        this_total_perf_obj.lose_with_megas = has_megas and lose
+        this_total_perf_obj.win_with_megas = int(has_megas and win)
+        this_total_perf_obj.lose_with_megas = int(has_megas and lose)
 
-        this_total_perf_obj.win_and_opponent_with_megas = opponent_has_megas and win
-        this_total_perf_obj.lose_and_opponent_with_megas = opponent_has_megas and lose
+        this_total_perf_obj.win_and_opponent_with_megas = int(opponent_has_megas and win)
+        this_total_perf_obj.lose_and_opponent_with_megas = int(opponent_has_megas and lose)
 
         for x in range(1, 6):
             attrib_name = f"first_pick_pos_{x}"

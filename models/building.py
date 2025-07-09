@@ -115,7 +115,7 @@ class BuildingData(SQLModel, table=True):
         default=None, foreign_key="in_game_buildings_not_destroyed.id"
     )
 
-    game_id: Optional[int] = Field(default=None, foreign_key="games.id", ondelete="CASCADE", )
+    game_id: Optional[int] = _fk("games", col_type="bigint", cascade=True)
     game: Optional["Game"] = Relationship(
         back_populates="building_data",
     )

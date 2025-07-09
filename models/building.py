@@ -8,6 +8,8 @@ from .helpers import _fk
 
 # BUILDINGS
 class Building(SQLModel, table=True):
+    const: ClassVar[BuildingConstant] = BuildingConstant
+
     id: Optional[int] = Field(default=None, primary_key=True)
 
     name: str
@@ -22,7 +24,6 @@ class Building(SQLModel, table=True):
     is_rax: Optional[bool]
     melee: Optional[bool]
 
-    const: ClassVar[BuildingConstant] = BuildingConstant
 
     __tablename__ = "in_game_buildings"
 
@@ -114,4 +115,5 @@ class BuildingData(SQLModel, table=True):
     not_destroyed_id: Optional[int] = Field(
         default=None, foreign_key="in_game_buildings_not_destroyed.id"
     )
+
 

@@ -131,7 +131,8 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
                 megacreeps=bk['megacreeps'],
 
                 # additional tower info
-                naked_throne=bk['naked_throne'], )
+                naked_throne=bk['naked_throne'],
+            )
 
             db_session.add(bk_obj)
             bd_objs.append(bk_obj)
@@ -173,7 +174,8 @@ def _fill_building_kill(db_session, building_kill: Dict[str, list | dict], ) -> 
             # additional tower info
             naked_throne=bd_objs[-1].naked_throne if len(bd_objs) else False,
 
-            not_destroyed=bnk_obj, )
+            not_destroyed=bnk_obj,
+        )
         db_session.add(building_data_obj)
 
         output_dict[side] = building_data_obj

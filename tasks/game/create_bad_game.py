@@ -25,7 +25,8 @@ def create_bad_game_on_error(match_id: int, league_id: None | int = None):
             game_data = json.load(match_json)
 
     except (FileNotFoundError, json.JSONDecodeError):
-        raise FileNotFoundError(f"No appropriate json found for {match_id} game!")
+        logger.error(f"No appropriate json found for {match_id} game!")
+        return
 
     if league_id is None:
         league_id = game_data['league']['leagueid']

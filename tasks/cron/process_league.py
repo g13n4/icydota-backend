@@ -26,6 +26,7 @@ def find_leagues_to_process_cron() -> None:
     for league_obj in sel_res.all():
         found_games, processing_group = process_league_task_group(
             league_obj=league_obj,
+            overwrite=False,
             execute=False,
             reason=TaskReason.PROCESS_LEAGUE_CRON,
         )

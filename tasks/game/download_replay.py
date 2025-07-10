@@ -8,7 +8,7 @@ from typing import Callable
 
 import requests
 from celery import shared_task
-from celery.utils.log import get_task_logger
+from celery.utils.log import get_task_logger, logger as celery_logger
 from dotenv import load_dotenv
 
 from file_path import BASE_REPLAY_PATH
@@ -137,8 +137,10 @@ def parse_replay(dem_file: Path, replay_file: Path, port: str | int):
 
 
 @shared_task(name='get_match_replay', retries=3, default_retry_delay=7, ignore_result=True)
-def get_match_replay(match_id: int, parser_port: int | str) -> int:
-    logger.info(f'Download replay for {match_id}')
+def get_match_replay(match_id: int, parser_port: int | str, outer_logger=None, **kwargs) -> int:
+    this_logger = outer_logger or logger
+
+    this_logger.info(f'Download replay for {match_id}')
 
     folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}/'))
     folder_path.mkdir(parents=True, exist_ok=True)
@@ -167,7 +169,7 @@ def get_match_replay(match_id: int, parser_port: int | str) -> int:
         is_valid = _jsonl_exists_and_valid(jsonl_file)
 
         if not is_valid:
-            logger.error(f"Replay data for match {match_id} is not correct!")
+            this_logger.error(f"Replay data for match {match_id} is not correct!")
             raise ReplayDataError(curl_response)
 
     return match_id

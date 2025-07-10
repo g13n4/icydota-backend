@@ -4,6 +4,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
 
+from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import League
 from tasks.cron.set_flags_for_league_and_patch import set_leagues_and_patch_flags_cron
@@ -26,6 +27,7 @@ def find_leagues_to_process_cron() -> None:
         found_games, processing_group = process_league_task_group(
             league_obj=league_obj,
             execute=False,
+            reason=TaskReason.PROCESS_LEAGUE_CRON,
         )
         league_text = f"League {league_obj.name} - ({league_obj.id}):"
         if found_games:

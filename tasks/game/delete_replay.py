@@ -17,9 +17,11 @@ DELETE_REPLAY = os.getenv('DELETE_REPLAY', default='true')
 
 
 @shared_task(name='delete_replay_folder', ignore_result=True)
-def delete_replay_folder(match_id: int):
+def delete_replay_folder(match_id: int, outer_logger=None, **kwargs):
+    this_logger = outer_logger or logger
+
     if DELETE_REPLAY == "true":
-        logger.info(f'Deleting match {match_id} replay folder')
+        this_logger.info(f'Deleting match {match_id} replay folder')
 
         folder_path = Path(os.path.join(BASE_REPLAY_PATH, f'{match_id}'))
         shutil.rmtree(folder_path)

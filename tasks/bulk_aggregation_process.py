@@ -6,6 +6,7 @@ from celery import chain, group
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
 
+from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import League
 from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
@@ -48,7 +49,12 @@ def process_full_cycle(league_obj: League | None = None, league_id: int | None =
 
     games = []
     for idx, game in enumerate(league_match_data):
-        match_chain: chain = process_game_helper(match_id=game['match_id'], league_id=league_obj.id, execute=False)
+        match_chain: chain = process_game_helper(
+            match_id=game['match_id'],
+            league_id=league_obj.id,
+            execute=False,
+            reason=TaskReason.PROCESS_LEAGUE,
+        )
         games.append(match_chain)
 
     (
@@ -93,7 +99,8 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
                 match_chain: chain = process_game_helper(
                     match_id=game['match_id'],
                     league_id=league_id,
-                    execute=False
+                    execute=False,
+                    reason=TaskReason.PROCESS_LEAGUE,
                 )
                 games.append(match_chain)
 

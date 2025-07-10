@@ -7,6 +7,8 @@ from celery.schedules import crontab
 from celery.signals import after_setup_logger, after_setup_task_logger, task_prerun
 from dotenv import load_dotenv
 
+from constants.task_reason import TaskReason
+
 
 load_dotenv()
 
@@ -41,7 +43,7 @@ celery_app = Celery(
 
 logger = logging.getLogger(__name__)
 
-base_message_format = "%(levelname)s|%(asctime)s|%(processName)s|%(processName)s|%(args)s"
+base_message_format = "%(levelname)s|%(asctime)s|%(processName)s|%(args)s|%(reason)s"
 
 
 @after_setup_logger.connect
@@ -70,7 +72,8 @@ def setup_task_loggers(logger, *args, **kwargs):
 
 @task_prerun.connect
 def setup_task_post_run(task, *args, **kwargs):
-    logger.info(f"{task.name}|{task.request.id}|args: {args}|kwargs: {kwargs['kwargs']}")
+    reason = TaskReason.to_str(kwargs['kwargs'].get('reason', None))
+    logger.info(f"{task.name}|{task.request.id}|args: {args}|kwargs: {kwargs['kwargs']} {reason}")
 
 
 def strict_cron_time(task_name: str, time_start: int, time_step: int):
@@ -83,16 +86,12 @@ def strict_cron_time(task_name: str, time_start: int, time_step: int):
 
 
 celery_app.conf.beat_schedule = {
-    # 'update_leagues_date': {
-    #     'task': 'update_leagues_date_(cron)',
-    #     'schedule': crontab(minute='0', hour='12', day_of_week='1,4'),
-    # },
     **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=7),
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=3, time_step=3),
     'aggregate_and_ccomp_league_(cron)_[at_22]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',
         'schedule': crontab(minute='0', hour='22'),
-        'kwargs': {"process_league": True}
+        'kwargs': { "process_league": True }
     },
     'aggregate_and_ccomp_patch_(cron)_[at_12]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',

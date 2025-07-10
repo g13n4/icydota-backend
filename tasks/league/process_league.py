@@ -4,7 +4,6 @@ from typing import Dict, Optional
 import celery
 import requests
 from celery import chain, group
-from celery.utils.log import get_task_logger
 from dotenv import load_dotenv
 from sqlmodel import Session
 
@@ -20,23 +19,25 @@ from tasks.game.single_task_match_processing import single_task_process_game
 from tasks.league.create_league import get_or_create_league
 from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 
-
-logger = get_task_logger(__name__)
-
 load_dotenv()
 
 MATCH_ONE_TASK = os.getenv('MATCH_ONE_TASK', default='true')
 
 
-def process_game_helper(match_id: int, league_id: int | None = None, execute: bool = False) -> Optional[chain]:
+def process_game_helper(
+        match_id: int,
+        league_id: int | None = None,
+        execute: bool = False,
+        reason: int | None = None,
+) -> Optional[chain]:
     port = next(AVAILABLE_PARSERS_PORT)
     if MATCH_ONE_TASK == "true":
-        task = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port)
+        task = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port, reason=reason)
     else:
         task = (
-                get_match_replay.si(match_id=match_id, parser_port=port) |
-                process_game_data.si(match_id=match_id, league_id=league_id) |
-                delete_replay_folder.si(match_id=match_id)
+                get_match_replay.si(match_id=match_id, parser_port=port, reason=reason) |
+                process_game_data.si(match_id=match_id, league_id=league_id, reason=reason) |
+                delete_replay_folder.si(match_id=match_id, reason=reason)
         )
 
     task = task.on_error(
@@ -56,6 +57,7 @@ def get_league_games_tasks(
         league_obj: League | None = None,
         league_id: int | None = None,
         overwrite: bool = False,
+        reason: int | None = None,
 ) -> list:
     db_session: Session = get_sync_db_session(expire=False)
 
@@ -76,6 +78,7 @@ def get_league_games_tasks(
                     match_id=game['match_id'],
                     league_id=league_obj.id,
                     execute=False,
+                    reason=reason,
                 )
             )
 
@@ -88,8 +91,9 @@ def process_league_task_group(
         league_id: int | None = None,
         overwrite: bool = False,
         execute: bool = True,
+        reason: int | None = None,
 ) -> tuple[int, None | celery.group]:
-    tasks = get_league_games_tasks(league_obj=league_obj, league_id=league_id, overwrite=overwrite)
+    tasks = get_league_games_tasks(league_obj=league_obj, league_id=league_id, overwrite=overwrite, reason=reason)
 
     if tasks:
         task = (

@@ -17,6 +17,7 @@ from api.table.table_formatting import to_table_format_cross_comparison, to_tabl
 from api.task_helpres.process_mispositioned import process_mispositioned_games
 from celery_app import celery_app
 from constants.api import GameStageEnum, ComparisonEnum, ComparisonTypeEnum, PoTEnum, LoPEnum
+from constants.task_reason import TaskReason
 from db import get_async_db_session
 
 
@@ -250,7 +251,7 @@ if not LIGHT_MODE:
 
     @icydota_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
     async def process_match_api(match_id: int):
-        process_game_helper(match_id=match_id, execute=True)
+        process_game_helper(match_id=match_id, execute=True, reason=TaskReason.PROCESS_ONE_MATCH)
         return { 'status': 'processing' }
 
 

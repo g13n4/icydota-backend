@@ -2,6 +2,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
 
+from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import Game, PositionApproximation, PlayerGameData
 from tasks.league.process_league import process_game_helper
@@ -29,6 +30,11 @@ def reprocess_mispositioned_league_games_cron() -> None:
     logger.info(f"Found {len(games_to_process_again)} bad games")
 
     for game_id, league_id in games_to_process_again:
-        process_game_helper(match_id=game_id, league_id=league_id, execute=True)
+        process_game_helper(
+            match_id=game_id,
+            league_id=league_id,
+            execute=True,
+            reason=TaskReason.PROCESS_MISPOSITIONED_GAMES_CRON,
+        )
 
     db_session.close()

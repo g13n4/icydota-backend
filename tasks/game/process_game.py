@@ -133,15 +133,17 @@ def process_players(db_session, players: List[dict]) -> Dict[int, Player]:
 
 # , retry=True, max_retries=2, default_retry_delay=120,
 @shared_task(name='process_game_data', ignore_result=True)
-def process_game_data(match_id: int, league_id: int | None = None):
-    logger.info(f'Process replay for {match_id}')
+def process_game_data(match_id: int, league_id: int | None = None, outer_logger=None, **kwargs):
+    this_logger = outer_logger or logger
+
+    this_logger.info(f'Process replay for {match_id}')
 
     db_session: Session = get_sync_db_session(expire=False)
 
     game = db_session.get(Game, match_id)
     processed_counter = 1
     if game:
-        logger.warning('Deleting already existing Game object')
+        this_logger.warning('Deleting already existing Game object')
         processed_counter = game.processed_counter + 1
         db_session.delete(game)
         db_session.commit()
@@ -359,10 +361,10 @@ def process_game_data(match_id: int, league_id: int | None = None):
         match_info=match_meta_info,
         match_replay_folder_path=match_folder_path,
         additional_player_data=player_data_dict,
-        logger=logger,
+        logger=this_logger,
     )
 
-    logger.info("Creating Game object...")
+    this_logger.info("Creating Game object...")
 
     game_obj.players_game_data = PGD_objs
     game_obj.average_roshan_window_time = additional_data['average_roshan_window_time']
@@ -375,4 +377,4 @@ def process_game_data(match_id: int, league_id: int | None = None):
 
     db_session.add(game_obj)
     db_session.full_commit()
-    logger.info("Parsing complete")
+    this_logger.info("Parsing complete")

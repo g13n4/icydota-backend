@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from typing import Dict, List, Any
 
 import pandas as pd
@@ -71,7 +72,7 @@ def _fill_hero_deaths(db_session, hero_deaths: List[dict], MPD: MatchPlayersData
 
 
 def _get_building_dict(db_session, ) -> dict:
-    igb_objs: List[Building] = get_all_sqlmodel_objs(db_session, Building)
+    igb_objs: Iterable[Building] = get_all_sqlmodel_objs(db_session, Building)
     igb_dict = dict()
     for igb_obj in igb_objs:
         if igb_obj.is_tower:

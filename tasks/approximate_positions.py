@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import numpy as np
 import pandas as pd
 from celery import shared_task
@@ -43,10 +41,10 @@ def approximate_positions(league_id: int) -> None:
         )
     )
 
-    old_positions_data: List[tuple[dict, PositionApproximation]] = [
+    old_positions_data: list[tuple[dict, PositionApproximation]] = [
         (obj.model_dump(), obj) for obj in old_positions_obj
     ]
-    old_positions_data: Dict[tuple, PositionApproximation] = {
+    old_positions_data: dict[tuple, PositionApproximation] = {
         (item['league_id'], item['player_id']): obj for item, obj in old_positions_data
     }
 

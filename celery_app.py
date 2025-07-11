@@ -86,7 +86,7 @@ def strict_cron_time(task_name: str, time_start: int, time_step: int):
 
 
 celery_app.conf.beat_schedule = {
-    **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=7),
+    **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=6),
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=3, time_step=3),
     'aggregate_and_ccomp_league_(cron)_[at_22]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',
@@ -100,6 +100,6 @@ celery_app.conf.beat_schedule = {
     },
     'attempt_to_process_bad_games_[at_18]': {
         'task': 'attempt_to_process_bad_games_(cron)',
-        'schedule': crontab(minute='0', hour='18', day_of_week='1,3,5'),
+        'schedule': crontab(minute='0', hour='18'),
     }
 }

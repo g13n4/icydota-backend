@@ -19,6 +19,7 @@ from tasks.game.single_task_match_processing import single_task_process_game
 from tasks.league.create_league import get_or_create_league
 from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
 
+
 load_dotenv()
 
 MATCH_ONE_TASK = os.getenv('MATCH_ONE_TASK', default='true')
@@ -41,9 +42,8 @@ def process_game_helper(
         )
 
     task = task.on_error(
-        create_bad_game_on_error
-        .si(match_id=match_id, league_id=league_id)
-        .on_error(delete_replay_folder.si(match_id=match_id)) | delete_replay_folder.si(match_id=match_id)
+        create_bad_game_on_error.si(match_id=match_id, league_id=league_id) |
+        delete_replay_folder.si(match_id=match_id)
     )
 
     if execute:

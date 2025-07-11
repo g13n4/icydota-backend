@@ -37,10 +37,12 @@ def reprocess_mispositioned_league_games_cron() -> None:
         )
     )
 
+    player_information_data = db_session.exec(player_information_select_query).all()
+
     game_to_recalculate = set()
     league_name_dict = dict()
     league_info = defaultdict(list)
-    for league_name, league_id, game_name, game_id, nickname, pos_approx, pos_calculated_with in player_information_select_query.all():
+    for league_name, league_id, game_name, game_id, nickname, pos_approx, pos_calculated_with in player_information_data:
 
         game_to_recalculate.add((league_id, game_id))
 

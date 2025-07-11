@@ -33,14 +33,21 @@ def create_bad_game_on_error(match_id: int, league_id: None | int = None):
         league_obj = get_or_create_league(db_session=db_session, league_id=league_id)
         league_id = league_obj.id
 
-    game_obj = Game(
-        id=match_id,
-        league_id=league_id,
-        patch_id=game_data["patch"],
-        replay_url=game_data['replay_url'],
-        is_broken=True,
-        processed_counter=1,
-    )
+    game_obj = db_session.get(Game, match_id)
+    if game_obj is None:
+        game_obj = Game(
+            id=match_id,
+            league_id=league_id,
+            patch_id=game_data["patch"],
+            replay_url=game_data['replay_url'],
+            is_broken=True,
+            processed_counter=1,
+        )
+        db_session.add(game_obj)
 
-    db_session.add(game_obj)
+    if getattr(game_obj, "is_broken", None):
+        logger.error(f"There is already a broken version of the game!")
+    else:
+        logger.error(f"There is already a processed version of the game. Skipping creating of the bad game...")
+
     db_session.full_commit()

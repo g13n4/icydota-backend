@@ -99,6 +99,7 @@ class PlayerGameData(SQLModel, table=True):
     team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     player_id: Optional[int] = Field(default=None, foreign_key="players.account_id")
 
+    original_position: Optional[int] = Field(default=None)
     position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
     hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
     facet_id: Optional[int] = Field(default=None, foreign_key="facets.id")

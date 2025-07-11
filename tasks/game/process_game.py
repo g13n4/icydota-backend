@@ -223,6 +223,7 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
             'hero_id': this_hero,
             'facet_id': this_facet,
 
+            'original_position': position_id,
             'position': this_position,
             'position_id': this_position,
         }

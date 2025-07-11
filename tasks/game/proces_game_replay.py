@@ -2,7 +2,7 @@ import os
 import pathlib
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Any, Tuple, List
+from typing import Any, Tuple
 
 from models import PlayerGameData
 from modules.match_analyser import MatchAnalyser
@@ -12,13 +12,14 @@ from tasks.game.process_game_replay_addtitional import process_additional_replay
 from tasks.game.process_game_replay_main import set_processor_data
 
 
-def process_game_replay(db_session,
-                        opendota_data: dict[str, Any],
-                        match_info: dict[str, Any],
-                        match_replay_folder_path: Path,
-                        additional_player_data: Dict[int, Dict[str, Any]],
-                        logger: Logger,
-                        ) -> Tuple[list[PlayerGameData], Dict[str, Any]]:
+def process_game_replay(
+        db_session,
+        opendota_data: dict[str, Any],
+        match_info: dict[str, Any],
+        match_replay_folder_path: Path,
+        additional_player_data: dict[int, dict[str, Any]],
+        logger: Logger,
+        ) -> Tuple[list[PlayerGameData], dict[str, Any]]:
     logger.info('Parsing raw replay windows_data')
     match_path = os.path.join(match_replay_folder_path, Path(f'./{match_info['match_id']}.jsonl'))
 
@@ -54,6 +55,5 @@ def process_game_replay(db_session,
 
     PDP.process_game_data()
     PDP.process_side_data(match_data=match_info)
-
 
     return (PDP.get_all_player_game_data(), additional_data)

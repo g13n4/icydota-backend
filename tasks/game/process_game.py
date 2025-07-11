@@ -1,6 +1,7 @@
 import json
 import sys
 import warnings
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
@@ -198,6 +199,7 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
     # INITIAL DATA CREATION
     player_data_dict = dict()
+    position_test_dict = defaultdict(list)
     for approximated_slot, player_info in enumerate(game_data['players']):
         is_radiant = player_info['isRadiant']
         this_team: Team = teams_dict['radiant'] if is_radiant else teams_dict['dire']
@@ -228,6 +230,10 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
             'position_id': this_position,
         }
         check_for_manual_fix_inplace(game_id=match_id, data=player_data)
+
+        position_test_dict[(this_slot < 5, this_position)].append(
+            f"{players_dict[this_slot].nickname} ({players_dict[this_slot].account_id})"
+        )
 
         PGD_obj = PlayerGameData(
             team_id=this_team.id,
@@ -315,6 +321,15 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
         player_data['performance_total_data'] = PTD_obj
 
         player_data_dict[this_slot] = player_data
+
+    # POSITION CHECK
+    for k, nicknames in position_test_dict.items():
+        side, position = k
+        if len(nicknames) > 1:
+            raise ValueError(
+                f"Multiple {"dire" if side else "sentinel"} players on position {position}: "
+                f"{", ".join(nicknames)} "
+            )
 
     # CREATING GAMEDATA OBJECTS
     game_data_sent_obj, game_data_dire_obj = create_game_data_objs(

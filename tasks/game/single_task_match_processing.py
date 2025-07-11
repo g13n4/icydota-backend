@@ -8,8 +8,7 @@ from tasks.game.process_game import process_game_data
 
 logger = get_task_logger(__name__)
 
-
-@shared_task(name='single_task_process_game', retries=3, default_retry_delay=7, ignore_result=True)
+@shared_task(name='single_task_process_game', retries=3, default_retry_delay=180, ignore_result=True)
 def single_task_process_game(match_id: int, league_id: int | None, port: int, **kwargs):
     logger.info(f"Start full match {match_id} processing...")
 

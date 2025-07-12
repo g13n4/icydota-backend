@@ -86,29 +86,29 @@ def strict_cron_time(task_name: str, time_start: int, time_step: int):
     }
 
 
+parallel_options_dict = { }
+if AGGREGATION_SEPARATE_TASK == "true":
+    parallel_options_dict["options"] = {
+        "queue": 'parallel'
+    }
+
 celery_app.conf.beat_schedule = {
     **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=6),
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=3, time_step=3),
     'aggregate_and_ccomp_league_(cron)_[at_22]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',
         'schedule': crontab(minute='0', hour='22'),
-        'kwargs': { "process_league": True }
+        'kwargs': { "process_league": True },
+        **parallel_options_dict
     },
     'aggregate_and_ccomp_patch_(cron)_[at_12]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',
         'schedule': crontab(minute='0', hour='12', day_of_week='2,6'),
-        'kwargs': { "process_patch": True }
+        'kwargs': { "process_patch": True },
+        **parallel_options_dict
     },
     'attempt_to_process_bad_games_[at_18]': {
         'task': 'attempt_to_process_bad_games_(cron)',
         'schedule': crontab(minute='0', hour='18'),
     },
-    'parallel_test': {
-        'task': 'test_task_task',
-        'schedule': crontab(minute='*/2'),
-        "options": {
-            "queue": 'parallel'
-
-        }
-    }
 }

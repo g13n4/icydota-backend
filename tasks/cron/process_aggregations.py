@@ -38,7 +38,7 @@ def aggregate_and_ccomp_league_and_patch_cron(
             "leagues"
             )
     elif process_patch:
-        data_tuple = LoPItem(select(Patch).where(Patch.should_be_processed == True), "patch_id", "patch", "patches"),
+        data_tuple = LoPItem(select(Patch).where(Patch.should_be_processed == True), "patch_id", "patch", "patches")
     else:
         raise TypeError("No argument provided")
 

@@ -106,10 +106,6 @@ celery_app.conf.beat_schedule = {
     'parallel_test': {
         'task': 'test_task_task',
         'schedule': crontab(minute='*/2'),
+        "queue": 'parallel'
     }
 }
-
-if AGGREGATION_SEPARATE_TASK == "true":
-    celery_app.conf.task_routes = {
-        'tasks.parallel.*': { 'queue': 'parallel' },
-    }

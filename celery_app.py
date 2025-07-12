@@ -14,6 +14,7 @@ load_dotenv()
 
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', default="127.0.0.1")
+AGGREGATION_SEPARATE_TASK = os.getenv('AGGREGATION_SEPARATE_TASK', default="false")
 
 tasks = [
     'tasks.aggregation',
@@ -103,3 +104,8 @@ celery_app.conf.beat_schedule = {
         'schedule': crontab(minute='0', hour='18'),
     }
 }
+
+if AGGREGATION_SEPARATE_TASK == "true":
+    celery_app.conf.task_routes = {
+        'tasks.parallel.*': {'queue': 'parallel'},
+    }

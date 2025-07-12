@@ -106,6 +106,9 @@ celery_app.conf.beat_schedule = {
     'parallel_test': {
         'task': 'test_task_task',
         'schedule': crontab(minute='*/2'),
-        "queue": 'parallel'
+        "options": {
+            "queue": 'parallel'
+
+        }
     }
 }

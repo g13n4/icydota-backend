@@ -4,3 +4,4 @@ from tasks.parallel.task_helper.player_cross_comparison_task_helper import \
     create_cross_comparison_player_performance_task
 from tasks.parallel.task_helper.team_aggregation_task_helper import create_aggregate_team_performance_task
 from tasks.parallel.task_helper.team_cross_comparison_task_helper import create_cross_comparison_team_performance_task
+from tasks.parallel.test_task import test_task_task

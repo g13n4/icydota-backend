@@ -102,10 +102,14 @@ celery_app.conf.beat_schedule = {
     'attempt_to_process_bad_games_[at_18]': {
         'task': 'attempt_to_process_bad_games_(cron)',
         'schedule': crontab(minute='0', hour='18'),
+    },
+    'parallel_test': {
+        'task': 'test_task_task',
+        'schedule': crontab(minute='*/2'),
     }
 }
 
 if AGGREGATION_SEPARATE_TASK == "true":
     celery_app.conf.task_routes = {
-        'tasks.parallel.*': {'queue': 'parallel'},
+        'tasks.parallel.*': { 'queue': 'parallel' },
     }

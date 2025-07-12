@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlmodel import Session, select, col
+from sqlmodel import Session, select
 
 from db import get_sync_db_session
 from models import PlayerGameData, Game, PositionApproximation
@@ -41,11 +41,8 @@ def approximate_positions(league_id: int) -> None:
         )
     )
 
-    old_positions_data: list[tuple[dict, PositionApproximation]] = [
-        (obj.model_dump(), obj) for obj in old_positions_obj
-    ]
     old_positions_data: dict[tuple, PositionApproximation] = {
-        (item['league_id'], item['player_id']): obj for item, obj in old_positions_data
+        (obj.league_id, obj.team_id, obj.player_id): obj for obj in old_positions_obj
     }
 
     logger.info('Getting windows_data from new games')
@@ -53,22 +50,24 @@ def approximate_positions(league_id: int) -> None:
         select(
             PlayerGameData.player_id,
             PlayerGameData.team_id,
+            PlayerGameData.original_position,
             PlayerGameData.position_id,
             Game.game_start_time
         )
         .join(Game)
         .where(
             Game.id == PlayerGameData.game_id,
-            Game.league_id == league_id
+            Game.league_id == league_id,
         )
     )
 
     teams_set = set()
+
     players_data = []
-    for player, team, position, start_time in players_raw_data.all():
+    for player, team, position_og, position, start_time in players_raw_data.all():
         players_data.append(
             {
-                'position': position,
+                'position': position_og or position,
                 'player': player,
                 'team': team,
             }
@@ -104,13 +103,13 @@ def approximate_positions(league_id: int) -> None:
             equals = (team_slice_position == lineup_ser).all()
             if equals:
                 for pid, posid in team_slice['median'].items():
-                    output[pid] = posid
+                    output[pid] = (posid, team_id)
                 continue
 
         unfit_teams.append(team_id)
 
     # CHECKING COMPARING MEDIAN TO MODE
-    agg_not_eq = None
+    #    agg_not_eq = None
     if unfit_teams:
         logger.info('Fitting in stand-ins...')
         agg = agg.loc[(unfit_teams), :].copy()
@@ -118,76 +117,78 @@ def approximate_positions(league_id: int) -> None:
         irregular_mode = ((agg['mode'] % 1) > 0)
         median_eq_mode = ((agg['mode'] * 1.0 == agg['median']) & ~irregular_mode)
 
-        agg_not_eq = agg[~median_eq_mode].copy()
+        #        agg_not_eq = agg[~median_eq_mode].copy()
 
         agg_eq = agg[median_eq_mode]
         for idx, value in agg_eq['median'].items():
             team_id, pid = idx
-            output[pid] = value
+            output[pid] = (value, team_id)
 
-    # CALCULATING USING MEAN
-    if agg_not_eq is not None and not agg_not_eq.empty:
-        equal_mean_median = (agg_not_eq['mean'] == agg_not_eq['median'])
-        can_be_calculated = agg_not_eq[~equal_mean_median]
-        cannot_be_calculated: pd.DataFrame = agg_not_eq[equal_mean_median]
-
-        if not can_be_calculated.empty:
-            logger.info('Calculating mean positions...')
-            diff_div = _compare_series(sub=can_be_calculated['median'], minu=can_be_calculated['mean'])
-
-            for idx, value in can_be_calculated.loc[diff_div, 'median'].items():
-                team_id, pid = idx
-                if (value % 1) > 0.5:
-                    output[pid] = np.ceil(value)
-                else:
-                    output[pid] = np.floor(value)
-
-        if not cannot_be_calculated.empty:
-            logger.info('Aggregating positions...')
-
-            remaining_players = cannot_be_calculated.reset_index()[['player', 'median']]
-            remaining_players_ids = remaining_players['player'].to_list()
-
-            pos_slice = db_session.exec(
-                select(
-                    PlayerGameData.player_id,
-                    PlayerGameData.position_id, )
-                .join(Game)
-                .where(
-                    col(PlayerGameData.player_id).in_(remaining_players_ids),
-                    Game.game_start_time < game_start_time + TIMESTAMP_1_MONTHS,
-                    Game.game_start_time > game_start_time - TIMESTAMP_3_MONTHS,
-                )
-            ).all()
-
-            pos_slice_dict = { player_id: pos_id for player_id, pos_id in pos_slice }
-
-            pos_slice_df = pd.DataFrame(
-                [
-                    {
-                        'player': player_id,
-                        'position': pos_id
-                    } for player_id, pos_id in pos_slice
-                ]
-            )
-            pos_slice_agg = (pos_slice_df.groupby(['player']).
-                             agg(median=pd.NamedAgg(column="position", aggfunc="median"))).reset_index()
-
-            diff_div = _compare_series(pos_slice_agg['median'], remaining_players['median'], coef=0.51)
-
-            for idx, value in remaining_players.loc[diff_div, 'player'].items():
-                output[value] = pos_slice_dict[value]
+    # # CALCULATING USING MEAN
+    # if agg_not_eq is not None and not agg_not_eq.empty:
+    #     equal_mean_median = (agg_not_eq['mean'] == agg_not_eq['median'])
+    #     can_be_calculated = agg_not_eq[~equal_mean_median]
+    #     cannot_be_calculated: pd.DataFrame = agg_not_eq[equal_mean_median]
+    #
+    #     if not can_be_calculated.empty:
+    #         logger.info('Calculating mean positions...')
+    #         diff_div = _compare_series(sub=can_be_calculated['median'], minu=can_be_calculated['mean'])
+    #
+    #         for idx, value in can_be_calculated.loc[diff_div, 'median'].items():
+    #             team_id, pid = idx
+    #             if (value % 1) > 0.5:
+    #                 output[pid] = np.ceil(value)
+    #             else:
+    #                 output[pid] = np.floor(value)
+    #
+    #     if not cannot_be_calculated.empty:
+    #         logger.info('Aggregating positions...')
+    #
+    #         remaining_players = cannot_be_calculated.reset_index()[['player', 'median']]
+    #         remaining_players_ids = remaining_players['player'].to_list()
+    #
+    #         pos_slice = db_session.exec(
+    #             select(
+    #                 PlayerGameData.player_id,
+    #                 PlayerGameData.position_id, )
+    #             .join(Game)
+    #             .where(
+    #                 col(PlayerGameData.player_id).in_(remaining_players_ids),
+    #                 Game.game_start_time < game_start_time + TIMESTAMP_1_MONTHS,
+    #                 Game.game_start_time > game_start_time - TIMESTAMP_3_MONTHS,
+    #             )
+    #         ).all()
+    #
+    #         pos_slice_dict = { player_id: pos_id for player_id, pos_id in pos_slice }
+    #
+    #         pos_slice_df = pd.DataFrame(
+    #             [
+    #                 {
+    #                     'player': player_id,
+    #                     'position': pos_id
+    #                 } for player_id, pos_id in pos_slice
+    #             ]
+    #         )
+    #         pos_slice_agg = (pos_slice_df.groupby(['player']).
+    #                          agg(median=pd.NamedAgg(column="position", aggfunc="median"))).reset_index()
+    #
+    #         diff_div = _compare_series(pos_slice_agg['median'], remaining_players['median'], coef=0.51)
+    #
+    #         for idx, value in remaining_players.loc[diff_div, 'player'].items():
+    #             output[value] = pos_slice_dict[value]
 
     logger.info('Setting new positions...')
     for k, v in output.items():
         player_id: int = k
-        position_id: int = int(v)
+        position_str, team_id = v
+        position_id: int = int(position_str)
 
-        obj: PositionApproximation | None = old_positions_data.get((league_id, player_id), None)
+        obj: PositionApproximation | None = old_positions_data.get((league_id, team_id, player_id), None)
         if obj is None:
             obj = PositionApproximation(
                 league_id=league_id,
                 player_id=player_id,
+                team_id=team_id,
                 position_id=position_id,
             )
         else:

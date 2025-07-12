@@ -33,6 +33,7 @@ def reprocess_mispositioned_league_games_cron() -> None:
         .join(League, onclause=League.id == Game.league_id)
         .where(
             PlayerGameData.player_id == PositionApproximation.player_id,
+            PlayerGameData.team_id == PositionApproximation.team_id,
             PlayerGameData.position_id != PositionApproximation.position_id,
         )
     )

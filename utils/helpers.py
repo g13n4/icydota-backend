@@ -4,11 +4,13 @@ from collections.abc import Iterable
 from datetime import datetime
 from decimal import Decimal
 from enum import EnumType
-from typing import Any, Dict, List, TypeVar, Type, Set, Tuple, Optional
+from typing import Any, TypeVar, Type, Set, Tuple, Optional
 
 import numpy as np
 from psycopg2.errors import IntegrityError
 from sqlmodel import select, Session
+
+from models import PositionApproximation
 
 
 T = TypeVar('T')
@@ -87,7 +89,7 @@ def get_or_create_base(
         db_session: Session,
         model_obj: Type[T],
         get_key: Any,
-        object_data: Dict[str, Any]
+        object_data: dict[str, Any]
 ) -> T:
     obj = db_session.get(model_obj, get_key)
 
@@ -120,7 +122,7 @@ def get_or_create(logger, *args, **kwargs):
     return output
 
 
-def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) -> List[str] | Set[str]:
+def get_sqlmodel_fields(model, include_ids: bool = False, to_set: bool = False) -> list[str] | Set[str]:
     schema = model.schema()
     fields = schema['properties']
     output = []
@@ -138,10 +140,18 @@ def to_dec(number: float | int | None, rounding: int = 2):
     return round(Decimal(float(number)), rounding)
 
 
-def get_positions_approximations(db_session: Session, model, league_id) -> Dict[int, int]:
+def get_positions_approximations(
+        db_session: Session,
+        team_sentinel_id: int,
+        team_dire_id: int,
+        league_id: int,
+) -> dict[int, int]:
     objs = db_session.exec(
-        select(model.player_id, model.position_id).
-        where(model.league_id == league_id)
+        select(PositionApproximation.player_id, PositionApproximation.position_id).
+        where(
+            PositionApproximation.league_id == league_id,
+            (PositionApproximation.team_id).in_([team_sentinel_id, team_dire_id]),
+        )
     )
 
     return { pid: poid for pid, poid in objs }

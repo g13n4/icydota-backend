@@ -9,5 +9,6 @@ class PositionApproximation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id")
+    team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     player_id: Optional[int] = Field(default=None, foreign_key="players.account_id")
     position_id: Optional[int] = Field(default=None, foreign_key="positions.id")

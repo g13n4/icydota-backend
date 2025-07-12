@@ -193,7 +193,8 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
     # APPROXIMATION POSITIONS
     approx_pos: dict = get_positions_approximations(
         db_session=db_session,
-        model=PositionApproximation,
+        team_sentinel_id=teams_dict['radiant'].id,
+        team_dire_id=teams_dict['dire'].id,
         league_id=league_id
     )
 

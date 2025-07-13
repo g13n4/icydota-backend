@@ -29,6 +29,7 @@ class GameTotal(BaseModel):
     normalization: None | FieldOption = None
     category: None | Item = None
     team_processing_option: None | int = None
+    is_lane: bool = False
 
 def set_total_name(klass: object):
     values = []
@@ -68,11 +69,15 @@ class GameTotalsIterator:
             self,
             available_for: Iterable | None = None,
             only_pseudo_bools: bool = False,
+            only_lanes: bool = False,
 
             only_field: Literal["index", "name"] | None = None,
     ):
         for item in self._values:
             if only_pseudo_bools and not item.pseudo_bool:
+                continue
+
+            if only_lanes and not item.is_lane:
                 continue
 
             if available_for and item.availability is not None:
@@ -167,6 +172,7 @@ class GameTotals:
         availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True),
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        is_lane=True,
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -183,6 +189,8 @@ class GameTotals:
         availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True ),
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        is_lane=True,
+
     )
     destroyed_tower_time: GameTotal = GameTotal(
         value_type=Optional[int],

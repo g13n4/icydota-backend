@@ -78,9 +78,9 @@ first_tower_destroyed_dict = {
 }
 
 first_tower_lost_dict = {
-    1: 'first_tower_lost_top',
+    1: 'first_tower_lost_bot',
     2: 'first_tower_lost_mid',
-    3: 'first_tower_lost_bot',
+    3: 'first_tower_lost_top',
 }
 
 # FIRST TOWER LANE
@@ -91,9 +91,9 @@ first_tower_lane_destroyed_dict = {
 }
 
 first_tower_lane_lost_dict = {
-    1: 'first_tower_lane_lost_top',
+    1: 'first_tower_lane_lost_bot',
     2: 'first_tower_lane_lost_mid',
-    3: 'first_tower_lane_lost_bot',
+    3: 'first_tower_lane_lost_top',
 }
 
 # FIRST BARRACKS SET
@@ -104,9 +104,9 @@ first_barracks_set_destroyed_dict = {
 }
 
 first_barracks_set_lost_dict = {
-    1: 'first_barracks_set_lost_top',
+    1: 'first_barracks_set_lost_bot',
     2: 'first_barracks_set_lost_mid',
-    3: 'first_barracks_set_lost_bot',
+    3: 'first_barracks_set_lost_top',
 }
 
 

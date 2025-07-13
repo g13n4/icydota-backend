@@ -98,7 +98,7 @@ def process_league_task_group(
     if tasks:
         task = (
                 group(*tasks) |
-                approximate_positions.si(league_id=league_id) |
+                approximate_positions.si(league_id=league_id or league_obj.id) |
                 set_comparison_names.si()
         ).on_error(
             approximate_positions.si(league_id=league_id) | set_comparison_names.si()

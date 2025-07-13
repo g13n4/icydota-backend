@@ -58,7 +58,7 @@ async def get_initial_data(db: AsyncSession) -> dict:
             "computations": await _build_computations(),
             "patch": await to_basic_list(patch_objs),
             "league": await to_league_list(league_data),
-            "totalPercentFields": GameTotals.VALUES(only_pseudo_bools=True, only_field="name"),
+            "totalPercentFields": list(GameTotals.VALUES(only_pseudo_bools=True, only_field="name")),
         }
 
         CACHE.clear()

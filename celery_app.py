@@ -91,6 +91,20 @@ if AGGREGATION_SEPARATE_TASK == "true":
     parallel_options_dict["options"] = {
         "queue": 'parallel'
     }
+    celery_app.conf.task_routes = {
+        'one_calculation_aggregate_player': { 'queue': 'parallel' },
+
+        'create_aggregate_player_performance': { 'queue': 'parallel' },
+        'create_cross_comparison_player_performance': { 'queue': 'parallel' },
+        'create_aggregate_team_performance': { 'queue': 'parallel' },
+        'create_cross_comparison_team_performance': { 'queue': 'parallel' },
+
+        "delete_cross_comparison_match": { 'queue': 'parallel' },
+        "delete_cross_comparison_team": { 'queue': 'parallel' },
+        "delete_aggregation_match": { 'queue': 'parallel' },
+        "delete_aggregation_team": { 'queue': 'parallel' },
+    }
+
 
 celery_app.conf.beat_schedule = {
     **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=6),

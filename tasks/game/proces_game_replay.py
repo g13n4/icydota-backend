@@ -45,7 +45,7 @@ def process_game_replay(
         paring_options=additional_options,
     )
 
-    ICDC.combine_data(match.players.get_slot_to_pos())
+    ICDC.combine_data(match.players.get_pos_to_slot_by_side())
     additional_data["graph"] = ICDC.get_data_dict()
 
     logger.info('Processing main replay windows_data')

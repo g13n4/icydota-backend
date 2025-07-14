@@ -74,7 +74,7 @@ class IntervalChartDataCollector:
         self._fill_line_data(slot, line, is_last=True)
 
 
-    def combine_data(self, slot_to_pos: dict[int, int]):
+    def combine_data(self, slot_to_pos: dict[str, dict[int, int]]):
         arr_length = None
         # Filling up last remaining value
         for slot in self.player_data:
@@ -82,20 +82,17 @@ class IntervalChartDataCollector:
                 self.player_data[slot][name].append(self.player_last_seen[slot][name])
                 arr_length = len(self.player_data[slot][name])
 
-        # Building comparison match
-        positions_dict = defaultdict(list)
-        for slot, pos in slot_to_pos.items():
-            positions_dict[pos].append(slot)
-            positions_dict[pos].sort()
-
         # Output creation
         output_player = { x.value: defaultdict(dict) for x in PositionConstant.POSITIONS }
         output_team = { y: np.zeros(arr_length) for y in LINE_VALUES_TO_PROCESS }
 
         # Comparing
         for name in LINE_VALUES_TO_PROCESS:
-            for position, slots in positions_dict.items():
-                sent_slot, dire_slot = slots
+            for position_item in PositionConstant.POSITIONS:
+
+                position = position_item.value
+                sent_slot = slot_to_pos["sentinel"][position]
+                dire_slot = slot_to_pos["dire"][position]
 
                 sent_arr = np.array(self.player_data[sent_slot][name])
                 dire_arr = np.array(self.player_data[dire_slot][name])

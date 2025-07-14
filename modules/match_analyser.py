@@ -102,10 +102,6 @@ class MatchPlayersData:
         return data
 
 
-    def get_slot_to_pos(self) -> dict[int, int]:
-        return { item["slot"]: item["position"] for item in self.get_all() }
-
-
     def get_name_slot_dict(self) -> dict[str, int]:
         items = self.get_all()
         names = { x['hero_npc_name']: x['slot'] for x in items }

@@ -8,6 +8,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 from constants.performance.game_side import SidePerformance
 from models.helpers import _fk
+from models.mixins.game_performance_graph import GamePerformanceGraphMixin
 from models.mixins.helpers import inherit_annotations
 from models.mixins.side_performance import SidePerformanceDataMixin
 
@@ -81,6 +82,8 @@ class Game(SQLModel, table=True):
         cascade_delete=True,
     )
 
+    graph: Optional["GamePerformanceGraph"] = Relationship(back_populates="game")
+
     game_start_time: int = Field(
         sa_column=db.Column(db.BIGINT, nullable=True, unique=False),
     )  # unix timestamp
@@ -146,3 +149,18 @@ class Patch(SQLModel, table=True):
 
     aggregation_allowed: bool = Field(default=False, nullable=False)
     should_be_processed: Optional[bool] = Field(default=False)
+
+
+class GamePerformanceGraph(GamePerformanceGraphMixin, SQLModel, table=True):
+    __tablename__ = "game_performance_graphs"
+
+    id: int = Field(default=None, primary_key=True)
+
+    game_id: int = Field(
+        sa_column=db.Column(
+            db.BIGINT,
+            ForeignKey("games.id", ondelete="CASCADE"),
+            nullable=True, primary_key=False, index=False
+        )
+    )
+    game: Optional["Game"] = Relationship(back_populates="graph")

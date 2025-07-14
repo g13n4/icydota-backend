@@ -12,8 +12,8 @@ from sqlmodel import Session
 from constants.performance.game_side import SidePerformance
 from db import get_sync_db_session
 from file_path import BASE_REPLAY_PATH
-from models import Player, Team, SidePerformanceData, PlayerGameData, Game, PositionApproximation
-from models.game import Patch
+from models import Player, Team, SidePerformanceData, PlayerGameData, Game
+from models.game import Patch, GamePerformanceGraph
 from models.performance import PerformanceTotalData
 from tasks.game.helpers import fix_odota_data
 from tasks.game.manual_processing import check_for_manual_fix_inplace
@@ -383,6 +383,8 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
     this_logger.info("Creating Game object...")
 
+    game_graph_obj = GamePerformanceGraph(**additional_data["graph"])
+
     game_obj.players_game_data = PGD_objs
     game_obj.average_roshan_window_time = additional_data['average_roshan_window_time']
     game_obj.roshan_death = additional_data['roshan_death']
@@ -391,6 +393,7 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
     game_obj.dire_lost_first_tower = additional_data['dire_lost_first_tower']
 
     game_obj.building_data = [additional_data['sent_building_status'], additional_data['dire_building_status']]
+    game_obj.graph = game_graph_obj
 
     db_session.add(game_obj)
     db_session.full_commit()

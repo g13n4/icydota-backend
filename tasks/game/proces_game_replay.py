@@ -19,13 +19,13 @@ def process_game_replay(
         match_replay_folder_path: Path,
         additional_player_data: dict[int, dict[str, Any]],
         logger: Logger,
-        ) -> Tuple[list[PlayerGameData], dict[str, Any]]:
+) -> Tuple[list[PlayerGameData], dict[str, Any]]:
     logger.info('Parsing raw replay windows_data')
     match_path = os.path.join(match_replay_folder_path, Path(f'./{match_info['match_id']}.jsonl'))
 
     # MATCH PARSING
     match = MatchAnalyser(pathlib.Path(match_path), match_id=match_info['match_id'])
-    match_data, additional_options = match.get_match_data()
+    match_data, additional_options, ICDC = match.get_match_data()
     match.players.set_player_data_from_dict(additional_player_data)
 
     PDP = PerformanceDataProcessor(
@@ -44,6 +44,9 @@ def process_game_replay(
         PDP=PDP,
         paring_options=additional_options,
     )
+
+    ICDC.combine_data(match.players.get_slot_to_pos())
+    additional_data["graph"] = ICDC.get_data_dict()
 
     logger.info('Processing main replay windows_data')
     set_processor_data(

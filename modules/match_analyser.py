@@ -10,6 +10,7 @@ from fuzzywuzzy import fuzz
 from constants.position import PositionConstant, POSITION_OPPONENTS
 from models import PlayerGameData
 from models.performance import PerformanceTotalData
+from modules.interval_chart_data_collector import IntervalChartDataCollector
 from modules.match_windows_handler import MatchWindowsHandler
 from utils import get_both_slot_values
 
@@ -99,6 +100,10 @@ class MatchPlayersData:
             data[player['side']][player['position']] = player['slot']
 
         return data
+
+
+    def get_slot_to_pos(self) -> dict[int, int]:
+        return { item["slot"]: item["position"] for item in self.get_all() }
 
 
     def get_name_slot_dict(self) -> dict[str, int]:
@@ -328,7 +333,7 @@ class MatchAnalyser:
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
 
 
-    def get_match_data(self) -> tuple[dict[str, pd.DataFrame], dict]:
+    def get_match_data(self) -> tuple[dict[str, pd.DataFrame], dict, IntervalChartDataCollector]:
         interval = []  # interval
         pings = []  # pings
         wards = []  # obs / sen / sen_left / obs_left
@@ -386,6 +391,8 @@ class MatchAnalyser:
             "no_cm_hero_picks": False,
         }
 
+        ICDC = IntervalChartDataCollector()
+
         with open(self.path, 'r') as file:
             for line in file.readlines():
                 for pattern in [
@@ -406,7 +413,7 @@ class MatchAnalyser:
                 # cm mode is value = 3
                 if p_line["type"] == "DOTA_COMBATLOG_GAME_STATE" and p_line["value"] == 10:
                     pass
-#                    additional_options["no_cm_hero_picks"] = True
+                #                    additional_options["no_cm_hero_picks"] = True
 
                 # in new games the end games sets time to -855
                 total_game_length = max(total_game_length, line_time)
@@ -420,6 +427,7 @@ class MatchAnalyser:
 
                 if line_type == 'interval':
                     interval.append(p_line)
+                    ICDC.add_line(p_line)
 
                     self.windows_handler.update_time(line_time)
 
@@ -499,4 +507,4 @@ class MatchAnalyser:
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
             'draft': pd.DataFrame(draft)
-        }, additional_options
+        }, additional_options, ICDC

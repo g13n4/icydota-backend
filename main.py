@@ -4,9 +4,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import ORJSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.crud.cross_comparison_field import get_cross_comparison_fields
+from api.crud.graph_data import get_graph_data
 from api.crud.initial_data import get_initial_data
 from api.crud.match import get_games
 from api.crud.match_all import get_games_all
@@ -44,7 +46,7 @@ else:
     print(LIGHT_MODE)
 
 # FASTAPI
-icydota_api = FastAPI()
+icydota_api = FastAPI(default_response_class=ORJSONResponse)
 
 # CORS
 icydota_api.add_middleware(
@@ -68,6 +70,16 @@ async def get_index():
 async def get_initial_data_route(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
     items = await get_initial_data(db_session)
     return items
+
+
+@icydota_api.get(API_PREFIX + '/graph/{match_id}/{position}')
+async def get_graph_position_route(
+        match_id: int,
+        position: int,
+        db_session: AsyncSession = Depends(get_async_db_session),
+) -> dict:
+    data = await get_graph_data(adb_session=db_session, match_id=match_id, position=position)
+    return data
 
 
 @icydota_api.get(API_PREFIX + '/cross-comparison/fields')

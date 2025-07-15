@@ -2,9 +2,8 @@ import hashlib
 import io
 import json
 from pathlib import Path
-from typing import Callable, Literal
 
-from redis_app import get_redis_single
+import orjson
 
 
 def write_dict_to_json(data: dict, file_name: str | Path) -> None:
@@ -47,7 +46,7 @@ def check_file_hash(file_path: Path, expected_hash: str | None) -> bool | None:
 def get_dict_hash(data: dict) -> str:
     """MD5 hash of a dictionary."""
     dhash = hashlib.md5()
-    encoded = json.dumps(data, sort_keys=True).encode()
+    encoded = orjson.dumps(data)
     dhash.update(encoded)
     return dhash.hexdigest()
 

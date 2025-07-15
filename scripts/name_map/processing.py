@@ -1,6 +1,7 @@
-import json
 from pathlib import Path
 from typing import Callable
+
+import orjson
 
 from redis_app import get_redis_single
 from scripts.name_map.helpers import get_dict_hash, write_dict_to_json
@@ -24,7 +25,7 @@ def check_data_map_redis(data_creation: Callable, file_name_const: str, **kwargs
     if not data:
         raise ValueError("No data was generated!")
 
-    r.set(file_name_const, json.dumps(data))
+    r.set(file_name_const, orjson.dumps(data))
 
 
 def check_data_map_json(data_creation: Callable, file_name_const: str, path: Path, hash_: str | None, **kwargs):

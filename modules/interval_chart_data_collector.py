@@ -1,8 +1,8 @@
-import json
 from collections import defaultdict
 from typing import TypeVar
 
 import numpy as np
+from orjson import orjson
 
 from constants.position import PositionConstant
 
@@ -18,7 +18,7 @@ def generate_chart_name(pos: int | None, value_type: str):
 
 
 def _arr_to_str(arr: np.array) -> str:
-    return json.dumps([int(x) for x in arr], separators=(',', ':'))
+    return orjson.dumps([int(x) for x in arr], separators=(',', ':'))
 
 
 T = TypeVar('T')

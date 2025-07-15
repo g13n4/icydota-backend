@@ -5,7 +5,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from api.crud.helpers import to_front_bool
 from constants.performance.game_side import SidePerformance
 from models import Game, SidePerformanceData, League, PlayerGameData, Player, Performance, PerformanceTotalData
-
+from models.game import GamePerformanceGraph
+import orjson
 
 def _to_kda_format(value: float) -> str:
     return str(int(value)) if value is not None else "-"
@@ -60,13 +61,24 @@ async def get_games_all(
 
     where_condition = Game.league_id == league_id if league_id else Game.patch_id == patch_id
 
-    select_objs = [Game.id, Game.name, Game.dire_win, Game.duration, dire_side, sent_side, League.name]
+    select_objs = [
+        Game.id,
+        Game.name,
+        Game.dire_win,
+        Game.duration,
+        dire_side,
+        sent_side,
+        League.name,
+        GamePerformanceGraph.gold_game,
+        GamePerformanceGraph.xp_game,
+    ]
 
     select_query = (
         select(*select_objs)
         .join(sent_side, onclause=sent_side.game_id == Game.id)
         .join(dire_side, onclause=dire_side.game_id == Game.id)
         .join(League, onclause=Game.league_id == League.id)
+        .join(GamePerformanceGraph, onclause=Game.id == GamePerformanceGraph.game_id, isouter=True)
         .filter(sent_side.dire == False, dire_side.dire == True)
         .where(where_condition)
     )
@@ -101,12 +113,16 @@ async def get_games_all(
 
     output = []
     counter = 1
-    for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, league_name in match_objs.all():
+    for game_id, game_name, game_dire_win, game_duration, dire_side_obj, sent_side_obj, league_name, graph_gold, graph_xp in match_objs.all():
         dire_side_dict = { }
         sent_side_dict = { }
         comp_dict = { }
         sent_heroes = hero_data[(game_id, False)]
         dire_heroes = hero_data[(game_id, True)]
+        graph_data = graph_gold and graph_xp and {
+            "gold": orjson.loads(graph_gold),
+            "xp": orjson.loads(graph_xp),
+        }
 
         counter += 1
         sent_heroes.sort(key=lambda hero_item: _sort_func(hero_item))
@@ -135,6 +151,9 @@ async def get_games_all(
             "compData": comp_dict,
             'leagueName': league_name,
         }
+
+        if graph_data:
+            data["graphData"] = graph_data
 
         output.append(data)
 

@@ -1,9 +1,9 @@
 import copy
-import json
 import pathlib
 import re
 from typing import Any, Optional, TypedDict
 
+import orjson
 import pandas as pd
 from fuzzywuzzy import fuzz
 
@@ -260,7 +260,7 @@ class MatchAnalyser:
                 if not re_interval.search(line):
                     continue
 
-                pline = json.loads(line)
+                pline = orjson.loads(line)
                 if pline.get("hero_id", None) and pline['slot'] not in slots_added:
                     temp = {
                         'hero_name_cdota': pline["unit"],
@@ -402,7 +402,7 @@ class MatchAnalyser:
                     if re.search(pattern, line, re.IGNORECASE):
                         continue
 
-                p_line = json.loads(line)
+                p_line = orjson.loads(line)
                 line_type: str = p_line['type']
                 line_time: int = p_line['time']
 

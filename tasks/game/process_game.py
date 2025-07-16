@@ -152,10 +152,8 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
     match_folder_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/')
     json_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/{match_id}.json')
 
-    with open(json_path, "r") as match_json:
-        match_data_raw = match_json.read()
-        game_data = orjson.loads(match_data_raw)
-        del match_data_raw
+    with open(json_path, "rb") as match_json:
+        game_data = orjson.loads(match_json.read())
 
     patch_id = game_data['patch']
     patch_obj = db_session.get(Patch, patch_id)

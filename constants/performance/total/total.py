@@ -209,7 +209,7 @@ class GameTotals:
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
-        availability=FieldOption(match=False),
+        availability=FieldOption(is_hidden=True),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
     )

@@ -14,6 +14,8 @@ class FieldOption(BaseModel):
     # or all fields should be matched for a rule to be applied (and)
     for_any_option: bool = True
 
+    is_hidden: bool = False
+
 
     def is_required(self, **kwargs) -> bool:
         """If a value is required it should present during output. If it's not it should be removed"""
@@ -33,6 +35,9 @@ class FieldOption(BaseModel):
         :param args: names of the different types of calculations declared in FieldOption class
         :return: bool
         """
+        if self.is_hidden:
+            return False
+
         if self.for_any_option:
             for field in args:
                 if not getattr(self, field):

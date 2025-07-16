@@ -17,8 +17,9 @@ def generate_chart_name(pos: int | None, value_type: str):
         return f"{value_type}_{pos}"
 
 
-def _arr_to_str(arr: np.array) -> str:
-    return orjson.dumps([int(x) for x in arr])
+def _arr_to_str(arr: np.array) -> bytes:
+    binary_dump = orjson.dumps([int(x) for x in arr])
+    return binary_dump.decode()
 
 
 T = TypeVar('T')

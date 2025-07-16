@@ -1,10 +1,10 @@
-import json
 import sys
 import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
+import orjson
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session
@@ -153,7 +153,9 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
     json_path = Path(f'{BASE_REPLAY_PATH}/{match_id}/{match_id}.json')
 
     with open(json_path, "r") as match_json:
-        game_data = json.load(match_json)
+        match_data_raw = match_json.read()
+        game_data = orjson.loads(match_data_raw)
+        del match_data_raw
 
     patch_id = game_data['patch']
     patch_obj = db_session.get(Patch, patch_id)

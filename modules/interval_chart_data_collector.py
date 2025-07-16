@@ -18,7 +18,7 @@ def generate_chart_name(pos: int | None, value_type: str):
 
 
 def _arr_to_str(arr: np.array) -> str:
-    return orjson.dumps([int(x) for x in arr], separators=(',', ':'))
+    return orjson.dumps([int(x) for x in arr])
 
 
 T = TypeVar('T')

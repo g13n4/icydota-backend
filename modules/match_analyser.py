@@ -3,7 +3,7 @@ import pathlib
 import re
 from typing import Any, Optional, TypedDict
 
-import orjson
+import orjsonl
 import pandas as pd
 from fuzzywuzzy import fuzz
 
@@ -254,24 +254,21 @@ class MatchAnalyser:
 
     def _fill_cdata(self) -> None:
         slots_added = set()
-        re_interval = re.compile(r'"interval"')
-        with open(self.path, 'r') as file:
-            for line in file.readlines():
-                if not re_interval.search(line):
-                    continue
+        for line in orjsonl.stream(self.path):
+            if line["type"] != "interval":
+                continue
 
-                pline = orjson.loads(line)
-                if pline.get("hero_id", None) and pline['slot'] not in slots_added:
-                    temp = {
-                        'hero_name_cdota': pline["unit"],
-                        'hero_id': pline['hero_id'],
-                    }
+            if line.get("hero_id", None) and line['slot'] not in slots_added:
+                temp = {
+                    'hero_name_cdota': line["unit"],
+                    'hero_id': line['hero_id'],
+                }
 
-                    slots_added.add(pline["slot"])
-                    self.players.update_slot_info(pline["slot"], **temp)
+                slots_added.add(line["slot"])
+                self.players.update_slot_info(line["slot"], **temp)
 
-                if len(slots_added) == 10:
-                    break
+            if len(slots_added) == 10:
+                break
         return None
 
 
@@ -305,10 +302,12 @@ class MatchAnalyser:
 
     def _fill_npc_data(self) -> None:
         npc_names = set()
-        re_hero_name = re.compile('"(npc_dota_hero_.*?)"')
-        with open(self.path, 'r') as file:
-            for line in file.readlines():
-                for name in re_hero_name.findall(line):
+        re_hero_name = re.compile(r'(npc_dota_hero_.*?)')
+        for line in orjsonl.stream(self.path):
+            hero_target_name = line.get("targetname", "")
+            hero_attacker_name = line.get("attackername", "")
+            for name in [hero_target_name, hero_attacker_name]:
+                if re_hero_name.match(name):
                     npc_names.add(name)
 
         self._combine_names(list(npc_names))
@@ -389,101 +388,99 @@ class MatchAnalyser:
 
         ICDC = IntervalChartDataCollector()
 
-        with open(self.path, 'r') as file:
-            for line in file.readlines():
-                for pattern in [
-                    'epilogue',  #
-                    'dotaplus',  # dota plus info
-                    'cosmetics',  # items id's
-                    'actions',  # button press
-                    'DOTA_COMBATLOG_MODIFIER_ADD',  # add buff
-                    'DOTA_COMBATLOG_MODIFIER_REMOVE',  # remove buff
-                ]:
-                    if re.search(pattern, line, re.IGNORECASE):
-                        continue
+        for line in orjsonl.stream(self.path):
+            if line['type'] in [
+                'epilogue',  #
+                'dotaplus',  # dota plus info
+                'cosmetics',  # items id's
+                'actions',  # button press
+                # type
+                'DOTA_COMBATLOG_MODIFIER_ADD',  # add buff
+                'DOTA_COMBATLOG_MODIFIER_REMOVE',  # remove buff
+            ]:
+                continue
 
-                p_line = orjson.loads(line)
-                line_type: str = p_line['type']
-                line_time: int = p_line['time']
+            line_type: str = line['type']
+            line_time: int = line['time']
 
-                # cm mode is value = 3
-                if p_line["type"] == "DOTA_COMBATLOG_GAME_STATE" and p_line["value"] == 10:
-                    pass
-                #                    additional_options["no_cm_hero_picks"] = True
+            # cm mode is value = 3
+            if line["type"] == "DOTA_COMBATLOG_GAME_STATE" and line["value"] == 10:
+                pass
+            #                    additional_options["no_cm_hero_picks"] = True
 
-                # in new games the end games sets time to -855
-                total_game_length = max(total_game_length, line_time)
+            # in new games the end games sets time to -855
+            total_game_length = max(total_game_length, line_time)
 
-                if line_type == 'draft_timings':
-                    draft.append(p_line)
+            if line_type == 'draft_timings':
+                draft.append(line)
 
-                # the game hasn't started yet
-                if line_time <= -90:
-                    continue
+            # the game hasn't started yet
+            if line_time <= -90:
+                continue
 
-                if line_type == 'interval':
-                    interval.append(p_line)
-                    ICDC.add_line(p_line)
+            if line_type == 'interval':
+                interval.append(line)
+                ICDC.add_line(line)
 
-                    self.windows_handler.update_time(line_time)
+                self.windows_handler.update_time(line_time)
 
-                if line_type == 'DOTA_COMBATLOG_GOLD' and p_line['gold_reason'] == 5:
-                    break
+            if line_type == 'DOTA_COMBATLOG_GOLD' and line['gold_reason'] == 5:
+                break
 
-                elif line_type == 'pings':
-                    pings.append(p_line)
+            elif line_type == 'pings':
+                pings.append(line)
 
-                elif line_type in ['sen_left', 'obs_left', 'obs', 'sen', ]:
-                    if 'slot' not in p_line:
-                        p_line['slot'] = wards_ehandle[p_line['ehandle']]
+            elif line_type in ['sen_left', 'obs_left', 'obs', 'sen', ]:
+                if 'slot' not in line:
+                    line['slot'] = wards_ehandle[line['ehandle']]
 
-                    if line_type.endswith('_left'):
-                        deward.append(
-                            { x: p_line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ] }
-                        )
-                    else:
-                        wards.append({ x: p_line[x] for x in ['time', 'type', 'slot', ] })
-
-                    wards_ehandle[p_line['ehandle']] = p_line['slot']
-
-
-                # deprecated
-                elif line_type in [
-                    'CHAT_MESSAGE_ITEM_PURCHASE',
-                    'CHAT_MESSAGE_RUNE_PICKUP',
-                    'CHAT_MESSAGE_SCAN_USED',
-                    'CHAT_MESSAGE_TOWER_KILL',
-                    'CHAT_MESSAGE_COURIER_LOST',
-                ]:
-                    # chat_messages.append(p_line)
-                    continue
-
-                elif line_type in ['DOTA_COMBATLOG_DAMAGE', ]:
-                    damage.append(p_line)
-
-                elif line_type in ['DOTA_COMBATLOG_GOLD', ]:
-                    gold.append(
-                        { x: p_line[x] for x in
-                          ['time', 'value', 'targetname', 'gold_reason'] }
+                if line_type.endswith('_left'):
+                    deward.append(
+                        { x: line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ] }
                     )
+                else:
+                    wards.append({ x: line[x] for x in ['time', 'type', 'slot', ] })
 
-                elif line_type in ['DOTA_COMBATLOG_XP', ]:
-                    xp.append(
-                        { x: p_line[x] for x in
-                          ['time', 'value', 'targetname', 'xp_reason'] }
-                    )
+                wards_ehandle[line['ehandle']] = line['slot']
 
-                elif line_type in ['DOTA_COMBATLOG_TEAM_BUILDING_KILL', ]:
-                    building_kill.append(
-                        { x: p_line[x] for x in
-                          ['time', 'value', 'targetname'] }
-                    )
 
-                elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targethero']:
-                    hero_deaths.append({ x: p_line[x] for x in ['time', 'sourcename', 'targetname', ] })
+            # deprecated
+            elif line_type in [
+                'CHAT_MESSAGE_ITEM_PURCHASE',
+                'CHAT_MESSAGE_RUNE_PICKUP',
+                'CHAT_MESSAGE_SCAN_USED',
+                'CHAT_MESSAGE_TOWER_KILL',
+                'CHAT_MESSAGE_COURIER_LOST',
+            ]:
+                # chat_messages.append(line)
+                continue
 
-                elif line_type == 'DOTA_COMBATLOG_DEATH' and p_line['targetname'] == 'npc_dota_roshan':
-                    roshan_deaths.append({ x: p_line[x] for x in ['time', 'sourcename', ] })
+            elif line_type in ['DOTA_COMBATLOG_DAMAGE', ]:
+                damage.append(line)
+
+            elif line_type in ['DOTA_COMBATLOG_GOLD', ]:
+                gold.append(
+                    { x: line[x] for x in
+                      ['time', 'value', 'targetname', 'gold_reason'] }
+                )
+
+            elif line_type in ['DOTA_COMBATLOG_XP', ]:
+                xp.append(
+                    { x: line[x] for x in
+                      ['time', 'value', 'targetname', 'xp_reason'] }
+                )
+
+            elif line_type in ['DOTA_COMBATLOG_TEAM_BUILDING_KILL', ]:
+                building_kill.append(
+                    { x: line[x] for x in
+                      ['time', 'value', 'targetname'] }
+                )
+
+            elif line_type == 'DOTA_COMBATLOG_DEATH' and line['targethero']:
+                hero_deaths.append({ x: line[x] for x in ['time', 'sourcename', 'targetname', ] })
+
+            elif line_type == 'DOTA_COMBATLOG_DEATH' and line['targetname'] == 'npc_dota_roshan':
+                roshan_deaths.append({ x: line[x] for x in ['time', 'sourcename', ] })
 
         self._is_match_windows_set = True
         self._game_total_length = total_game_length

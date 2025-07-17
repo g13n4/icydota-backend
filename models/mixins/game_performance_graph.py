@@ -1,5 +1,5 @@
 from constants.position import PositionConstant
-from modules.interval_chart_data_collector import LINE_VALUES_TO_PROCESS, generate_chart_name
+from modules.interval.interval_chart_data_collector import LINE_VALUES_TO_PROCESS, generate_chart_name
 
 
 class GamePerformanceGraphMixin:

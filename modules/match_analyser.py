@@ -10,7 +10,8 @@ from fuzzywuzzy import fuzz
 from constants.position import PositionConstant, POSITION_OPPONENTS
 from models import PlayerGameData
 from models.performance import PerformanceTotalData
-from modules.interval_chart_data_collector import IntervalChartDataCollector
+from modules.interval.interval_biggest_advantage import IntervalBiggestAdvantage
+from modules.interval.interval_chart_data_collector import IntervalChartDataCollector
 from modules.match_windows_handler import MatchWindowsHandler
 from utils import get_both_slot_values
 
@@ -328,7 +329,9 @@ class MatchAnalyser:
         raise MatchAnalyserWindowsException("Match windows are not created yet!")
 
 
-    def get_match_data(self) -> tuple[dict[str, pd.DataFrame], dict, IntervalChartDataCollector]:
+    def get_match_data(self) -> tuple[
+        dict[str, pd.DataFrame], dict, IntervalChartDataCollector, IntervalBiggestAdvantage
+    ]:
         interval = []  # interval
         pings = []  # pings
         wards = []  # obs / sen / sen_left / obs_left
@@ -387,6 +390,7 @@ class MatchAnalyser:
         }
 
         ICDC = IntervalChartDataCollector()
+        IBA = IntervalBiggestAdvantage()
 
         for line in orjsonl.stream(self.path):
             if line['type'] in [
@@ -421,6 +425,7 @@ class MatchAnalyser:
             if line_type == 'interval':
                 interval.append(line)
                 ICDC.add_line(line)
+                IBA.add_line(line)
 
                 self.windows_handler.update_time(line_time)
 
@@ -500,4 +505,4 @@ class MatchAnalyser:
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
             'draft': pd.DataFrame(draft)
-        }, additional_options, ICDC
+        }, additional_options, ICDC, IBA

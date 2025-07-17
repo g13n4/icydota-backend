@@ -3,7 +3,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from models.game import GamePerformanceGraph
-from modules.interval_chart_data_collector import generate_chart_name
+from modules.interval.interval_chart_data_collector import generate_chart_name
 
 
 async def get_graph_data(

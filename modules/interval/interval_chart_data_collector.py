@@ -5,6 +5,7 @@ import numpy as np
 from orjson import orjson
 
 from constants.position import PositionConstant
+from modules.interval.helpers import get_line_data
 
 
 LINE_VALUES_TO_PROCESS = ["xp", "gold"]
@@ -50,13 +51,6 @@ class IntervalChartDataCollector:
         self.combined_team_data = None
 
 
-    @staticmethod
-    def get_line_data(line: dict):
-        time = line["time"]
-        slot = line["slot"]
-        return time, slot
-
-
     def _fill_line_data(self, slot, line, is_last: bool = False):
         for name in LINE_VALUES_TO_PROCESS:
             value = line[name]
@@ -67,7 +61,7 @@ class IntervalChartDataCollector:
 
 
     def add_line(self, line: dict) -> None:
-        time, slot = IntervalChartDataCollector.get_line_data(line=line)
+        time, slot = get_line_data(line=line)
 
         if time == -89 or not (time % IntervalChartDataCollector.DATA_GATHERING_INTERVAL):
             self._fill_line_data(slot, line, is_last=False)

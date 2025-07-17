@@ -577,6 +577,24 @@ class GameTotals:
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
 
+    gold_advantage: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=85,
+        category=GameTotalsCategory.STATS,
+        description="Maximal gold advantage",
+    )
+    gold_advantage_win: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=86,
+        category=GameTotalsCategory.STATS,
+        description="Maximal gold advantage (win)",
+    )
+    gold_advantage_lose: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=10, decimal_places=2),
+        index=87,
+        category=GameTotalsCategory.STATS,
+        description="Maximal gold advantage (lose)",
+    )
 
     _VALUES: ClassVar[list[GameTotal]]
     VALUES: GameTotalsIterator

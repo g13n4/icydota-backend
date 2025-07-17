@@ -25,7 +25,7 @@ def process_game_replay(
 
     # MATCH PARSING
     match = MatchAnalyser(pathlib.Path(match_path), match_id=match_info['match_id'])
-    match_data, additional_options, ICDC = match.get_match_data()
+    match_data, additional_options, ICDC, IBA = match.get_match_data()
     match.players.set_player_data_from_dict(additional_player_data)
 
     PDP = PerformanceDataProcessor(
@@ -47,6 +47,18 @@ def process_game_replay(
 
     ICDC.combine_data(match.players.get_pos_to_slot_by_side())
     additional_data["graph"] = ICDC.get_data_dict()
+
+    advantage_data = IBA.combine_data(match.players.get_pos_to_slot_by_side())
+    for slot, slot_data in additional_player_data.items():
+        slot_data["performance_total_data"].gold_advantage = advantage_data[slot]
+
+        if slot_data["performance_total_data"].win:
+            slot_data["performance_total_data"].gold_advantage_win = advantage_data[slot]
+        else:
+            slot_data["performance_total_data"].gold_advantage_lose = advantage_data[slot]
+
+    additional_data["graph"] = ICDC.get_data_dict()
+
 
     logger.info('Processing main replay windows_data')
     set_processor_data(

@@ -105,7 +105,6 @@ if AGGREGATION_SEPARATE_TASK == "true":
         "delete_aggregation_team": { 'queue': 'parallel' },
     }
 
-
 celery_app.conf.beat_schedule = {
     **strict_cron_time('find_leagues_to_process_(cron)', time_start=0, time_step=3),
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=0, time_step=12),
@@ -121,8 +120,10 @@ celery_app.conf.beat_schedule = {
         'kwargs': { "process_patch": True },
         **parallel_options_dict
     },
-    'attempt_to_process_bad_games_[at_18]': {
+    'attempt_to_process_bad_games_all_[at_12]': {
         'task': 'attempt_to_process_bad_games_(cron)',
-        'schedule': crontab(minute='0', hour='18'),
+        'schedule': crontab(minute='0', hour='12', day_of_month="*/10"),
+        'kwargs': { "only_active": False },
     },
+    **strict_cron_time('attempt_to_process_bad_games_(cron)', time_start=0, time_step=4),
 }

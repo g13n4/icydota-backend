@@ -130,6 +130,10 @@ async def get_games_all(
 
         sent_name, dire_name = game_name.split(' vs ')
         for item in SidePerformance.VALUES:
+            # fix empty kpm
+            if item.name in ["kills_per_min"]:
+                continue
+
             dire_value = getattr(dire_side_obj, item.name)
             dire_side_dict[item.name] = str(dire_value) if item.value_type is not bool else to_front_bool(dire_value)
 

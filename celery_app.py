@@ -25,7 +25,7 @@ tasks = [
 ]
 
 celery_app = Celery(
-    main='icydota',
+    main='celery',
     enable_utc=True,
     timezone='Europe/Moscow',
     broker=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',

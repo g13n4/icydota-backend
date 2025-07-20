@@ -46,10 +46,10 @@ else:
     print(LIGHT_MODE)
 
 # FASTAPI
-icydota_api = FastAPI(default_response_class=ORJSONResponse)
+backend_api = FastAPI(default_response_class=ORJSONResponse)
 
 # CORS
-icydota_api.add_middleware(
+backend_api.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ADDRESS.split(","),
     allow_credentials=True,
@@ -57,22 +57,22 @@ icydota_api.add_middleware(
     allow_headers=["*"],
 )
 
-icydota_api.add_middleware(GZipMiddleware, minimum_size=500)
+backend_api.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 # TEST
-@icydota_api.get(API_PREFIX + '/index/', status_code=200)
+@backend_api.get(API_PREFIX + '/index/', status_code=200)
 async def get_index():
     return { 'hello': 'world' }
 
 
-@icydota_api.get(API_PREFIX + '/initial')
+@backend_api.get(API_PREFIX + '/initial')
 async def get_initial_data_route(db_session: AsyncSession = Depends(get_async_db_session)) -> dict:
     items = await get_initial_data(db_session)
     return items
 
 
-@icydota_api.get(API_PREFIX + '/graph/{match_id}/{position}')
+@backend_api.get(API_PREFIX + '/graph/{match_id}/{position}')
 async def get_graph_position_route(
         match_id: int,
         position: int,
@@ -82,13 +82,13 @@ async def get_graph_position_route(
     return data
 
 
-@icydota_api.get(API_PREFIX + '/cross-comparison/fields')
+@backend_api.get(API_PREFIX + '/cross-comparison/fields')
 async def get_cross_comparison_fields_route() -> dict:
     items = await get_cross_comparison_fields()
     return items
 
 
-@icydota_api.get(API_PREFIX + '/league/{league_id}')
+@backend_api.get(API_PREFIX + '/league/{league_id}')
 async def get_league_matches_route(
         league_id: int,
         db_session: AsyncSession = Depends(get_async_db_session),
@@ -97,7 +97,7 @@ async def get_league_matches_route(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/all/{lop}/{lod_id}')
+@backend_api.get(API_PREFIX + '/all/{lop}/{lod_id}')
 async def get_league_matches_route(
         lop: LoPEnum,
         lod_id: int,
@@ -117,7 +117,7 @@ async def get_league_matches_route(
 
 
 # DATA
-@icydota_api.get(API_PREFIX + '/data/match/{pot}/{match_id}/{data_type}')
+@backend_api.get(API_PREFIX + '/data/match/{pot}/{match_id}/{data_type}')
 async def get_performance_data_api(
         pot: PoTEnum,
         match_id: int,
@@ -161,7 +161,7 @@ async def get_performance_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/data/aggregation/{pot}/{lop}/{lop_value}/{data_type}')
+@backend_api.get(API_PREFIX + '/data/aggregation/{pot}/{lop}/{lop_value}/{data_type}')
 async def get_performance_aggregated_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
@@ -196,7 +196,7 @@ async def get_performance_aggregated_data_api(
     return output
 
 
-@icydota_api.get(API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}')
+@backend_api.get(API_PREFIX + '/data/cross_comparison/{pot}/{lop}/{lop_value}/{data_type}')
 async def get_performance_cross_comparison_data_api(
         pot: PoTEnum,
         lop: LoPEnum,
@@ -246,7 +246,7 @@ if not LIGHT_MODE:
     from tasks.league.process_league import process_league_task_group, process_game_helper
 
 
-    @icydota_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
+    @backend_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
     async def process_league_api(league_id: int, overwrite: bool = False):
         new_games_number, _ = process_league_task_group(league_id=league_id, overwrite=overwrite, execute=True)
         if new_games_number:
@@ -255,67 +255,67 @@ if not LIGHT_MODE:
         return { 'status': 'processed' }
 
 
-    @icydota_api.post(API_PREFIX + '/process/all-mispositioned', status_code=202)
+    @backend_api.post(API_PREFIX + '/process/all-mispositioned', status_code=202)
     async def process_all_mispositioned_api():
         process_mispositioned_games()
         return { 'status': 'processed' }
 
 
-    @icydota_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
+    @backend_api.post(API_PREFIX + '/process/match/{match_id}', status_code=202)
     async def process_match_api(match_id: int):
         process_game_helper(match_id=match_id, execute=True, reason=TaskReason.PROCESS_ONE_MATCH)
         return { 'status': 'processing' }
 
 
     # AGGREGATION
-    @icydota_api.delete(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=204)
+    @backend_api.delete(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=204)
     async def delete_aggregation_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         delete_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-    @icydota_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
+    @backend_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
     async def create_aggregation_api(lop: LoPEnum, lop_value: int, atype: int | None = None):
         league_id, patch_id = lop.to_api(lop_value)
         aggregate_league_task_helper(league_id=league_id, patch_id=patch_id, atype=atype)
 
 
-    @icydota_api.post(API_PREFIX + '/aggregate-parallel/{lop}/{lop_value}', status_code=202)
+    @backend_api.post(API_PREFIX + '/aggregate-parallel/{lop}/{lop_value}', status_code=202)
     async def create_aggregation_parallel_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         parallel_aggregate_task_helper(league_id=league_id, patch_id=patch_id)
 
 
     # CROSS-COMPARISON
-    @icydota_api.delete(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=204)
+    @backend_api.delete(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=204)
     async def delete_cross_comparison_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         delete_cross_comparison_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-    @icydota_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=202)
+    @backend_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=202)
     async def create_cross_comparison_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-    @icydota_api.post(API_PREFIX + '/cross-comparison-parallel/{lop}/{lop_value}', status_code=202)
+    @backend_api.post(API_PREFIX + '/cross-comparison-parallel/{lop}/{lop_value}', status_code=202)
     async def create_cross_comparison_parallel_api(lop: LoPEnum, lop_value: int):
         league_id, patch_id = lop.to_api(lop_value)
         parallel_cross_comparison_task_helper(league_id=league_id, patch_id=patch_id)
 
 
     # UTILS
-    @icydota_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)
+    @backend_api.post(API_PREFIX + '/approximate_positions/{league_id}', status_code=202)
     async def approximate_positions_api(league_id: int):
         approximate_positions_helper(league_id=league_id)
 
 
-    @icydota_api.post(API_PREFIX + '/process/full_cycle/{league_id}', status_code=202)
+    @backend_api.post(API_PREFIX + '/process/full_cycle/{league_id}', status_code=202)
     async def process_full_cycle_api(league_id: int):
         process_full_cycle(league_id=league_id)
 
 
-    @icydota_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
+    @backend_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api():
         set_comparison_names_helper()

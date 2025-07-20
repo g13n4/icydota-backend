@@ -14,7 +14,7 @@ do
   read -r INT_INPUT
   case $INT_INPUT in
 	0)
-		uvicorn main:icydota_api --use-colors --log-level 'trace' --reload --workers 2 --port 3333
+		uvicorn main:backend_api --use-colors --log-level 'trace' --reload --workers 2 --port 3333
 		break
 		;;
 	1)

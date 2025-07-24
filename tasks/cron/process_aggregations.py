@@ -32,7 +32,7 @@ def aggregate_and_ccomp_league_and_patch_cron(
     if process_league:
         data_tuple = LoPItem(
             "select distinct l.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id"
-            "JOIN leagues l ON g.league_id = l.id WHERE pgd.created_at < l.processed_at GROUP BY l.league_id",
+            "JOIN leagues l ON g.league_id = l.id WHERE pgd.created_at > l.processed_at GROUP BY l.id",
             "league_id",
             "league",
             "leagues"
@@ -40,7 +40,7 @@ def aggregate_and_ccomp_league_and_patch_cron(
     elif process_patch:
         data_tuple = LoPItem(
             "select distinct p.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id"
-            "JOIN patches p ON g.patch_id = p.id WHERE pgd.created_at < p.processed_at GROUP BY p.patch_id",
+            "JOIN patches p ON g.patch_id = p.id WHERE pgd.created_at > p.processed_at GROUP BY p.id",
             "patch_id",
             "patch",
             "patches"

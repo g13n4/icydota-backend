@@ -1,3 +1,5 @@
+import datetime
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, select
@@ -13,9 +15,11 @@ logger = get_task_logger(__name__)
 def set_leagues_and_patch_flags_cron(league_id: int) -> None:
     db_session: Session = get_sync_db_session(expire=True)
 
+    now = datetime.datetime.now()
+
     league_obj = db_session.get(League, league_id)
 
-    league_obj.should_be_processed = True
+    league_obj.processed_at = now
     db_session.add(league_obj)
 
     patch_select = db_session.exec(
@@ -26,7 +30,7 @@ def set_leagues_and_patch_flags_cron(league_id: int) -> None:
     )
 
     for patch_obj in patch_select.all():
-        patch_obj.should_be_processed = True
+        patch_obj.processed_at = now
         db_session.add(patch_obj)
 
     db_session.full_commit()

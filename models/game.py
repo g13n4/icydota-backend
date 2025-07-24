@@ -139,7 +139,6 @@ class PlayerGameData(SQLModel, table=True):
     )
 
 
-
 class Patch(SQLModel, table=True):
     __tablename__ = "patches"
 
@@ -148,7 +147,8 @@ class Patch(SQLModel, table=True):
     date: Optional[datetime] = Field(default=None, nullable=True)
 
     aggregation_allowed: bool = Field(default=False, nullable=False)
-    should_be_processed: Optional[bool] = Field(default=False)
+
+    processed_at: Optional[datetime] = Field(default=None)
 
 
 class GamePerformanceGraph(GamePerformanceGraphMixin, SQLModel, table=True):

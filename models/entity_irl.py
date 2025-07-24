@@ -58,9 +58,7 @@ class League(SQLModel, table=True):
     # if it's more than 8 days we stop checking
     new_game_found_at: Optional[datetime.datetime] = Field(default=None)
 
-    # we set these flags when we processed all new games
-    should_be_processed: Optional[bool] = Field(default=None)
-
+    processed_at: Optional[datetime.datetime] = Field(default=None)
 
     games: List["Game"] = Relationship(
         back_populates="league",

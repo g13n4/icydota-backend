@@ -29,7 +29,7 @@ def performance_creator_task_decorator(func):
             else:
                 data[k] = obj.id
 
-        r.set(rkey, pickle.dumps(data), ex=60 * 60 * 24)
+        r.set(rkey, pickle.dumps(data), ex=60 * 60 * 36)
 
 
     return wrapper

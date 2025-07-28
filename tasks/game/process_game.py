@@ -168,6 +168,7 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
     if not league_id:
         league_id = game_data['league']['leagueid']
+
     league_obj = get_or_create_league(db_session=db_session, league_id=league_id)
 
     fix_odota_data(game_data)
@@ -182,7 +183,7 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
     # META DATA
     match_meta_info = {
-        "league_id": league_obj.id,
+        "league_id": league_id,
         "match_id": match_id,
         "patch_id": patch_id,
 
@@ -350,7 +351,6 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
         processed_counter=processed_counter,
 
         league=league_obj,
-        league_id=league_obj.id,
         name=f"{teams_dict['radiant'].name} vs {teams_dict['dire'].name}",
 
         patch_id=patch_obj.id,

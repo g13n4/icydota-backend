@@ -112,3 +112,7 @@ class MatchWindowsHandler:
                 is_complete_window = (window['window_length'] + 2 > window['length'] > window['window_length'] - 2)
                 if window['length'] > 0 and not is_complete_window:
                     window['incomplete'] = True
+
+
+    def get_existing_window_map(self):
+        return { window["index"]: window["exists"] for window in self.match_windows }

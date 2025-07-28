@@ -424,6 +424,7 @@ class MatchAnalyser:
 
             if line_type == 'interval':
                 interval.append(line)
+
                 ICDC.add_line(line)
                 IBA.add_line(line)
 

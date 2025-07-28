@@ -9,10 +9,10 @@ from constants.calculation.game.category import WindowCategories
 from constants.game_performance import PerformanceTypeConstant
 from constants.performance.total.total import GameTotals
 from constants.performance.window import AllWindows
-from .mixins.abilities import AbilityTotalDataMixin
-from .mixins.helpers import inherit_annotations
-from .mixins.totals import PerformanceTotalDataMixin
-from .mixins.windows import PerformanceWindowTableMixin
+from models.mixins.abilities import AbilityTotalDataMixin
+from models.mixins.helpers import inherit_annotations
+from models.mixins.totals import PerformanceTotalDataMixin
+from models.mixins.windows import PerformanceWindowTableMixin
 
 
 OFFSET = 1

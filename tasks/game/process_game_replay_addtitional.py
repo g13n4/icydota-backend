@@ -297,10 +297,14 @@ def process_additional_replay_data(
         this_total_perf_obj.first_pick_hero = int(first_pick)
         this_total_perf_obj.last_pick_hero = int(last_pick)
 
-        has_megas = building_stats_objs['dire'].megacreeps if is_dire else building_stats_objs['sentinel'].megacreeps
-        opponent_has_megas = building_stats_objs['sentinel'].megacreeps if is_dire else building_stats_objs[
-            'dire'].megacreeps
-
+        has_megas = (
+            building_stats_objs['dire'].megacreeps
+            if is_dire else building_stats_objs['sentinel'].megacreeps
+        )
+        opponent_has_megas = (
+            building_stats_objs['sentinel'].megacreeps
+            if is_dire else building_stats_objs['dire'].megacreeps
+        )
         this_total_perf_obj.win_with_megas = int(has_megas and win)
         this_total_perf_obj.lose_with_megas = int(has_megas and lose)
 

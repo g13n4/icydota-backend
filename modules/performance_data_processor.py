@@ -20,6 +20,7 @@ from modules.processors.windows import WindowsPerformanceProcessor
 
 OFFSET = 1
 
+
 class PerformanceDataProcessor:
     ROWS_SIZE = len(list(WindowCalculations.VALUES))
     COLUMNS_SIZE = len(AllWindows.VALUES)
@@ -55,6 +56,13 @@ class PerformanceDataProcessor:
 
         self.PROCESSED_GAME_DATA = False
         self.PREPROCESSED_GAME_DATA = False
+
+
+    def _set_array_nan(self, windows_map: dict[int, bool]):
+        for window_idx, window_status in windows_map.items():
+            if not window_status:
+                for player_ndarray in self.windows_data.values():
+                    player_ndarray[:, window_idx - OFFSET] = None
 
 
     def calculate_windows_totals_by_type(self):
@@ -310,7 +318,9 @@ class PerformanceDataProcessor:
                 )
 
 
-    def process_game_data(self):
+    def process_game_data(self, windows_map: dict[int, bool]):
+        self._set_array_nan(windows_map=windows_map)
+
         self.calculate_windows_totals_by_type()
         for slot in self.windows_data.keys():
             self.process_slot(slot)

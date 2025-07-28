@@ -68,7 +68,7 @@ def process_game_replay(
         PDP=PDP,
     )
 
-    PDP.process_game_data()
+    PDP.process_game_data(windows_map=match.windows_handler.get_existing_window_map())
     PDP.process_side_data(match_data=match_info)
 
     return (PDP.get_all_player_game_data(), additional_data)

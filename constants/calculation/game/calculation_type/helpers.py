@@ -25,6 +25,11 @@ class CalculationItem(BaseModel):
     processing: tuple[Any, Any] | None = None
     postprocessing: PostprocessingItem | None = None
 
+    def __eq__(self, other):
+        if isinstance(type(self), type(other)):
+            return self.db_id == other.db_id
+        return self.db_id == other
+
 
 GLOBAL_VALUE_COUNTER = 0
 

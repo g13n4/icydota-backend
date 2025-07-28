@@ -1,13 +1,17 @@
 from typing import ClassVar, TypeVar, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 Constant = TypeVar("Constant")
 
 
 class Item(BaseModel):
+    model_config = ConfigDict(slots=True)
+
     value: Any
     name: str = ''
     description: str = ''
+    type_: Any = None
 
 
     def __eq__(self, other):

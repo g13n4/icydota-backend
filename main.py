@@ -10,6 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from api.crud.cross_comparison_field import get_cross_comparison_fields
 from api.crud.graph_data import get_graph_data
 from api.crud.initial_data import get_initial_data
+from api.crud.lop_header import get_lop_header
 from api.crud.match import get_games
 from api.crud.match_all import get_games_all
 from api.table.match_name import get_match_name_data
@@ -114,6 +115,20 @@ async def get_league_matches_route(
         raise HTTPException(status_code=404)
 
     return { "data": output }
+
+
+@backend_api.get(API_PREFIX + '/header/{lop}/{lod_id}')
+async def get_league_matches_route(
+        lop: LoPEnum,
+        lod_id: int,
+        db_session: AsyncSession = Depends(get_async_db_session),
+) -> dict:
+    if lop == LoPEnum.league:
+        output = await get_lop_header(db_session=db_session, league_id=lod_id)
+    else:
+        output = await get_lop_header(db_session=db_session, patch_id=lod_id)
+
+    return output
 
 
 # DATA

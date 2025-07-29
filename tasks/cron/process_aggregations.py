@@ -6,7 +6,6 @@ from sqlmodel import Session, text
 
 from db import get_sync_db_session
 from tasks.aggregation_tasks_helper import parallel_aggregate_task_helper, parallel_cross_comparison_task_helper
-from tasks.cron.create_lop_short_data import create_short_data_for_league_and_patch_cron
 
 
 logger = get_task_logger(__name__)
@@ -56,8 +55,6 @@ def aggregate_and_ccomp_league_and_patch_cron(
             )
     ).all():
         kwarg = { data_tuple.field: obj.id }
-
-        create_short_data_for_league_and_patch_cron.si(**kwarg).apply_async()
 
         parallel_aggregate_task_helper(**kwarg)
         parallel_cross_comparison_task_helper(**kwarg)

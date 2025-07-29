@@ -42,12 +42,8 @@ GROUP BY pgd.position_id
 
 
 @shared_task(name='create_short_data_for_league_and_patch_(cron)', ignore_result=True)
-def create_short_data_for_league_and_patch_cron(
-        league_id: int | None = None,
-        patch_id: int | None = None,
-) -> None:
+def create_short_data_for_league_and_patch_cron(league_id: int | None = None, patch_id: int | None = None) -> None:
     db_session: Session = get_sync_db_session(expire=True)
-
 
     if league_id:
         logger.info(f"Processing league for data table header")

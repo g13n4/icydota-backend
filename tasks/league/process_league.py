@@ -63,7 +63,7 @@ def get_league_games_tasks(
 
     league_obj = get_or_create_league(db_session=db_session, league_id=league_id, existing_obj=league_obj)
 
-    r = requests.get(f'https://api.opendota.com/api/leagues/{league_obj.id}/matches')
+    r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/matches')
     league_match_data = r.json()
 
     db_league_games: Dict[int, Game] = { x.id: x for x in league_obj.games }
@@ -82,7 +82,8 @@ def get_league_games_tasks(
                 )
             )
 
-    db_session.full_commit()
+    db_session.commit()
+    db_session.refresh(league_obj)
     return new_games_found_list
 
 

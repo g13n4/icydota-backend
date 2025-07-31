@@ -66,7 +66,9 @@ def get_league_games_tasks(
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/matches')
     league_match_data = r.json()
 
-    db_league_games: Dict[int, Game] = { x.id: x for x in league_obj.games }
+    db_league_games: Dict[int, Game] = {}
+    if league_obj:
+        db_league_games = { x.id: x for x in league_obj.games }
     new_games_found_list = []
 
     for idx, game in enumerate(league_match_data):
@@ -76,7 +78,7 @@ def get_league_games_tasks(
             new_games_found_list.append(
                 process_game_helper(
                     match_id=game['match_id'],
-                    league_id=league_obj.id,
+                    league_id=league_id,
                     execute=False,
                     reason=reason,
                 )

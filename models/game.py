@@ -19,7 +19,7 @@ class SidePerformanceData(SidePerformanceDataMixin, SQLModel, table=True):
 
     const: ClassVar[SidePerformance] = SidePerformance
 
-    id: int = Field(default=None, primary_key=True, index=True)
+    id: int = Field(default=None, primary_key=True)
 
     game_id: int = Field(
         sa_column=db.Column(

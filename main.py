@@ -334,3 +334,12 @@ if not LIGHT_MODE:
     @backend_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api():
         set_comparison_names_helper()
+
+
+
+# FISSURE/Universe 17907 - 18107
+# DreamLeague 18111 - 17765
+# PGL/Wallachia/5 18358 - 18058
+# Blast 17417 - 17418
+# 18375 WEC
+# Ra;eigh 18375

@@ -42,7 +42,7 @@ class Team(SQLModel, table=True):
 class League(SQLModel, table=True):
     __tablename__ = "leagues"
 
-    id: int = Field(default=None, primary_key=True, index=True)  # steam league id
+    id: int = Field(default=None, primary_key=True)  # steam league id
 
     pd_link: Optional[str]
     name: Optional[str]

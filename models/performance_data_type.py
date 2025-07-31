@@ -18,7 +18,7 @@ class ComparisonType(SQLModel, table=True):
 
     # if is_flat we subtract comparans from comparandum and if it's not we divide thus operating in percents
     # can be none if it's a basic cross-comparison
-    is_flat: Optional[bool] = Field(default=None, index=True)
+    is_flat: Optional[bool] = Field(default=None)
 
     # if basic == True = pos 1 is compared to pos 1 and 3
     # if basic == False = pos 1 is compared to sum(1, 3) / 2
@@ -123,8 +123,8 @@ class ByTeamType(SQLModel, table=True):
         }
     )
 
-    is_flat: Optional[bool] = Field(index=True)
-    is_dire: Optional[bool] = Field(index=True)
+    is_flat: Optional[bool]
+    is_dire: Optional[bool]
 
     team_cpd_id: Optional[int] = Field(default=None, foreign_key="teams.id")
     team_cps_id: Optional[int] = Field(default=None, foreign_key="teams.id")

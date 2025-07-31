@@ -11,7 +11,7 @@ class Hero(SQLModel, table=True):
     __tablename__ = "heroes"
 
     id: int = Field(sa_column=db.Column(db.SMALLINT, primary_key=True))  # open_dota id
-    name: str = Field(unique=True, index=True)
+    name: str = Field(unique=True)
 
     cdota_name: Optional[str]
 

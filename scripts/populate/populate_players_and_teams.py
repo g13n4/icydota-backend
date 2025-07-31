@@ -27,17 +27,20 @@ def create_players_and_teams(db_session: Session, ) -> None:
             nickname=player['name'],
             official_name=True,
             account_id=int(player['account_id']),
-            steam_id=player['steamid'] and int(player['steamid']), )
+            steam_id=player['steamid'] and int(player['steamid']),
+        )
 
         db_session.add(new_player)
         players_counter += 1
 
         team_id = player['team_id']
-        if team_id not in teams_ids:
+        team_name = player['team_name']
+        if (team_id and team_name) and team_id not in teams_ids:
             new_team = Team(
                 id=team_id,
-                name=player['team_name'],
-                tag=player['team_tag'], )
+                name=team_name,
+                tag=player['team_tag'],
+            )
 
             db_session.add(new_team)
             teams_ids.add(team_id)

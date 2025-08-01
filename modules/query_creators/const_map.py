@@ -30,9 +30,10 @@ AGGREGATION_MODELS = {
 
     AggregationConstant.BY_POSITION_HERO: [POSITION, HERO, ],
     AggregationConstant.BY_HERO_PLAYER: [HERO, PLAYER, ],
-    AggregationConstant.BY_PLAYER_HERO: [PLAYER, HERO, ],
+    AggregationConstant.BY_POSITION_PLAYER_HERO: [POSITION, PLAYER, HERO, ],
 
-    AggregationConstant.BY_HERO_FACET_PLAYER: [
+    AggregationConstant.BY_POSITION_HERO_FACET_PLAYER: [
+        POSITION,
         HERO,
         FACET,
         PLAYER,
@@ -42,7 +43,6 @@ AGGREGATION_MODELS = {
         HERO,
         FACET,
     ],
-
 }
 
 CComItem = namedtuple('CComItem', ['field', 'field_name', 'auxiliary'], defaults=[False])

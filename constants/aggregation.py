@@ -5,9 +5,9 @@ class AggregationConstant:
     BY_POSITION: int = 4
 
     BY_HERO_PLAYER: int = 5
-    BY_PLAYER_HERO: int = 6
+    BY_POSITION_PLAYER_HERO: int = 6
 
-    BY_HERO_FACET_PLAYER: int = 7
+    BY_POSITION_HERO_FACET_PLAYER: int = 7
     BY_PLAYER_HERO_FACET: int = 8
     BY_POSITION_HERO: int = 9
 
@@ -18,10 +18,9 @@ class AggregationConstant:
         BY_POSITION,
 
         BY_HERO_PLAYER,
-        BY_PLAYER_HERO,
+        BY_POSITION_PLAYER_HERO,
 
-        BY_HERO_FACET_PLAYER,
+        BY_POSITION_HERO_FACET_PLAYER,
         BY_PLAYER_HERO_FACET,
         BY_POSITION_HERO,
     ]
-

@@ -55,8 +55,12 @@ def is_invalid_value(value: Any) -> bool:
         return value.is_nan()
     elif isinstance(value, float):
         return math.isnan(value)
+    elif value is None:
+        return True
+    elif np.isinf(value) or np.isnan(value):
+        return True
 
-    return value in [-np.inf, np.inf, np.nan, None]
+    return False
 
 
 def get_obj_from_list(objs_list: list, **kwargs):

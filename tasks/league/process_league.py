@@ -85,7 +85,6 @@ def get_league_games_tasks(
             )
 
     db_session.commit()
-    db_session.refresh(league_obj)
     return new_games_found_list
 
 

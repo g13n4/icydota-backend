@@ -248,8 +248,8 @@ class PerformanceDataProcessor:
 
         # NON COMPARISON
         for side, side_offset in [
-            (self.DIRE, 0),  # sentinel_offset
-            (self.SENT, 5),  # dire_offset
+            (self.SENT, 0),  # sentinel_offset
+            (self.DIRE, 5),  # dire_offset
         ]:
 
             BTT_obj = ByTeamType(
@@ -266,6 +266,7 @@ class PerformanceDataProcessor:
             )
 
             side_indexes = [slot for slot in range(side_offset, 5 + side_offset)]
+
             total_windows = [self.windows_data[slot] for slot in side_indexes]
             windows_df: np.ndarray = reduce(operator.add, total_windows)
 

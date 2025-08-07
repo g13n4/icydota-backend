@@ -44,10 +44,10 @@ class Game(SQLModel, table=True):
     name: Optional[str]
     processed_counter: int
 
-    league: Optional["League"] = Relationship(back_populates="games")
-    league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
+    league: "League" = Relationship(back_populates="games")
+    league_id: int = Field(default=None, foreign_key="leagues.id", index=True)
 
-    patch_id: Optional[int] = Field(default=None, foreign_key="patches.id")
+    patch_id: int = Field(default=None, foreign_key="patches.id")
 
     sent_team_id: int = _fk("teams")
     dire_team_id: int = _fk("teams")

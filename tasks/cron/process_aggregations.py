@@ -2,9 +2,11 @@ from collections import namedtuple
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from sqlalchemy import update
 from sqlmodel import Session, text
 
 from db import get_sync_db_session
+from models import League, Patch
 from tasks.aggregation_tasks_helper import parallel_aggregate_task_helper, parallel_cross_comparison_task_helper
 
 
@@ -16,6 +18,7 @@ LoPItem = namedtuple(
         'field',
         "singular",
         "plural",
+        "model"
     ]
 )
 
@@ -35,7 +38,8 @@ def aggregate_and_ccomp_league_and_patch_cron(
             "JOIN leagues l ON g.league_id = l.id WHERE pgd.created_at > l.processed_at GROUP BY l.id",
             "league_id",
             "league",
-            "leagues"
+            "leagues",
+            League
         )
     elif process_patch:
         data_tuple = LoPItem(
@@ -43,26 +47,23 @@ def aggregate_and_ccomp_league_and_patch_cron(
             "JOIN patches p ON g.patch_id = p.id WHERE pgd.created_at > p.processed_at GROUP BY p.id",
             "patch_id",
             "patch",
-            "patches"
+            "patches",
+            Patch
         )
     else:
         raise TypeError("No argument provided")
 
     processed_ids = []
-    for obj in db_session.execute(
-            text(
-                data_tuple.query
-            )
-    ).all():
-        kwarg = { data_tuple.field: obj.id }
+    for obj_id in db_session.execute(text(data_tuple.query)).all():
+        kwarg = { data_tuple.field: obj_id }
 
         parallel_aggregate_task_helper(**kwarg)
         parallel_cross_comparison_task_helper(**kwarg)
 
-        obj.should_be_processed = False
-        db_session.add(obj)
-        processed_ids.append(obj.id)
-        logger.info(f"Added {data_tuple.singular} to aggregate and cross-compare: {obj.name}")
+        db_session.execute(
+            update(data_tuple.model).where(data_tuple.model.id == obj_id).values(should_be_processed=False)
+        )
+        logger.info(f"Added {data_tuple.singular} to aggregate and cross-compare: id {obj_id}")
 
         logger.info(f"Added {len(processed_ids)} {data_tuple.plural} to aggregate and cross-compare")
 

@@ -23,7 +23,7 @@ from .performance_fields_type import (
     PerformanceTotalField,
 )
 from .position_appoximation import PositionApproximation
-from .league_and_patch_short_data import LoPShortDataData
+from .league_and_patch_short_data import LoPShortData, LoPShortDataMomentum
 from .ranking import (
     PerformanceRanking,
     PerformanceTotalRanking,

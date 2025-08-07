@@ -6,7 +6,7 @@ from sqlmodel import text, Session, select
 
 from constants.calculation.game.calculation_types import WindowCalculations
 from db import get_sync_db_session
-from models.league_and_patch_short_data import LoPShortDataData
+from models.league_and_patch_short_data import LoPShortData
 
 
 logger = get_task_logger(__name__)
@@ -50,13 +50,13 @@ def create_short_data_for_league_and_patch_cron(league_id: int | None = None, pa
 
         field = "league_id"
         field_id = league_id
-        where = LoPShortDataData.league_id == league_id
+        where = LoPShortData.league_id == league_id
     elif patch_id:
         logger.info(f"Processing patch for data table header")
 
         field = "patch_id"
         field_id = patch_id
-        where = LoPShortDataData.patch_id == patch_id
+        where = LoPShortData.patch_id == patch_id
     else:
         raise TypeError("No argument provided")
 
@@ -91,15 +91,12 @@ def create_short_data_for_league_and_patch_cron(league_id: int | None = None, pa
             data_dict[f"{start_name}_{mid_name}_at_15"] = value
 
     params = { field: field_id }
-    data_obj = db_session.exec(select(LoPShortDataData).where(where)).first()
+    data_obj = db_session.exec(select(LoPShortData).where(where)).first()
     if data_obj:
         logger.info(f"Data table header already exists... Updating data")
         data_obj.sqlmodel_update(data_dict)
     else:
-        data_obj = LoPShortDataData(
-            **params,
-            **data_dict,
-        )
+        data_obj = LoPShortData(**params,**data_dict)
 
     db_session.add(data_obj)
     db_session.full_commit()

@@ -7,7 +7,6 @@ from tasks.aggregation.delete import delete_aggregation_match, delete_aggregatio
 from tasks.aggregation.player import aggregate_league_player_task
 from tasks.aggregation.team import aggregate_league_team_task
 from tasks.approximate_positions import approximate_positions
-from tasks.cron.create_lop_short_data import create_short_data_for_league_and_patch_cron
 from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_cross_comparison_team
 from tasks.cross_comparison.match import cross_compare_player_task
 from tasks.cross_comparison.team import cross_compare_team_task
@@ -68,7 +67,7 @@ def parallel_aggregate_task_helper(
 ) -> None:
     player_aggregation_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
     team_aggregation_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
-    create_short_data_for_league_and_patch_cron.si(league_id=league_id, patch_id=patch_id).apply_async()
+
 
 
 def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:

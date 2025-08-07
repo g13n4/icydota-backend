@@ -1,7 +1,8 @@
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models import LoPShortDataData
+from constants.league_and_patch_short_data import LeaguePatchShortDataConstant
+from models import LoPShortData
 
 
 async def get_lop_header(db_session: AsyncSession, league_id: int | None = None, patch_id: int | None = None) -> dict:
@@ -11,9 +12,13 @@ async def get_lop_header(db_session: AsyncSession, league_id: int | None = None,
         raise TypeError("Only one parameter should be provided! Provided both League or Patch.")
 
     if league_id:
-        where = LoPShortDataData.league_id == league_id
+        where = LoPShortData.league_id == league_id
     else:
-        where = LoPShortDataData.patch_id == patch_id
+        where = LoPShortData.patch_id == patch_id
 
-    data_obj = await db_session.exec(select(LoPShortDataData).where(where)).first()
-    return data_obj.model_dump()
+    data_obj = await db_session.exec(select(LoPShortData).where(where)).first()
+
+    return {
+        key: { "label": getattr(LeaguePatchShortDataConstant, key).description, "value": value } for key, value in
+        data_obj.model_dump(exclude={ "id", "league_id", "patch_id" }).items()
+    }

@@ -1,11 +1,11 @@
-import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
+from sqlmodel import TIMESTAMP, Field, Relationship, SQLModel
 
 from constants.position import PositionConstant
 from models.helpers import sa_kwargs_setter
-from sqlmodel import Field, Relationship, SQLModel
 
 
 class Position(SQLModel, table=True):
@@ -56,13 +56,22 @@ class League(SQLModel, table=True):
     has_ended: Optional[bool] = Field(default=None)
 
     # if it's more than 8 days we stop checking
-    new_game_found_at: Optional[datetime.datetime] = Field(default=None)
+    new_game_found_at: Optional[datetime] = Field(default=None)
 
-    processed_at: Optional[datetime.datetime] = Field(default=None)
+    processed_at: Optional[datetime] = Field(default=None)
 
     games: List["Game"] = Relationship(
         back_populates="league",
         sa_relationship_kwargs=sa_kwargs_setter(
             False, "cascade", "lazy", order_by="Game.id", join_depth=4
         ),
+    )
+
+    updated_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=True,
+        sa_column_kwargs={
+            "onupdate": lambda: datetime.now(timezone.utc),
+        },
+        sa_type=TIMESTAMP(timezone=True),
     )

@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional, ClassVar
 
 import sqlalchemy as db
@@ -11,6 +10,8 @@ from models.helpers import _fk
 from models.mixins.game_performance_graph import GamePerformanceGraphMixin
 from models.mixins.helpers import inherit_annotations
 from models.mixins.side_performance import SidePerformanceDataMixin
+from sqlmodel import SQLModel, Field, TIMESTAMP
+from datetime import datetime, timezone
 
 
 @inherit_annotations
@@ -44,7 +45,7 @@ class Game(SQLModel, table=True):
     name: Optional[str]
     processed_counter: int
 
-    league: "League" = Relationship(back_populates="games")
+    league: Optional["League"] = Relationship(back_populates="games")
     league_id: int = Field(default=None, foreign_key="leagues.id", index=True)
 
     patch_id: int = Field(default=None, foreign_key="patches.id")
@@ -150,6 +151,15 @@ class Patch(SQLModel, table=True):
 
     processed_at: Optional[datetime] = Field(default=None)
 
+    updated_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=True,
+        sa_column_kwargs={
+            "onupdate": lambda: datetime.now(timezone.utc),
+        },
+        sa_type=TIMESTAMP(timezone=True),
+    )
+
 
 class GamePerformanceGraph(GamePerformanceGraphMixin, SQLModel, table=True):
     __tablename__ = "game_performance_graphs"
@@ -160,7 +170,9 @@ class GamePerformanceGraph(GamePerformanceGraphMixin, SQLModel, table=True):
         sa_column=db.Column(
             db.BIGINT,
             ForeignKey("games.id", ondelete="CASCADE"),
-            nullable=True, primary_key=False, index=False
+            nullable=True,
+            primary_key=False,
+            index=False,
         )
     )
     game: Optional["Game"] = Relationship(back_populates="graph")

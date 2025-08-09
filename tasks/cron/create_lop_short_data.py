@@ -1,12 +1,14 @@
 from collections import defaultdict
+from decimal import Decimal
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlmodel import text, Session, select
+from sqlmodel import text, select, Session
 
 from constants.calculation.game.calculation_types import WindowCalculations
 from db import get_sync_db_session
-from models.league_and_patch_short_data import LoPShortData
+from models import Game
+from models.league_and_patch_short_data import LoPShortData, LoPShortDataMomentum
 
 
 logger = get_task_logger(__name__)
@@ -41,25 +43,7 @@ GROUP BY pgd.position_id
 """
 
 
-@shared_task(name='create_short_data_for_league_and_patch_(cron)', ignore_result=True)
-def create_short_data_for_league_and_patch_cron(league_id: int | None = None, patch_id: int | None = None) -> None:
-    db_session: Session = get_sync_db_session(expire=True)
-
-    if league_id:
-        logger.info(f"Processing league for data table header")
-
-        field = "league_id"
-        field_id = league_id
-        where = LoPShortData.league_id == league_id
-    elif patch_id:
-        logger.info(f"Processing patch for data table header")
-
-        field = "patch_id"
-        field_id = patch_id
-        where = LoPShortData.patch_id == patch_id
-    else:
-        raise TypeError("No argument provided")
-
+def create_short_data_from_iterable(db_session: Session, field: str, field_id: int | str) -> dict:
     counter = 0
     data_dict = defaultdict(lambda: 0)
     for data_tuple in db_session.execute(text(QUERY.format(field, field_id))).all():
@@ -89,14 +73,103 @@ def create_short_data_for_league_and_patch_cron(league_id: int | None = None, pa
                 mid_name = "level"
 
             data_dict[f"{start_name}_{mid_name}_at_15"] = value
+    return data_dict
 
-    params = { field: field_id }
-    data_obj = db_session.exec(select(LoPShortData).where(where)).first()
+
+@shared_task(name='create_short_data_patch_(cron)', ignore_result=True)
+def create_short_data_for_patch_cron(patch_id: int) -> None:
+    db_session: Session = get_sync_db_session(expire=True)
+
+    logger.info(f"Processing patch for data table header")
+
+    field = "patch_id"
+    field_id = patch_id
+
+    data_dict = create_short_data_from_iterable(
+        db_session=db_session,
+        field=field,
+        field_id=field_id,
+    )
+
+    data_obj = db_session.exec(select(LoPShortData).where(LoPShortData.patch_id == patch_id)).first()
     if data_obj:
         logger.info(f"Data table header already exists... Updating data")
         data_obj.sqlmodel_update(data_dict)
     else:
-        data_obj = LoPShortData(**params,**data_dict)
+        data_obj = LoPShortData(patch_id=patch_id, **data_dict)
 
+    db_session.add(data_obj)
+    db_session.full_commit()
+
+
+def compare_value_to_bool(league_value: int | float | Decimal, patch_value: int | float | Decimal):
+    if league_value > patch_value:
+        return True
+    elif league_value < patch_value:
+        return False
+    else:
+        return None
+
+
+@shared_task(name='create_short_data_for_league_(cron)', ignore_result=True)
+def create_short_data_for_league_cron(league_id: int) -> None:
+    db_session: Session = get_sync_db_session(expire=True)
+
+    logger.info(f"Processing patch for data table header")
+
+    field = "league_id"
+    field_id = league_id
+
+    league_data_dict = create_short_data_from_iterable(
+        db_session=db_session,
+        field=field,
+        field_id=field_id,
+    )
+
+    data_obj, momentum_obj = db_session.exec(
+        select(LoPShortData, LoPShortDataMomentum)
+        .join(LoPShortDataMomentum, LoPShortDataMomentum.data_id == LoPShortData.id, isouter=True)
+        .where(LoPShortData.league_id == league_id)
+    ).first()
+
+    if data_obj:
+        logger.info(f"Data table header already exists... Updating data")
+        data_obj.sqlmodel_update(league_data_dict)
+    else:
+        data_obj = LoPShortData(league_id=league_id, **league_data_dict)
+
+    db_session.add(data_obj)
+
+    patch_query = db_session.exec(select(Game.patch_id).where(Game.league_id == league_id).distinct())
+    patch_ids = [x for x in patch_query.all()]
+    patch_ids_len = len(patch_ids)
+
+    patch_objs = db_session.exec(select(LoPShortData).where((LoPShortData.patch_id).in_(patch_ids)).distinct())
+    patch_obj_counter = 0
+    patch_dict = defaultdict(lambda: 0)
+    for patch_obj in patch_objs.all():
+        patch_obj_counter += 1
+
+        for field in LoPShortData.const.VALUES:
+            patch_dict[field.name] = getattr(patch_obj, field.name)
+
+    if patch_obj_counter == 0:
+        db_session.full_commit()
+        return
+
+    if patch_obj_counter != patch_ids_len:
+        data_obj.partial_comparison = True
+    if momentum_obj is None:
+        momentum_obj = LoPShortDataMomentum()
+    for field in LoPShortData.const.VALUES:
+        setattr(
+            momentum_obj,
+            field.name,
+            compare_value_to_bool(league_data_dict[field.name], patch_dict[field.name] / patch_obj_counter)
+        )
+
+    data_obj.momentum = momentum_obj
+
+    db_session.add(momentum_obj)
     db_session.add(data_obj)
     db_session.full_commit()

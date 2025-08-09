@@ -2,7 +2,18 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from constants.league_and_patch_short_data import LeaguePatchShortDataConstant
-from models import LoPShortData
+from models import LoPShortData, LoPShortDataMomentum
+
+
+def create_value(key: str, value: float | None, momentum_obj: LoPShortDataMomentum | None):
+    item = {
+        "label": getattr(LeaguePatchShortDataConstant, key).description,
+        "value": value,
+    }
+
+    if momentum_obj is not None:
+        item["mom"] = getattr(momentum_obj, key)
+    return item
 
 
 async def get_lop_header(db_session: AsyncSession, league_id: int | None = None, patch_id: int | None = None) -> dict:
@@ -16,9 +27,13 @@ async def get_lop_header(db_session: AsyncSession, league_id: int | None = None,
     else:
         where = LoPShortData.patch_id == patch_id
 
-    data_obj = await db_session.exec(select(LoPShortData).where(where)).first()
+    data_obj, momentum_obj = await db_session.exec(
+        select(LoPShortData, LoPShortDataMomentum)
+        .join(LoPShortDataMomentum, LoPShortDataMomentum.data_id == LoPShortData.id, isouter=True)
+        .where(where)
+    ).first()
 
     return {
-        key: { "label": getattr(LeaguePatchShortDataConstant, key).description, "value": value } for key, value in
+        key: create_value(key=key, value=value, momentum_obj=momentum_obj) for key, value in
         data_obj.model_dump(exclude={ "id", "league_id", "patch_id" }).items()
     }

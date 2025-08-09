@@ -2,4 +2,5 @@ from tasks.cron.process_aggregations import aggregate_and_ccomp_league_and_patch
 from tasks.cron.process_mispositioned_games import reprocess_mispositioned_league_games_cron
 from tasks.cron.find_leagues import find_leagues_to_process_cron
 from tasks.cron.process_bad_games import attempt_to_process_bad_games_cron
-from tasks.cron.create_lop_short_data import create_short_data_for_league_and_patch_cron
+from tasks.cron.create_lop_short_data import create_short_data_for_league_cron, create_short_data_for_patch_cron
+

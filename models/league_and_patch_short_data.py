@@ -22,6 +22,8 @@ class LoPShortData(LeagueAndPatchShortDataMixin, SQLModel, table=True):
 
     momentum: Optional["LoPShortDataMomentum"] = Relationship(back_populates="momentum")
 
+    partial_comparison: bool = Field(default=False)
+
     created_at: Optional[datetime] = Field(
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),

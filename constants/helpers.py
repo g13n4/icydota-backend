@@ -2,7 +2,7 @@ from typing import ClassVar, TypeVar, Any
 from pydantic import BaseModel, ConfigDict
 
 
-Constant = TypeVar("Constant")
+ConstantClass = TypeVar("ConstantClass")
 
 
 class Item(BaseModel):
@@ -11,7 +11,6 @@ class Item(BaseModel):
     value: Any
     name: str = ''
     description: str = ''
-    type_: Any = None
 
 
     def __eq__(self, other):
@@ -37,7 +36,7 @@ def to_description(text: str) -> str:
     return ' '.join(x.lower().capitalize() for x in split_text)
 
 
-def to_nested_constant(klass: Constant) -> Constant:
+def to_nested_constant(klass: ConstantClass) -> ConstantClass:
     # turn every class variable into an object that contains: description, value and system name
     values = []
     for name, type_ in klass.__annotations__.items():
@@ -54,7 +53,6 @@ def to_nested_constant(klass: Constant) -> Constant:
         else:
             raise NotImplementedError("Behaviour for this type is not implemented.")
 
-
         constant_data = Item(value=value, name=name, description=description)
         values.append(constant_data)
         setattr(klass, name, constant_data)
@@ -64,10 +62,10 @@ def to_nested_constant(klass: Constant) -> Constant:
     return klass
 
 
-def update_description(klass: Constant) -> Constant:
+def _update_description(klass: ConstantClass, default_class=Item) -> ConstantClass:
     for name, type_ in klass.__annotations__.items():
         try:
-            if issubclass(Item, type_):
+            if issubclass(default_class, type_):
                 item = getattr(klass, name)
                 if not item.name:
                     item.name = name
@@ -80,6 +78,14 @@ def update_description(klass: Constant) -> Constant:
 
     return klass
 
+
+def update_description(klass: ConstantClass | None = None, default_class=Item) -> ConstantClass:
+    if klass is None:
+        def decorator(inner_klass: ConstantClass):
+            return _update_description(klass=inner_klass, default_class=default_class)
+        return decorator
+    else:
+        return _update_description(klass=klass, default_class=default_class)
 
 
 def get_only_names(items: list[BaseModel]) -> list[str]:
@@ -97,4 +103,3 @@ def sec_to_min(value: int) -> str:
 
 def to_range(value1: int, value2: int) -> str:
     return " - ".join(map(sec_to_min, [value1, value2]))
-

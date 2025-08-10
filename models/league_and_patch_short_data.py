@@ -20,7 +20,7 @@ class LoPShortData(LeagueAndPatchShortDataMixin, SQLModel, table=True):
     league_id: Optional[int] = Field(default=None, foreign_key="leagues.id", index=True)
     patch_id: Optional[int] = Field(default=None, foreign_key="patches.id", index=True)
 
-    momentum: Optional["LoPShortDataMomentum"] = Relationship(back_populates="momentum")
+    momentum: Optional["LoPShortDataMomentum"] = Relationship(back_populates="data")
 
     partial_comparison: bool = Field(default=False)
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from constants.league_and_patch_short_data import LeaguePatchShortDataConstant
 
 
@@ -14,4 +16,4 @@ class LeagueAndPatchShortDataMomentumMixin:
 for item in LeaguePatchShortDataConstant.VALUES:
     LeagueAndPatchShortDataMixin.__annotations__[item.name] = item.type_
     if item.is_comparable:
-        LeagueAndPatchShortDataMomentumMixin.__annotations__[item.name] = item.type_
+        LeagueAndPatchShortDataMomentumMixin.__annotations__[item.name] = Optional[item.type_]

@@ -7,6 +7,7 @@ class LOPShortDataValueFormat:
     RAW = 1
     PERCENT = 2
     LEVEL = 3
+    TIME = 4
 
 
 class LOPShortDataItem(BaseModel):
@@ -39,13 +40,13 @@ class LeaguePatchShortDataConstant:
         value=3,
         description="Sentinel win rate",
         type_=condecimal(max_digits=3, decimal_places=2),
-        value_format=LOPShortDataValueFormat.PERCENT
+        value_format=LOPShortDataValueFormat.PERCENT,
     )
     win_dire: LOPShortDataItem = LOPShortDataItem(
         value=4,
         description="Dire win rate",
         type_=condecimal(max_digits=3, decimal_places=2),
-        value_format=LOPShortDataValueFormat.PERCENT
+        value_format=LOPShortDataValueFormat.PERCENT,
     )
 
     net_worth: LOPShortDataItem = LOPShortDataItem(
@@ -71,7 +72,12 @@ class LeaguePatchShortDataConstant:
     )
 
     matches: LOPShortDataItem = LOPShortDataItem(value=9, description="Matches", type_=int, is_comparable=False)
-    duration: LOPShortDataItem = LOPShortDataItem(value=10, description="Match length", type_=int)
+    duration: LOPShortDataItem = LOPShortDataItem(
+        value=10,
+        description="Match length",
+        type_=int,
+        value_format=LOPShortDataValueFormat.TIME,
+    )
 
     cores_networth_at_15: LOPShortDataItem = LOPShortDataItem(
         value=11,

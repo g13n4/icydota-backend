@@ -17,7 +17,6 @@ from tasks.parallel.task_helper.team_aggregation_task_helper import team_aggrega
 from tasks.parallel.task_helper.team_cross_comparison_task_helper import \
     team_cross_comparison_parallel_processor_task_helper
 from tasks.set_comparison_names import set_comparison_names
-from tasks.cron.create_lop_short_data import create_short_data_for_league_cron, create_short_data_for_patch_cron
 
 
 logger = get_task_logger(__name__)
@@ -70,7 +69,6 @@ def parallel_aggregate_task_helper(
     team_aggregation_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-
 def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
     all_deletion_tasks = (
             delete_cross_comparison_team.si(league_id=league_id, patch_id=patch_id) |
@@ -80,20 +78,16 @@ def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: 
 
 
 def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
-    # ccomparison_tasks = chain(
-    #     cross_compare_player_task.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type)
-    #     for ccomparison_type in CrossComparisonTypeConstant.VALUES
-    # )
-    #
-    # all_tasks = (
-    #         cross_compare_team_task.si(league_id=league_id, patch_id=patch_id) |
-    #         ccomparison_tasks
-    # )
-    # all_tasks()
-    if league_id:
-        create_short_data_for_league_cron.si(league_id=league_id).apply_async()
-    else:
-        create_short_data_for_patch_cron.si(patch_id=patch_id).apply_async()
+    ccomparison_tasks = chain(
+        cross_compare_player_task.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type)
+        for ccomparison_type in CrossComparisonTypeConstant.VALUES
+    )
+
+    all_tasks = (
+            cross_compare_team_task.si(league_id=league_id, patch_id=patch_id) |
+            ccomparison_tasks
+    )
+    all_tasks()
 
 
 def parallel_cross_comparison_task_helper(

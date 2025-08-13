@@ -19,7 +19,7 @@ class PerformanceQueryCreatorMixin:
 
 
     def _set_model(self, calculation_type_id: int | None, is_header: bool):
-        if calculation_type_id:
+        if calculation_type_id is not None:
             self.data_model = PerformanceWindowData
             self.data_model_name = 'window_data'
         else:

@@ -21,6 +21,9 @@ def create_player_cross_comparison_performance_objs(
         key_tuple = CCKC.create_key(item, append=is_flat)
         key_dict = CCKC.create_dict(item)
 
+        if key_tuple in performance_dict:
+            continue
+
         comparison_obj = ComparisonType(
             is_flat=is_flat,
             basic=False,

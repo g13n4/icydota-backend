@@ -53,25 +53,39 @@ def create_performance_objs(
 
 @shared_task(name="aggregate_league_team", ignore_result=True)
 @validate_league_and_patch
-def aggregate_league_team_task(db_session, league_id: int | None = None, patch_id: int | None = None):
+def aggregate_league_team_task(
+        db_session,
+        league_id: int | None = None,
+        patch_id: int | None = None,
+        preload_all: bool = False,
+):
     columns = ['team_id']
 
     performance_dict = create_performance_objs(db_session=db_session, league_id=league_id, patch_id=patch_id)
 
+    # all calc_ids are preloaded at once
+    if preload_all:
+        windows_group_by = columns + ["calc_type_id"]
+        db_ids = [0]
+    else:
+        windows_group_by = columns
+        db_ids = WindowCalculations.VALUES(only_field="db_id")
+
     for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
-        for calculation in WindowCalculations.VALUES:
+        for calculation_db_id in db_ids:
             query, names = team_aggregation_query_creator(
                 patch_id=patch_id,
                 league_id=league_id,
-                calculation_type_id=calculation.db_id,
+                calculation_type_id=calculation_db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat,
             )
             data = get_query_data(db_session=db_session, query=query, names=names)
 
-            for window_data in process_data(data=data, group_by=columns, is_window=True):
+            for window_data in process_data(data=data, group_by=windows_group_by, is_window=True):
+                calc_type_id = window_data.get("calc_type_id") if preload_all else calculation_db_id
                 key = _get_key(window_data, is_flat)
-                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calc_type_id)
                 PWD_obj.performance = performance_dict[key]
                 db_session.add(PWD_obj)
 

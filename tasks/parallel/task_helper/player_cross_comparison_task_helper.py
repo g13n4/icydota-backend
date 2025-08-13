@@ -28,7 +28,7 @@ def player_cross_comparison_parallel_processor_task_helper(
                         patch_id=patch_id,
                         ccomparison_type=ccomparison_type,
                         ccomp_pos_id=ccomp_pos_id,
-                        calculation_id=0,
+                        calculation_id=None,
                         is_comparison=is_comparison,
                         is_flat=is_flat,
                     )

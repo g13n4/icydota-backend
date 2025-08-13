@@ -14,19 +14,32 @@ from tasks.utils.performance_object_creation.player_cross_comparison_objects imp
 
 @shared_task(name="cross_compare_player", ignore_result=True)
 @validate_league_and_patch
-def cross_compare_player_task(db_session, league_id: int | None, patch_id: int | None, ccomparison_type: int):
+def cross_compare_player_task(
+        db_session,
+        league_id: int | None,
+        patch_id: int | None,
+        ccomparison_type: int,
+        preload_all: bool = False,
+):
     CCKC = CrossComparisonPlayerKeyCreator(ccomparison_type)
     columns = CCKC.get_fields()
+
+    if preload_all:
+        windows_group_by = columns + ["calc_type_id"]
+        db_ids = [0]
+    else:
+        windows_group_by = columns
+        db_ids = WindowCalculations.VALUES(only_field="db_id")
 
     for ccomp_pos_id, enemies in COMPARISON_TYPE_POSITION_MAP.items():
         for is_flat in [True, False]:
             performance_dict = None
-            for calculation in WindowCalculations.VALUES:
+            for calculation_db_id in db_ids:
 
                 query, names = match_ccomparison_query_creator(
                     patch_id=patch_id,
                     league_id=league_id,
-                    calculation_type_id=calculation.db_id,
+                    calculation_type_id=calculation_db_id,
                     positions=enemies,
                     is_flat=is_flat
                 )
@@ -44,9 +57,9 @@ def cross_compare_player_task(db_session, league_id: int | None, patch_id: int |
                         position_type=ccomp_pos_id,
                     )
 
-                for window_data in process_data(data=data, group_by=columns, is_window=True):
-                    PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
-
+                for window_data in process_data(data=data, group_by=windows_group_by, is_window=True):
+                    calc_type_id = window_data.get("calc_type_id") if preload_all else calculation_db_id
+                    PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calc_type_id)
                     performance_key = CCKC.create_key(window_data, append=is_flat)
                     performance_obj = performance_dict[performance_key]
                     PWD_obj.performance = performance_obj

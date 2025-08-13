@@ -15,16 +15,23 @@ from tasks.utils.performance_object_creation.team_cross_comparison_objects impor
 
 @shared_task(name="cross_compare_team", ignore_result=True)
 @validate_league_and_patch
-def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = None):
+def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = None, preload_all: bool = False):
     CCTKC = CrossComparisonTeamKeyCreator()
+
+    if preload_all:
+        windows_group_by = CCTKC.fields + ["calc_type_id"]
+        db_ids = [0]
+    else:
+        windows_group_by = CCTKC.fields
+        db_ids = WindowCalculations.VALUES(only_field="db_id")
 
     for is_flat in [True, False]:
         performance_dict = None
-        for calculation in WindowCalculations.VALUES:
+        for calculation_db_id in db_ids:
             query, names = team_ccomparison_query_creator(
                 league_id=league_id,
                 patch_id=patch_id,
-                calculation_type_id=calculation.db_id,
+                calculation_type_id=calculation_db_id,
                 is_flat=is_flat
             )
             data = get_query_data(db_session=db_session, query=query, names=names)
@@ -39,8 +46,9 @@ def cross_compare_team_task(db_session, league_id: int, patch_id: int | None = N
                     KC=CCTKC,
                 )
 
-            for window_data in process_data(data=data, group_by=CCTKC.fields, is_window=True):
-                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
+            for window_data in process_data(data=data, group_by=windows_group_by, is_window=True):
+                calc_type_id = window_data.get("calc_type_id") if preload_all else calculation_db_id
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calc_type_id)
                 key = CCTKC.create_key(window_data, append=is_flat)
                 performance_obj = performance_dict[key]
 

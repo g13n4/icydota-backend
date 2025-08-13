@@ -17,7 +17,8 @@ def aggregate_league_player_task(
         db_session,
         aggregation_type: int,
         league_id: int | None = None,
-        patch_id: int | None = None
+        patch_id: int | None = None,
+        preload_all: bool = False,
 ):
     AGC = AggregationPlayerKeyCreator(aggregation_type)
     columns = AGC.get_fields()
@@ -29,20 +30,30 @@ def aggregate_league_player_task(
         AGC=AGC,
     )
 
+    # all calc_ids are preloaded at once
+    if preload_all:
+        windows_group_by = columns + ["calc_type_id"]
+        db_ids = [0]
+    else:
+        windows_group_by = columns
+        db_ids = WindowCalculations.VALUES(only_field="db_id")
+
+
     for is_comparison, is_flat in PROCESSING_COMPARISON_LIST:
-        for calculation in WindowCalculations.VALUES:
+        for calculation_db_id in db_ids:
             query, names = match_aggregation_query_creator(
                 league_id=league_id,
                 patch_id=patch_id,
-                calculation_type_id=calculation.db_id,
+                calculation_type_id=calculation_db_id,
                 is_comparison=is_comparison,
                 is_flat=is_flat
             )
             data = get_query_data(db_session=db_session, query=query, names=names)
 
-            for window_data in process_data(data=data, group_by=columns, is_window=True):
+            for window_data in process_data(data=data, group_by=windows_group_by, is_window=True):
+                calc_type_id = window_data.get("calc_type_id") if preload_all else calculation_db_id
                 key = AGC.create_key(window_data, append=is_flat)
-                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calculation.db_id)
+                PWD_obj = WindowsPerformanceProcessor.get_pwd_from_iterable(window_data, calc_type_id)
                 PWD_obj.performance = performance_dict[key]
                 db_session.add(PWD_obj)
 

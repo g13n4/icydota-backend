@@ -22,7 +22,7 @@ def team_cross_comparison_parallel_processor_task_helper(
             ONE_CALC_TASK(
                 league_id=league_id,
                 patch_id=patch_id,
-                calculation_id=0,
+                calculation_id=None,
                 is_comparison=is_comparison,
                 is_flat=is_flat,
             )

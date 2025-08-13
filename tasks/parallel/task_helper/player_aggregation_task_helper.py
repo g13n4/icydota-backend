@@ -24,7 +24,7 @@ def player_aggregation_parallel_processor_task_helper(
                     league_id=league_id,
                     patch_id=patch_id,
                     aggregation_type=agg_type,
-                    calculation_id=0,
+                    calculation_id=None,
                     is_comparison=is_comparison,
                     is_flat=is_flat,
                 )

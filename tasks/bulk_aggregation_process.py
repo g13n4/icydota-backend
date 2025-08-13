@@ -12,10 +12,10 @@ from models import League
 from tasks.aggregation.delete import delete_aggregation_match, delete_aggregation_team
 from tasks.aggregation.player import aggregate_league_player_task
 from tasks.aggregation.team import aggregate_league_team_task
-from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper
+from tasks.aggregation_tasks_helper import aggregate_task_helper, cross_compare_task_helper
 from tasks.approximate_positions import approximate_positions
 from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_cross_comparison_team
-from tasks.cross_comparison.match import  cross_compare_player_task
+from tasks.cross_comparison.match import cross_compare_player_task
 from tasks.cross_comparison.team import cross_compare_team_task
 from tasks.league.create_league import get_or_create_league
 from tasks.league.process_league import process_game_helper
@@ -34,9 +34,9 @@ def post_process_league_id(
     if approx:
         approximate_positions(league_id=league_id)
     if aggregate:
-        aggregate_league_task_helper(league_id=league_id)
+        aggregate_task_helper(league_id=league_id)
     if cross_compare:
-        cross_compare_league_task_helper(league_id=league_id)
+        cross_compare_task_helper(league_id=league_id)
 
 
 def process_full_cycle(league_obj: League | None = None, league_id: int | None = None):
@@ -111,15 +111,15 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
         approximation_list = [(approximate_positions.si(league_id=x, ) | league_games_dict[x])
                               for x in filtered_leagues]
         (
-            group(all_leagues) |
-            group(approximation_list).set(link_error=approximation_list)
+                group(all_leagues) |
+                group(approximation_list).set(link_error=approximation_list)
         ).apply_async()
 
     else:
         celery_helper = (
-            cross_compare_league_task_helper
+            cross_compare_task_helper
             if process_type == 'cross_compare_league' else
-            aggregate_league_task_helper
+            aggregate_task_helper
         )
 
         sel_result = db_session.exec(select(League))
@@ -131,6 +131,5 @@ def mass_process(process_type: str, league_ids: List[int]) -> None:
                 celery_helper(league_id=league_id)
             else:
                 logger.warning('League {} doesn\'t exist in the database')
-
 
     db_session.close()

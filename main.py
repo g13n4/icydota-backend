@@ -255,7 +255,7 @@ async def get_performance_cross_comparison_data_api(
 # PROCESSING WITH CELERY
 if not LIGHT_MODE:
     from tasks.bulk_aggregation_process import process_full_cycle
-    from tasks.aggregation_tasks_helper import aggregate_league_task_helper, cross_compare_league_task_helper, \
+    from tasks.aggregation_tasks_helper import aggregate_task_helper, cross_compare_task_helper, \
         approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
         delete_cross_comparison_task_helper, parallel_cross_comparison_task_helper, parallel_aggregate_task_helper
     from tasks.league.process_league import process_league_task_group, process_game_helper
@@ -290,9 +290,9 @@ if not LIGHT_MODE:
 
 
     @backend_api.post(API_PREFIX + '/aggregate/{lop}/{lop_value}', status_code=202)
-    async def create_aggregation_api(lop: LoPEnum, lop_value: int, atype: int | None = None):
+    async def create_aggregation_api(lop: LoPEnum, lop_value: int, atype: int | None = None, preload: bool = False):
         league_id, patch_id = lop.to_api(lop_value)
-        aggregate_league_task_helper(league_id=league_id, patch_id=patch_id, atype=atype)
+        aggregate_task_helper(league_id=league_id, patch_id=patch_id, atype=atype, preload_all=preload)
 
 
     @backend_api.post(API_PREFIX + '/aggregate-parallel/{lop}/{lop_value}', status_code=202)
@@ -309,9 +309,9 @@ if not LIGHT_MODE:
 
 
     @backend_api.post(API_PREFIX + '/cross_comparison/{lop}/{lop_value}', status_code=202)
-    async def create_cross_comparison_api(lop: LoPEnum, lop_value: int):
+    async def create_cross_comparison_api(lop: LoPEnum, lop_value: int, preload: bool = False):
         league_id, patch_id = lop.to_api(lop_value)
-        cross_compare_league_task_helper(league_id=league_id, patch_id=patch_id)
+        cross_compare_task_helper(league_id=league_id, patch_id=patch_id, preload_all=preload)
 
 
     @backend_api.post(API_PREFIX + '/cross-comparison-parallel/{lop}/{lop_value}', status_code=202)
@@ -334,4 +334,3 @@ if not LIGHT_MODE:
     @backend_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api():
         set_comparison_names_helper()
-

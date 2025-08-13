@@ -34,10 +34,11 @@ def delete_league_task_helper(league_id: int | None = None, patch_id: int | None
     all_deletion_tasks()
 
 
-def aggregate_league_task_helper(
+def aggregate_task_helper(
         league_id: int | None = None,
         patch_id: int | None = None,
         atype: int | None = None,
+        preload_all: bool = False,
 ) -> None:
     if atype is not None:
         if atype:
@@ -47,15 +48,15 @@ def aggregate_league_task_helper(
                 aggregation_type=atype
             ).apply_async()
         else:
-            aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id).apply_async()
+            aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id, preload_all=preload_all).apply_async()
     else:
         aggregation_tasks = chain(
-            aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type)
+            aggregate_league_player_task.si(league_id=league_id, patch_id=patch_id, aggregation_type=aggregation_type, preload_all=preload_all)
             for aggregation_type in AggregationConstant.VALUES
         )
 
         all_tasks = (
-                aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id) |
+                aggregate_league_team_task.si(league_id=league_id, patch_id=patch_id, preload_all=preload_all) |
                 aggregation_tasks
         )
         all_tasks()
@@ -77,14 +78,14 @@ def delete_cross_comparison_task_helper(league_id: int | None = None, patch_id: 
     all_deletion_tasks()
 
 
-def cross_compare_league_task_helper(league_id: int | None = None, patch_id: int | None = None) -> None:
+def cross_compare_task_helper(league_id: int | None = None, patch_id: int | None = None, preload_all: bool = False) -> None:
     ccomparison_tasks = chain(
-        cross_compare_player_task.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type)
+        cross_compare_player_task.si(league_id=league_id, patch_id=patch_id, ccomparison_type=ccomparison_type, preload_all=preload_all)
         for ccomparison_type in CrossComparisonTypeConstant.VALUES
     )
 
     all_tasks = (
-            cross_compare_team_task.si(league_id=league_id, patch_id=patch_id) |
+            cross_compare_team_task.si(league_id=league_id, patch_id=patch_id, preload_all=preload_all) |
             ccomparison_tasks
     )
     all_tasks()

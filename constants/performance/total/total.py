@@ -1,11 +1,13 @@
 from collections.abc import Iterable
 from typing import Any, ClassVar, Optional, Literal
 
-from pydantic import condecimal, BaseModel
+from pydantic import condecimal, BaseModel, ConfigDict
 
 from constants.helpers import Item
+from constants.performance.field_types.field_availability import FieldAvailability
+from constants.performance.field_types.field_option import FieldOption, RepresentationNumbersMixin
+from constants.performance.field_types.field_representation import DATA_TYPE_TYPE, TotalFieldRepresentation
 from constants.performance.total.category import GameTotalsCategory
-from constants.performance.total.field_option import FieldOption
 from constants.performance.total.processing_options import TotalTeamProcessingOption
 from helpers import to_proper_name
 from modules.unique_index_checker import UniqueIndexChecker
@@ -13,23 +15,23 @@ from modules.unique_index_checker import UniqueIndexChecker
 
 MINUTE = 60
 
-FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[FieldOption.__match_args__]
+FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL = Literal[DATA_TYPE_TYPE]
 
 
-class GameTotal(BaseModel):
+class GameTotal(BaseModel, RepresentationNumbersMixin):
+    model_config = ConfigDict(slots=True)
+
     value_type: Any
 
     index: int
     name: str | None = None
     description: str | None = None
     pseudo_bool: bool = False
-    availability: None | FieldOption = None
-    optional: bool = False
+    field_options: FieldOption | None = None
     sort_offset: int = 0
-    normalization: None | FieldOption = None
     category: None | Item = None
     team_processing_option: None | int = None
-    is_lane: bool = False
+
 
 def set_total_name(klass: object):
     values = []
@@ -44,9 +46,6 @@ def set_total_name(klass: object):
             values.append(item)
 
             checker.add(item.index)
-
-            if item.availability is None:
-                item.optional = True
 
             if item.category is None:
                 item.category = GameTotalsCategory.GENERAL
@@ -69,19 +68,14 @@ class GameTotalsIterator:
             self,
             available_for: Iterable | None = None,
             only_pseudo_bools: bool = False,
-            only_lanes: bool = False,
-
             only_field: Literal["index", "name"] | None = None,
     ):
         for item in self._values:
             if only_pseudo_bools and not item.pseudo_bool:
                 continue
 
-            if only_lanes and not item.is_lane:
-                continue
-
-            if available_for and item.availability is not None:
-                if not item.availability.is_available(*available_for):
+            if available_for and item.field_options is not None:
+                if not item.field_options.is_available(*available_for):
                     continue
 
             if only_field is None:
@@ -121,8 +115,14 @@ class GameTotals:
         value_type=condecimal(max_digits=4, decimal_places=3),
         index=18,
         team_processing_option=TotalTeamProcessingOption.AVERAGE,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="percent",
+                data_type=None,
+                pot=None,
+            )
+        ),
     )
-
     first_blood_claimed: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=20,
@@ -130,26 +130,53 @@ class GameTotals:
         pseudo_bool=True,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
         team_processing_option=TotalTeamProcessingOption.CEIL,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot=None,
+            )
+        ),
     )
     first_kill_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=24,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
+        ),
     )
-
     died_first: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=21,
         pseudo_bool=True,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
         team_processing_option=TotalTeamProcessingOption.CEIL,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type=None,
+                pot=None,
+            )
+        ),
     )
     died_first_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=25,
         category=GameTotalsCategory.FIRST_KILL_DEATH,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
+        )
     )
 
     # FIRST T1 TOWER (NOT FOR AGGREGATION)
@@ -160,19 +187,43 @@ class GameTotals:
         description="First to lose a tower",
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type=None,
+                pot=None,
+            )
+        ),
     )
     lost_tower_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=27,
         category=GameTotalsCategory.T1_TOWERS,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
+        )
     )
     lost_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=26,
-        availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True),
+        field_options=FieldOption(
+            availability=FieldAvailability(
+                aggregation=False,
+                cross_comparison=False,
+                for_any_option=True
+            ),
+            representation=TotalFieldRepresentation(
+                field_repr="lane",
+                data_type="match",
+                pot=None,
+            )
+        ),
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
-        is_lane=True,
     )
 
     destroyed_tower_first: GameTotal = GameTotal(
@@ -182,14 +233,27 @@ class GameTotals:
         description="First to destroy a tower",
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot=None,
+            )
+        ),
     )
     destroyed_tower_lane: GameTotal = GameTotal(
         value_type=Optional[int],
         index=28,
-        availability=FieldOption(aggregation=False, cross_comparison=False, for_any_option=True ),
+        field_options=FieldOption(
+            availability=FieldAvailability(aggregation=False, cross_comparison=False, for_any_option=True),
+            representation=TotalFieldRepresentation(
+                field_repr="lane",
+                data_type="match",
+                pot=None,
+            )
+        ),
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
-        is_lane=True,
 
     )
     destroyed_tower_time: GameTotal = GameTotal(
@@ -197,25 +261,67 @@ class GameTotals:
         index=29,
         category=GameTotalsCategory.T1_TOWERS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
+        )
     )
 
     win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=30,
-        availability=FieldOption(match=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="team",
+                pot=None,
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
     )
     picked: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=31,
-        availability=FieldOption(is_hidden=True),
+        field_options=FieldOption(
+            availability=FieldAvailability(is_hidden=True),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot=None,
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
     )
 
-    no_death: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=32, pseudo_bool=True)
-    no_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=33, pseudo_bool=True)
+    no_death: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2), index=32,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot=None,
+            ),
+        ),
+        pseudo_bool=True
+    )
+    no_kills: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=33,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot=None,
+            ),
+        ),
+        pseudo_bool=True
+    )
 
     deaths: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=34)
     assists: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=35)
@@ -232,6 +338,13 @@ class GameTotals:
     level: GameTotal = GameTotal(
         value_type=condecimal(max_digits=5, decimal_places=2),
         index=40,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="level",
+                data_type=None,
+                pot=None,
+            ),
+        ),
     )
 
     net_worth: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=41)
@@ -240,13 +353,38 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=42,
         pseudo_bool=True,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="player",
+            ),
+        ),
     )
     aghanims_shard: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=43,
         pseudo_bool=True,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="player",
+            ),
+        ),
     )
-    moonshard: GameTotal = GameTotal(value_type=condecimal(max_digits=3, decimal_places=2), index=44, pseudo_bool=True)
+    moonshard: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=3, decimal_places=2),
+        index=44,
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="player",
+            ),
+        ),
+        pseudo_bool=True,
+    )
 
     hero_damage: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=45)
     tower_damage: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=46)
@@ -255,14 +393,28 @@ class GameTotals:
     no_assists: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
-        availability=FieldOption(match=False),
+        field_options=FieldOption(
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="player",
+            )
+        ),
         pseudo_bool=True,
+
     )
     # FIRST T1 TOWER (FOR AGGREGATION)
     first_tower_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=49,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be destroyed - mid",
         category=GameTotalsCategory.T1_TOWERS,
@@ -271,7 +423,14 @@ class GameTotals:
     first_tower_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=50,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be destroyed - top",
         category=GameTotalsCategory.T1_TOWERS,
@@ -280,7 +439,14 @@ class GameTotals:
     first_tower_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=51,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be destroyed - bot",
         category=GameTotalsCategory.T1_TOWERS,
@@ -289,7 +455,14 @@ class GameTotals:
     first_tower_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=52,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be lost - mid",
         category=GameTotalsCategory.T1_TOWERS,
@@ -298,7 +471,14 @@ class GameTotals:
     first_tower_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=53,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be lost - top",
         category=GameTotalsCategory.T1_TOWERS,
@@ -307,7 +487,14 @@ class GameTotals:
     first_tower_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=54,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First tower to be lost - bot",
         category=GameTotalsCategory.T1_TOWERS,
@@ -317,7 +504,14 @@ class GameTotals:
     first_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=55,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -325,7 +519,14 @@ class GameTotals:
     first_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=56,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -333,7 +534,14 @@ class GameTotals:
     last_pick_win: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=57,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -341,7 +549,14 @@ class GameTotals:
     last_pick_lose: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=58,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -349,7 +564,14 @@ class GameTotals:
     last_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=59,
-        availability=FieldOption(team=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(team=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -357,7 +579,14 @@ class GameTotals:
     first_pick_hero: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=60,
-        availability=FieldOption(team=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(team=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -366,7 +595,14 @@ class GameTotals:
     first_tower_lane_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=61,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First T3 tower destroyed - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -375,7 +611,14 @@ class GameTotals:
     first_tower_lane_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=62,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First T3 tower destroyed - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -384,7 +627,14 @@ class GameTotals:
     first_tower_lane_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=63,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First T3 tower destroyed - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -393,7 +643,14 @@ class GameTotals:
     first_tower_lane_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=64,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First lost T3 tower - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -402,7 +659,14 @@ class GameTotals:
     first_tower_lane_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=65,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First lost T3 tower - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -411,7 +675,14 @@ class GameTotals:
     first_tower_lane_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=66,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         description="First lost T3 tower - bot",
         pseudo_bool=True,
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -421,7 +692,14 @@ class GameTotals:
     first_barracks_set_destroyed_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=67,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set destroyed - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -430,7 +708,14 @@ class GameTotals:
     first_barracks_set_destroyed_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=68,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set destroyed - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -439,7 +724,14 @@ class GameTotals:
     first_barracks_set_destroyed_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=69,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set destroyed - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -448,7 +740,14 @@ class GameTotals:
     first_barracks_set_lost_mid: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=70,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set lost - mid",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -457,7 +756,14 @@ class GameTotals:
     first_barracks_set_lost_top: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=71,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set lost - top",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -466,7 +772,14 @@ class GameTotals:
     first_barracks_set_lost_bot: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=72,
-        availability=FieldOption(player=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(player=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First rax set lost - bot",
         category=GameTotalsCategory.T3_TOWERS_AND_LANES,
@@ -476,7 +789,14 @@ class GameTotals:
     first_pick_pos_1: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=73,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         pseudo_bool=True,
         description="First pick - pos 1",
         category=GameTotalsCategory.PICKS,
@@ -485,8 +805,14 @@ class GameTotals:
     first_pick_pos_2: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=74,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         description="First pick - pos 2",
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -494,8 +820,14 @@ class GameTotals:
     first_pick_pos_3: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=75,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         description="First pick - pos 3",
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -503,8 +835,14 @@ class GameTotals:
     first_pick_pos_4: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=76,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         description="First pick - pos 4",
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -512,8 +850,14 @@ class GameTotals:
     first_pick_pos_5: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=77,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         description="First pick - pos 5",
         category=GameTotalsCategory.PICKS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -521,23 +865,35 @@ class GameTotals:
     win_dire: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=78,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     win_sent: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=79,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     duration: GameTotal = GameTotal(
         value_type=Optional[int],
         index=80,
-        availability=FieldOption(match=False, player=False, for_any_option=True),
+        field_options=FieldOption(availability=FieldAvailability(match=False, player=False, for_any_option=True)),
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
     )
@@ -545,8 +901,14 @@ class GameTotals:
     win_with_megas: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=81,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
@@ -554,8 +916,14 @@ class GameTotals:
     lose_with_megas: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=82,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
@@ -563,16 +931,28 @@ class GameTotals:
     win_and_opponent_with_megas: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=83,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
     lose_and_opponent_with_megas: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=84,
-        availability=FieldOption(match=False, player=False, for_any_option=False),
-        pseudo_bool=True,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
     )
@@ -587,6 +967,14 @@ class GameTotals:
         value_type=condecimal(max_digits=10, decimal_places=2),
         index=86,
         category=GameTotalsCategory.STATS,
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
         description="Maximal gold advantage (win)",
     )
     gold_advantage_lose: GameTotal = GameTotal(
@@ -594,6 +982,14 @@ class GameTotals:
         index=87,
         category=GameTotalsCategory.STATS,
         description="Maximal gold advantage (lose)",
+        field_options=FieldOption(
+            availability=FieldAvailability(match=False, player=False, for_any_option=False),
+            representation=TotalFieldRepresentation(
+                field_repr="boolean",
+                data_type="match",
+                pot="team",
+            ),
+        ),
     )
 
     _VALUES: ClassVar[list[GameTotal]]

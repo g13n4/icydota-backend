@@ -1,8 +1,9 @@
 from typing import Callable, TypeVar, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from constants.helpers import Item
+from constants.performance.field_types.field_option import FieldOption, RepresentationNumbersMixin
 from modules.unique_index_checker import UniqueIndexChecker
 
 
@@ -13,7 +14,9 @@ class PostprocessingItem(BaseModel):
     calculated_later: bool = False
 
 
-class CalculationItem(BaseModel):
+class CalculationItem(BaseModel, RepresentationNumbersMixin):
+    model_config = ConfigDict(slots=True)
+
     name: str
     description: str
     value: int | None = None  # global
@@ -24,6 +27,7 @@ class CalculationItem(BaseModel):
     category: Item | None = None
     processing: tuple[Any, Any] | None = None
     postprocessing: PostprocessingItem | None = None
+    field_options: FieldOption | None = None
 
     def __eq__(self, other):
         if isinstance(type(self), type(other)):

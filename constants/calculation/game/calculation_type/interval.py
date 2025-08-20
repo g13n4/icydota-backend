@@ -3,6 +3,8 @@ from enum import StrEnum, auto, Enum
 from constants.calculation.game.calculation_type.helpers import CalculationItem, set_category_and_value, \
     PostprocessingItem, add_values
 from constants.calculation.game.category import WindowCategories
+from constants.performance.field_types.field_option import FieldOption
+from constants.performance.field_types.field_representation import WindowFieldRepresentation
 
 
 class IntervalCalculationColumn(StrEnum):
@@ -304,7 +306,15 @@ class IntervalCalculations:
         postprocessing=PostprocessingItem(
             calculated_later=True,
         ),
+        field_options=FieldOption(
+            representation=WindowFieldRepresentation(
+                field_repr="percent",
+                data_type=None,
+                pot=None,
+            )
+        ),
         processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.COEFF),
+
     )
     xp__lvl: CalculationItem = CalculationItem(
         name="xp__lvl",
@@ -314,6 +324,13 @@ class IntervalCalculations:
             calculated_later=True,
         ),
         processing=(IntervalCalculationColumn.XP, IntervalCalculationAggregationMethod.CONVERT),
+        field_options=FieldOption(
+            representation=WindowFieldRepresentation(
+                field_repr="level",
+                data_type=None,
+                pot=None,
+            )
+        ),
     )
 
     VALUES: list[CalculationItem]

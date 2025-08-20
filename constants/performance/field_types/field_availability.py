@@ -1,7 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class FieldOption(BaseModel):
+class FieldAvailability(BaseModel):
+    model_config = ConfigDict(slots=True)
+
     __match_args__ = ("match", "aggregation", "cross_comparison")
 
     match: bool = True
@@ -40,10 +42,12 @@ class FieldOption(BaseModel):
 
         if self.for_any_option:
             for field in args:
+                # only every field should be matched for restriction not to trigger
                 if not getattr(self, field):
                     return False
             return True
         else:
             availability_list = [getattr(self, field) for field in args]
             # return True if no args provided
+            # only one field should be true for restriction not to trigger
             return any(availability_list) if availability_list else True

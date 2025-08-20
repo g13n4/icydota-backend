@@ -15,12 +15,14 @@ def to_table_format(
         data: List[dict],
         value_mapping: list,
         rows: list,
+        is_total: bool,
 ) -> dict:
 
     header_columns = extract_formatted_columns(
         data=data,
         pinned_columns=rows,
         item_map=ALL_CALCULATION_MAP,
+        is_total=is_total,
     )
 
     return {

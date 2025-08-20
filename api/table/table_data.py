@@ -119,7 +119,7 @@ async def get_cross_comparison_performance_data(
         aggregation_type: int | None,
         position: int,
         data_field: str,
-        calculation_type_id: int,
+        calculation_type_id: int | None,
         flat: bool,
 ):
     PQC = APICrossComparisonPerformanceQueryCreator()
@@ -134,7 +134,7 @@ async def get_cross_comparison_performance_data(
         is_flat=flat
     )
     query_output = await db_session.exec(select_query)
-    is_total = calculation_type_id == 0
+    is_total = not bool(calculation_type_id)
     TMMF = TableMinMaxFinder()
     CCP = CrossComparisonProcessor(aggregation_type, TMMF, PQC.models.get_names()[1:])
     # hero/player name | id in db | id in db of the comparans player/hero

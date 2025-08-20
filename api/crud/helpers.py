@@ -34,7 +34,7 @@ async def process_total_output(data: PerformanceTotalData, **kwargs) -> dict:
     data = data.model_dump(exclude=TOTAL_EXCLUDE_FIELDS)
 
     for game_total in GameTotals.VALUES:
-        if not game_total.availability.is_required(**kwargs):
+        if not game_total.field_options.is_required(**kwargs):
             del data[game_total.name]
             continue
 

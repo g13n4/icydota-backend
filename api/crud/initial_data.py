@@ -12,6 +12,17 @@ from models import Patch
 CACHE = dict()
 
 
+async def build_representation_numbers_dict(for_total: bool):
+    values = GameTotals.VALUES if for_total else WindowCalculations.VALUES
+
+    output = { }
+    for item in values:
+        representation_numbers = item.get_representation_numbers()
+        if representation_numbers is not None:
+            output[item.name] = representation_numbers
+    return output
+
+
 async def _build_computations() -> list[dict]:
     output = dict()
     for item in WindowCalculations.VALUES:
@@ -39,7 +50,8 @@ async def _build_computations() -> list[dict]:
 
 
 async def get_initial_data(db: AsyncSession) -> dict:
-    key = datetime.datetime.now().hour
+    # key = datetime.datetime.now().hour
+    key = datetime.datetime.now().second
     if key not in CACHE:
         patch_objs = await db.exec(select(Patch).where(Patch.aggregation_allowed == True).order_by(Patch.id.desc()))
         league_data = await db.execute(
@@ -58,8 +70,8 @@ async def get_initial_data(db: AsyncSession) -> dict:
             "computations": await _build_computations(),
             "patch": await to_basic_list(patch_objs),
             "league": await to_league_list(league_data),
-            "totalPercentFields": list(GameTotals.VALUES(only_pseudo_bools=True, only_field="name")),
-            "totalLanes": list(GameTotals.VALUES(only_lanes=True, only_field="name")),
+            "totalRepresentation": await build_representation_numbers_dict(for_total=True),
+            "windowRepresentation": await build_representation_numbers_dict(for_total=False),
         }
 
         CACHE.clear()

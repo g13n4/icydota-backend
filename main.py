@@ -147,13 +147,14 @@ async def get_performance_data_api(
     ctype = ctype.to_value()
     stage = stage and stage.value
     name_data_dict = await get_match_name_data(adb_session=db, match_id=match_id)
+    data_type_id = data_type if data_type else None
 
     if flat is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
             db_session=db,
             pot=pot,
             match_id=match_id,
-            data_type=data_type,
+            data_type=data_type_id,
             game_stage=stage,
         )
     else:
@@ -161,7 +162,7 @@ async def get_performance_data_api(
             db_session=db,
             pot=pot,
             match_id=match_id,
-            calculation_type_id=data_type,
+            calculation_type_id=data_type_id,
             game_stage=stage,
             basic=ctype,
             flat=flat,
@@ -170,7 +171,7 @@ async def get_performance_data_api(
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, rows)
+    output = to_table_format(items, value_mapping, rows, is_total = data_type_id is None)
     output["matchName"] = name_data_dict
 
     return output
@@ -191,6 +192,7 @@ async def get_performance_aggregated_data_api(
     league_id, patch_id = lop.to_api(lop_value)
     flat = comp.to_value()
     game_stage = stage and stage.value
+    data_type_id = data_type if data_type else None
 
     data, value_mapping, sum_total, header_fields = await get_aggregated_performance_data(
         db_session=db,
@@ -198,7 +200,7 @@ async def get_performance_aggregated_data_api(
         league_id=league_id,
         patch_id=patch_id,
         aggregation_type=atype,
-        calculation_type_id=data_type,
+        calculation_type_id=data_type_id,
         game_stage=game_stage,
         flat=flat
     )
@@ -206,7 +208,7 @@ async def get_performance_aggregated_data_api(
     if not data or not all(data):
         raise HTTPException(status_code=404)
 
-    output = to_table_format(data, value_mapping, header_fields)
+    output = to_table_format(data, value_mapping, header_fields, is_total = data_type_id is None)
 
     return output
 
@@ -226,6 +228,7 @@ async def get_performance_cross_comparison_data_api(
 ):
     league_id, patch_id = lop.to_api(lop_value)
     flat = comp.to_value()
+    data_type_id = data_type if data_type else None
 
     data, header_name, columns, values_info = await get_cross_comparison_performance_data(
         db_session=db,
@@ -235,7 +238,7 @@ async def get_performance_cross_comparison_data_api(
         aggregation_type=atype,
         position=position,
         data_field=field,
-        calculation_type_id=data_type,
+        calculation_type_id=data_type_id,
         flat=flat,
     )
 

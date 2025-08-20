@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Tuple
 
 from constants.api import PoTEnum
+from constants.performance.total.category import GameTotalsCategory
 from constants.performance.total.total import FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL, GameTotals
 from constants.performance.window import WINDOWS_BY_TYPE, WindowType, AllWindows
 from models.performance import PerformanceWindowData, PerformanceWindowTable
@@ -113,14 +114,29 @@ def process_db_output(
     return output, TMMF.get_minmax_values(), TMMF.has_totals()
 
 
+def get_column_with_children(col_name: str) -> dict:
+    return {
+        "headerName": col_name,
+        "wrapHeaderText": True,
+        "autoHeaderHeight": True,
+        "children": [],
+    }
+
+
 def extract_formatted_columns(
         data: list,
         pinned_columns: list[str],
         item_map: dict,
+        is_total: bool,
 ) -> list[dict]:
     first_item = next(iter(data))
     header_columns = []
     data_columns = []
+
+    total_category_list = [
+                              get_column_with_children("Details")
+                          ] + [get_column_with_children(item.description) for item in GameTotalsCategory.VALUES]
+
     for name in first_item.keys():
         this_item = item_map.get(name, None)
         this_dict = dict()
@@ -132,13 +148,25 @@ def extract_formatted_columns(
 
         if this_item is not None:
             this_dict["colId"] = this_item.index
-            data_columns.append(this_dict)
+            if is_total:
+                category_index = this_item.category.value
+                total_category_list[category_index]["children"].append(this_dict)
+            else:
+                data_columns.append(this_dict)
         else:
             this_dict["colId"] = name
-            header_columns.append(this_dict)
+            if is_total:
+                total_category_list[0]["children"].append(this_dict)
+            else:
+                header_columns.append(this_dict)
 
-    data_columns.sort(key=lambda x: x["colId"])
-    return header_columns + [item for item in data_columns]
+    if is_total:
+        [children["children"].sort(key=lambda x: x["colId"]) for children in total_category_list]
+        return total_category_list
+
+    else:
+        data_columns.sort(key=lambda x: x["colId"])
+        return header_columns + [item for item in data_columns]
 
 
 def format_formatted_columns(pinned_column: str, columns: list[str]) -> list[dict]:

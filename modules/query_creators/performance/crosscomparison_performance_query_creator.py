@@ -8,7 +8,7 @@ from modules.query_creators.performance.query_creator_mixin import PerformanceQu
 
 
 class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
-    def _set_data_ccomp_model(self, calculation_type_id: int, field: str | None = None):
+    def _set_data_ccomp_model(self, calculation_type_id: int | None, field: str | None = None):
         if calculation_type_id:
             self.data_model = PerformanceWindowData
 
@@ -84,7 +84,7 @@ class APICrossComparisonPerformanceQueryCreator(PerformanceQueryCreatorMixin):
             type_id: int,
             position_id: int,
             data_field: str,
-            calculation_type_id: int,
+            calculation_type_id: int | None,
             is_flat: bool,
     ):
         self._set_data_ccomp_model(calculation_type_id=calculation_type_id, field=data_field)

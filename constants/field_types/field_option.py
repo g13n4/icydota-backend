@@ -1,7 +1,8 @@
 from pydantic import ConfigDict, BaseModel
 
-from constants.performance.field_types.field_availability import FieldAvailability
-from constants.performance.field_types.field_representation import FieldRepresentation
+from constants.field_types.field_availability import FieldAvailability
+from constants.field_types.field_representation import FieldRepresentation, DATA_TYPE_INDEX, POT_INDEX, \
+    FIELD_REPRESENTATION_INDEX
 
 
 class FieldOption(BaseModel):
@@ -38,13 +39,18 @@ class FieldOption(BaseModel):
         else:
             representation_list = self.representation
 
-        output = []
+        output = { }
         for representation in representation_list:
             for name_tuple in representation.get_named_product():
-                if not self.is_available(*name_tuple[1:3]):
+                if not self.is_available(name_tuple[DATA_TYPE_INDEX], name_tuple[POT_INDEX]):
                     continue
 
-                output.append(FieldRepresentation.transform_tuple(name_tuple, to_int=True))
+                value_tuple = FieldRepresentation.transform_tuple(name_tuple, to_int=False)
+                code = value_tuple[DATA_TYPE_INDEX] + value_tuple[POT_INDEX]
+                if code in output:
+                    pass
+                else:
+                    output[code] = value_tuple[FIELD_REPRESENTATION_INDEX]
 
         return output if output else None
 

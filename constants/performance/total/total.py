@@ -3,10 +3,10 @@ from typing import Any, ClassVar, Optional, Literal
 
 from pydantic import condecimal, BaseModel, ConfigDict
 
+from constants.field_types.field_availability import FieldAvailability
+from constants.field_types.field_option import FieldOption, RepresentationNumbersMixin
+from constants.field_types.field_representation import DATA_TYPE_TYPE, TotalFieldRepresentation
 from constants.helpers import Item
-from constants.performance.field_types.field_availability import FieldAvailability
-from constants.performance.field_types.field_option import FieldOption, RepresentationNumbersMixin
-from constants.performance.field_types.field_representation import DATA_TYPE_TYPE, TotalFieldRepresentation
 from constants.performance.total.category import GameTotalsCategory
 from constants.performance.total.processing_options import TotalTeamProcessingOption
 from helpers import to_proper_name

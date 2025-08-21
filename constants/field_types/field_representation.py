@@ -6,15 +6,19 @@ from typing import Literal, get_args
 
 FIELD_REPRESENTATION_TYPE = Literal["lane", "percent", "level", "time", "boolean"]
 FIELD_REPRESENTATION_VALUE = get_args(FIELD_REPRESENTATION_TYPE)
+FIELD_REPRESENTATION_INDEX = 0
 
 DATA_TYPE_TYPE = Literal["match", "aggregation", "cross_comparison"]
 DATA_TYPE_VALUE = get_args(DATA_TYPE_TYPE)
+DATA_TYPE_INDEX = 1
 
 POT_TYPE = Literal["player", "team"]
 POT_VALUE = get_args(POT_TYPE)
+POT_INDEX = 2
 
 TOW_TYPE = Literal["total", "window"]
 TOW_VALUE = get_args(TOW_TYPE)
+TOW_INDEX = 3
 
 BINARY_OFFSET_MAP = {
     **{ name: idx for idx, name in enumerate(DATA_TYPE_VALUE) },
@@ -31,7 +35,12 @@ NAME_LIST_MAP = {
 
 
 class FieldRepresentation:
-    __slots__ = ("field_repr", "data_type", "pot", "tow")
+    __slots__ = (
+        "field_repr",
+        "data_type",
+        "pot",
+        "tow",
+    )
 
 
     def __init__(
@@ -49,7 +58,7 @@ class FieldRepresentation:
 
     @staticmethod
     def transform_tuple(named_tuple: tuple[str, ...], to_int: bool = False) -> tuple[int, ...] | int:
-        output = [0] * 4
+        output = [0] * len(FieldRepresentation.__slots__)
         for idx, value in enumerate(named_tuple):
             output[idx]: int = BINARY_OFFSET_MAP[value]
 

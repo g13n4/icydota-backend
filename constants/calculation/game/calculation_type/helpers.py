@@ -3,7 +3,7 @@ from typing import Callable, TypeVar, Any
 from pydantic import BaseModel, ConfigDict
 
 from constants.helpers import Item
-from constants.performance.field_types.field_option import FieldOption, RepresentationNumbersMixin
+from constants.field_types.field_option import FieldOption, RepresentationNumbersMixin
 from modules.unique_index_checker import UniqueIndexChecker
 
 

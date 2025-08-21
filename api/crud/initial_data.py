@@ -5,6 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.crud.helpers import to_basic_list, to_league_list
 from constants.calculation.game.calculation_types import WindowCalculations
+from constants.field_types.field_representation import POT_VALUE, DATA_TYPE_VALUE, BINARY_OFFSET_MAP
 from constants.performance.total.total import GameTotals
 from models import Patch
 
@@ -19,7 +20,7 @@ async def build_representation_numbers_dict(for_total: bool):
     for item in values:
         representation_numbers = item.get_representation_numbers()
         if representation_numbers is not None:
-            output[item.name] = representation_numbers
+            output[item.name if for_total else item.db_id] = representation_numbers
     return output
 
 
@@ -62,7 +63,7 @@ async def get_initial_data(db: AsyncSession) -> dict:
                         LEFT JOIN games ON games.league_id = leagues.id
                         GROUP by leagues.id
                         ORDER BY MAX(games.id)
-                        """
+                """
             )
         )
 
@@ -72,6 +73,7 @@ async def get_initial_data(db: AsyncSession) -> dict:
             "league": await to_league_list(league_data),
             "totalRepresentation": await build_representation_numbers_dict(for_total=True),
             "windowRepresentation": await build_representation_numbers_dict(for_total=False),
+            "code": BINARY_OFFSET_MAP,
         }
 
         CACHE.clear()

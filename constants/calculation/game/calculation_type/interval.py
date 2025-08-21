@@ -3,8 +3,8 @@ from enum import StrEnum, auto, Enum
 from constants.calculation.game.calculation_type.helpers import CalculationItem, set_category_and_value, \
     PostprocessingItem, add_values
 from constants.calculation.game.category import WindowCategories
-from constants.performance.field_types.field_option import FieldOption
-from constants.performance.field_types.field_representation import WindowFieldRepresentation
+from constants.field_types.field_option import FieldOption
+from constants.field_types.field_representation import WindowFieldRepresentation
 
 
 class IntervalCalculationColumn(StrEnum):

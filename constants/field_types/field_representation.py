@@ -24,7 +24,9 @@ BINARY_OFFSET_MAP = {
     **{ name: idx for idx, name in enumerate(DATA_TYPE_VALUE) },
     **{ name: idx << 2 for idx, name in enumerate(POT_VALUE) },
     **{ name: idx << 3 for idx, name in enumerate(TOW_VALUE) },
-    **{ name: idx << 4 for idx, name in enumerate(FIELD_REPRESENTATION_VALUE) },
+    # in theory there should be offset to include this part in a big integer
+    # but right now it works as a key
+    **{ name: idx for idx, name in enumerate(FIELD_REPRESENTATION_VALUE) },
 }
 
 NAME_LIST_MAP = {

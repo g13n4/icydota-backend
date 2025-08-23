@@ -32,6 +32,7 @@ async def get_performance_data(
         pot=pot,
         req_type="match",
         data_model_name=PQC.data_model_name,
+        is_comparison=False,
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
@@ -63,6 +64,7 @@ async def get_performance_data_comparison(
         pot=pot,
         req_type="match",
         data_model_name=PQC.data_model_name,
+        is_comparison=True,
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)
@@ -106,6 +108,7 @@ async def get_aggregated_performance_data(
         pot=pot,
         req_type="aggregation",
         data_model_name=PQC.data_model_name,
+        is_comparison=not (flat is None),
     )
 
     return data, value_mapping, has_total_field, PQC.get_model_names(only_header=True)

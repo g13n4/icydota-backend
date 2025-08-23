@@ -1,5 +1,6 @@
 from decimal import Decimal
 from functools import lru_cache
+from random import getrandbits
 from typing import Tuple
 
 from constants.api import PoTEnum
@@ -12,12 +13,20 @@ from modules.minmax_finder import TableMinMaxFinder
 from utils import is_na_decimal
 
 
-@lru_cache(maxsize=6)
+@lru_cache(maxsize=12)
 def get_total_required_fields(
         data_representation: FIELD_AVAILABILITY_DATA_REPRESENTATION_TYPE_LITERAL,
         pot: PoTEnum,
+        is_comparison: bool = False,
+
 ):
-    return list(GameTotals.VALUES(available_for=[data_representation, pot.value], only_field="name"))
+    return list(
+        GameTotals.VALUES(
+            available_for=[data_representation, pot.value],
+            only_field="name",
+            only_comparable=is_comparison
+        )
+    )
 
 
 def get_windows_required_fields(
@@ -80,6 +89,7 @@ def process_db_output(
         req_type: str,
         data_model_name: str,
         game_stage: str | None = None,
+        is_comparison: bool | None = None,
 ) -> Tuple[list, dict, bool]:
     TMMF = TableMinMaxFinder()
     output = []
@@ -97,7 +107,7 @@ def process_db_output(
             del row_data['window_table']
 
         elif data_model_name == 'total_data':
-            fields = get_total_required_fields(data_representation=req_type, pot=pot)
+            fields = get_total_required_fields(data_representation=req_type, pot=pot, is_comparison=is_comparison)
             calculated_data = set_calculated_data(
                 TMMF=TMMF,
                 calculated_data=row_data['total_data'].model_dump(include=fields)
@@ -132,10 +142,13 @@ def extract_formatted_columns(
     first_item = next(iter(data))
     header_columns = []
     data_columns = []
+    salt = getrandbits(19)
 
     total_category_list = [
                               get_column_with_children("Details")
-                          ] + [get_column_with_children(item.description) for item in GameTotalsCategory.VALUES]
+                          ] + [
+                              get_column_with_children(item.description) for item in GameTotalsCategory.VALUES
+                          ]
 
     for name in first_item.keys():
         this_item = item_map.get(name, None)
@@ -147,14 +160,14 @@ def extract_formatted_columns(
             this_dict["pinned"] = "left"
 
         if this_item is not None:
-            this_dict["colId"] = this_item.index
+            this_dict["colId"] = f"{this_item.index}-{salt}"
             if is_total:
                 category_index = this_item.category.value
                 total_category_list[category_index]["children"].append(this_dict)
             else:
                 data_columns.append(this_dict)
         else:
-            this_dict["colId"] = name
+            this_dict["colId"] = f"{name}-{salt}"
             if is_total:
                 total_category_list[0]["children"].append(this_dict)
             else:
@@ -171,6 +184,7 @@ def extract_formatted_columns(
 
 def format_formatted_columns(pinned_column: str, columns: list[str]) -> list[dict]:
     output = list()
+    salt = getrandbits(19)
     output.append(
         {
             "field": pinned_column,
@@ -183,5 +197,7 @@ def format_formatted_columns(pinned_column: str, columns: list[str]) -> list[dic
         this_dict = dict()
         this_dict["field"] = name
         this_dict["headerName"] = name
+        this_dict["colId"] = f"{name}-{salt}"
+
         output.append(this_dict)
     return output

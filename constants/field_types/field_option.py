@@ -10,8 +10,6 @@ class FieldOption(BaseModel):
 
     availability: FieldAvailability | None = None
     representation: list[FieldRepresentation] | FieldRepresentation | None = None
-    # representation that is used for flat comparison
-    comparison_representation: list[FieldRepresentation] | FieldRepresentation | None = None
 
 
     def is_required(self, **kwargs) -> bool:
@@ -32,16 +30,14 @@ class FieldOption(BaseModel):
         return self.availability.is_available(*args)
 
 
-    def get_representation_numbers(self, for_comparison: bool = False) -> None | list[int]:
+    def get_representation_numbers(self) -> None | list[int]:
         if self.representation is None:
             return None
 
-        this_representation = self.comparison_representation if for_comparison else self.representation
-
-        if isinstance(this_representation, FieldRepresentation):
-            representation_list = [this_representation]
+        if isinstance(self.representation, FieldRepresentation):
+            representation_list = [self.representation]
         else:
-            representation_list = this_representation
+            representation_list = self.representation
 
         output = { }
         for representation in representation_list:
@@ -60,8 +56,8 @@ class FieldOption(BaseModel):
 
 
 class RepresentationNumbersMixin:
-    def get_representation_numbers(self, for_comparison: bool = False) -> None | list[int]:
+    def get_representation_numbers(self) -> None | list[int]:
         if self.field_options is None:
             return None
 
-        return self.field_options.get_representation_numbers(for_comparison=for_comparison)
+        return self.field_options.get_representation_numbers()

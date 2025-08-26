@@ -2,7 +2,7 @@ from pydantic import ConfigDict, BaseModel
 
 from constants.field_types.field_availability import FieldAvailability
 from constants.field_types.field_representation import FieldRepresentation, DATA_TYPE_INDEX, POT_INDEX, \
-    FIELD_REPRESENTATION_INDEX
+    FIELD_REPRESENTATION_INDEX, COMPARISON_INDEX
 
 
 class FieldOption(BaseModel):
@@ -10,6 +10,8 @@ class FieldOption(BaseModel):
 
     availability: FieldAvailability | None = None
     representation: list[FieldRepresentation] | FieldRepresentation | None = None
+
+    is_comparable: bool = True
 
 
     def is_required(self, **kwargs) -> bool:
@@ -45,12 +47,16 @@ class FieldOption(BaseModel):
                 if not self.is_available(name_tuple[DATA_TYPE_INDEX], name_tuple[POT_INDEX]):
                     continue
 
+                if not self.is_comparable and name_tuple[COMPARISON_INDEX]:
+                    continue
+
                 value_tuple = FieldRepresentation.transform_tuple(name_tuple, to_int=False)
-                code = value_tuple[DATA_TYPE_INDEX] + value_tuple[POT_INDEX]
+                code = value_tuple[DATA_TYPE_INDEX] + value_tuple[POT_INDEX] + value_tuple[COMPARISON_INDEX]
+                field_code = value_tuple[FIELD_REPRESENTATION_INDEX]
+
                 if code in output:
-                    pass
-                else:
-                    output[code] = value_tuple[FIELD_REPRESENTATION_INDEX]
+                    print(f"Representation for {name_tuple} is changed from {output[code]} to {field_code}")
+                output[code] = field_code
 
         return output if output else None
 

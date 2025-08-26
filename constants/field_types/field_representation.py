@@ -20,19 +20,27 @@ TOW_TYPE = Literal["total", "window"]
 TOW_VALUE = get_args(TOW_TYPE)
 TOW_INDEX = 3
 
+COMPARISON_TYPE = Literal["none", "flat"]
+COMPARISON_VALUE = get_args(COMPARISON_TYPE)
+COMPARISON_INDEX = 4
+
 BINARY_OFFSET_MAP = {
     **{ name: idx for idx, name in enumerate(DATA_TYPE_VALUE) },
     **{ name: idx << 2 for idx, name in enumerate(POT_VALUE) },
     **{ name: idx << 3 for idx, name in enumerate(TOW_VALUE) },
+    **{ name: idx << 4 for idx, name in enumerate(COMPARISON_VALUE) },
     # in theory there should be offset to include this part in a big integer
     # but right now it works as a key
     **{ name: idx for idx, name in enumerate(FIELD_REPRESENTATION_VALUE) },
 }
 
+print(BINARY_OFFSET_MAP)
+
 NAME_LIST_MAP = {
     "data_type": DATA_TYPE_VALUE,
     "pot": POT_VALUE,
     "tow": TOW_VALUE,
+    "comparison": COMPARISON_VALUE,
 }
 
 
@@ -42,6 +50,7 @@ class FieldRepresentation:
         "data_type",
         "pot",
         "tow",
+        "comparison",
     )
 
 
@@ -51,11 +60,13 @@ class FieldRepresentation:
             data_type: DATA_TYPE_TYPE | Iterable[DATA_TYPE_TYPE] | None = None,
             pot: POT_TYPE | Iterable[POT_TYPE] | None = None,
             tow: TOW_TYPE | Iterable[TOW_TYPE] | None = None,
+            comparison: COMPARISON_TYPE | Iterable[COMPARISON_TYPE] | None = None,
     ):
         self.field_repr = field_repr
         self.data_type = data_type
         self.pot = pot
         self.tow = tow
+        self.comparison = comparison
 
 
     @staticmethod

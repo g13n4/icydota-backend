@@ -138,17 +138,17 @@ async def get_performance_data_api(
         match_id: int,
         data_type: int,
         # qparams
+        ctype: ComparisonTypeEnum | None = None,
         stage: GameStageEnum | None = None,
         comp: ComparisonEnum = ComparisonEnum.none,
-        ctype: ComparisonTypeEnum = ComparisonTypeEnum.player,
         db=Depends(get_async_db_session)
 ):
     flat = comp.to_value()
-    ctype = ctype.to_value()
+    ctype_value = ctype and ctype.to_value()
     stage = stage and stage.value
     name_data_dict = await get_match_name_data(adb_session=db, match_id=match_id)
     data_type_id = data_type if data_type else None
-
+    print(ctype, ctype_value)
     if flat is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
             db_session=db,
@@ -164,14 +164,14 @@ async def get_performance_data_api(
             match_id=match_id,
             calculation_type_id=data_type_id,
             game_stage=stage,
-            basic=ctype,
+            basic=ctype_value,
             flat=flat,
         )
 
     if not items:
         raise HTTPException(status_code=404)
 
-    output = to_table_format(items, value_mapping, rows, is_total = data_type_id is None)
+    output = to_table_format(items, value_mapping, rows, is_total=data_type_id is None)
     output["matchName"] = name_data_dict
 
     return output
@@ -208,7 +208,7 @@ async def get_performance_aggregated_data_api(
     if not data or not all(data):
         raise HTTPException(status_code=404)
 
-    output = to_table_format(data, value_mapping, header_fields, is_total = data_type_id is None)
+    output = to_table_format(data, value_mapping, header_fields, is_total=data_type_id is None)
 
     return output
 

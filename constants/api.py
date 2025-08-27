@@ -48,9 +48,9 @@ class ComparisonTypeEnum(CaseInsensitiveEnum):
 
 
     def to_value(self) -> bool:
-        if self == self.player or self == self.basic:
+        if self == self.basic:
             return False
-        elif self == self.general:
+        elif self == self.player:
             return True
 
         raise ValueError("Can only be used if Enum is value")

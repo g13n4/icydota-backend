@@ -4,6 +4,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from sqlmodel import Session, text
 
+from constants.game_performance import GamePerformanceTypeConstant
 from db import get_sync_db_session
 
 
@@ -35,9 +36,8 @@ def set_comparison_names() -> None:
             INNER JOIN players p_cps ON comp_data.player_cps_id = p_cps.account_id
             INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = pos_cpd.id
             INNER JOIN positions pos_cps ON comp_data.pos_cps_id = pos_cpd.id
-            WHERE c_main.hero_cps_id IS NOT NULL
-              AND c_main.id = comp_data.id
-                    """
+            """ +
+            f"WHERE comp_data.id in (select id from performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON})"
         )
     )
 

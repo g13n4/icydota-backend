@@ -1060,6 +1060,26 @@ class GameTotals:
             ),
         ),
     )
+    duration_win: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=88,
+        field_options=FieldOption(
+            is_comparable=False,
+            availability=FieldAvailability(match=False, player=False, for_any_option=True)
+        ),
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
+    )
+    duration_lose: GameTotal = GameTotal(
+        value_type=Optional[int],
+        index=89,
+        field_options=FieldOption(
+            is_comparable=False,
+            availability=FieldAvailability(match=False, player=False, for_any_option=True)
+        ),
+        category=GameTotalsCategory.STATS,
+        team_processing_option=TotalTeamProcessingOption.BIGGEST,
+    )
 
     _VALUES: ClassVar[list[GameTotal]]
     VALUES: GameTotalsIterator

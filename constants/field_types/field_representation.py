@@ -34,8 +34,6 @@ BINARY_OFFSET_MAP = {
     **{ name: idx for idx, name in enumerate(FIELD_REPRESENTATION_VALUE) },
 }
 
-print(BINARY_OFFSET_MAP)
-
 NAME_LIST_MAP = {
     "data_type": DATA_TYPE_VALUE,
     "pot": POT_VALUE,

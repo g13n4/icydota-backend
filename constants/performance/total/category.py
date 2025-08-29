@@ -6,7 +6,7 @@ class GameTotalsCategory(GetItemHelper):
     GENERAL: Item = Item(
         value=1,
         name="General data",
-        description="General performance data.",
+        description="General performance data",
         )
     FIRST_KILL_DEATH: Item = Item(
         value=2,

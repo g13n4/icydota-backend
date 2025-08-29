@@ -148,7 +148,7 @@ async def get_performance_data_api(
     stage = stage and stage.value
     name_data_dict = await get_match_name_data(adb_session=db, match_id=match_id)
     data_type_id = data_type if data_type else None
-    print(ctype, ctype_value)
+
     if flat is None:
         items, value_mapping, sum_total, rows = await get_performance_data(
             db_session=db,

@@ -252,6 +252,9 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
         db_session.add(PGD_obj)
 
+        this_win = int(player_info['win'])
+        this_duration = game_data['duration']
+
         hero_kills = none_to_zero(player_info['hero_kills'])
         deaths = none_to_zero(player_info['deaths'])
         assists = none_to_zero(player_info['assists'])
@@ -306,9 +309,11 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
 
 
             # use in aggregation
-            win=int(player_info['win']),
+            win=this_win,
             picked=1,
-            duration=game_data['duration'],
+            duration=this_duration,
+            duration_win=this_duration if this_win else None,
+            duration_lose=this_duration if not this_win else None,
         )
 
         # FIX FOR BROKEN SQLMODEL Decimal field

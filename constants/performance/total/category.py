@@ -3,16 +3,16 @@ from constants.helpers import Item, update_description, get_only_names, GetItemH
 
 @update_description
 class GameTotalsCategory(GetItemHelper):
-    GENERAL: Item = Item(
+    KDA: Item = Item(
         value=1,
+        name="K/D/A",
+        description="Kills, deaths and assists",
+    )
+    GENERAL: Item = Item(
+        value=2,
         name="General data",
         description="General performance data",
         )
-    FIRST_KILL_DEATH: Item = Item(
-        value=2,
-        name="First kill and death",
-        description="Data regarding first kill, death and time of the event",
-    )
     T1_TOWERS: Item = Item(
         value=3,
         name="First T3 towers",
@@ -27,5 +27,5 @@ class GameTotalsCategory(GetItemHelper):
     PICKS: Item = Item(value=6, name="Picks", description="Data regarding game picks")
 
 
-    VALUES: list = [GENERAL, FIRST_KILL_DEATH, T1_TOWERS, T3_TOWERS_AND_LANES, STATS, PICKS]
+    VALUES: list = [KDA, GENERAL,  T1_TOWERS, T3_TOWERS_AND_LANES, STATS, PICKS]
     VALUES_NAMES: list = get_only_names(VALUES)

@@ -2,7 +2,7 @@ from pydantic import ConfigDict, BaseModel
 
 from constants.field_types.field_availability import FieldAvailability
 from constants.field_types.field_representation import FieldRepresentation, DATA_TYPE_INDEX, POT_INDEX, \
-    FIELD_REPRESENTATION_INDEX, COMPARISON_INDEX
+    FIELD_REPRESENTATION_INDEX, COMPARISON_INDEX, ComparisonTypeRepresentationEnum
 
 
 class FieldOption(BaseModel):
@@ -47,7 +47,7 @@ class FieldOption(BaseModel):
                 if not self.is_available(name_tuple[DATA_TYPE_INDEX], name_tuple[POT_INDEX]):
                     continue
 
-                if not self.is_comparable and name_tuple[COMPARISON_INDEX]:
+                if not self.is_comparable and name_tuple[COMPARISON_INDEX] != ComparisonTypeRepresentationEnum.NONE:
                     continue
 
                 value_tuple = FieldRepresentation.transform_tuple(name_tuple, to_int=False)

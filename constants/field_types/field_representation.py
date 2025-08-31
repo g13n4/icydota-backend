@@ -1,26 +1,76 @@
 from collections.abc import Iterable
+from enum import StrEnum
 from functools import partial
 from itertools import product
 from typing import Literal, get_args
 
 
-FIELD_REPRESENTATION_TYPE = Literal["lane", "percent", "level", "time", "boolean"]
+class FieldRepresentationEnum(StrEnum):
+    LANE = "lane"
+    PERCENT = "percent"
+    LEVEL = "level"
+    TIME = "time"
+    BOOLEAN = "boolean"
+
+
+FIELD_REPRESENTATION_TYPE = Literal[
+    FieldRepresentationEnum.LANE,
+    FieldRepresentationEnum.PERCENT,
+    FieldRepresentationEnum.LEVEL,
+    FieldRepresentationEnum.TIME,
+    FieldRepresentationEnum.BOOLEAN,
+]
 FIELD_REPRESENTATION_VALUE = get_args(FIELD_REPRESENTATION_TYPE)
 FIELD_REPRESENTATION_INDEX = 0
 
-DATA_TYPE_TYPE = Literal["match", "aggregation", "cross_comparison"]
+
+class DataTypeRepresentationEnum(StrEnum):
+    MATCH = "match"
+    AGGREGATION = "aggregation"
+    CROSS_COMPARISON = "cross_comparison"
+
+
+DATA_TYPE_TYPE = Literal[
+    DataTypeRepresentationEnum.MATCH,
+    DataTypeRepresentationEnum.AGGREGATION,
+    DataTypeRepresentationEnum.CROSS_COMPARISON,
+]
 DATA_TYPE_VALUE = get_args(DATA_TYPE_TYPE)
 DATA_TYPE_INDEX = 1
 
-POT_TYPE = Literal["player", "team"]
+
+class PlayerOrTeamEnum(StrEnum):
+    PLAYER = "player"
+    TEAM = "team"
+
+
+POT_TYPE = Literal[PlayerOrTeamEnum.PLAYER, PlayerOrTeamEnum.TEAM]
 POT_VALUE = get_args(POT_TYPE)
 POT_INDEX = 2
 
-TOW_TYPE = Literal["total", "window"]
+
+class TotalOrWindowRepresentationEnum(StrEnum):
+    TOTAL = "total"
+    WINDOW = "window"
+
+
+TOW_TYPE = Literal[
+    TotalOrWindowRepresentationEnum.TOTAL,
+    TotalOrWindowRepresentationEnum.WINDOW,
+]
 TOW_VALUE = get_args(TOW_TYPE)
 TOW_INDEX = 3
 
-COMPARISON_TYPE = Literal["none", "flat"]
+
+class ComparisonTypeRepresentationEnum(StrEnum):
+    NONE = "none"
+    FLAT = "flat"
+
+
+COMPARISON_TYPE = Literal[
+    ComparisonTypeRepresentationEnum.NONE,
+    ComparisonTypeRepresentationEnum.FLAT,
+]
 COMPARISON_VALUE = get_args(COMPARISON_TYPE)
 COMPARISON_INDEX = 4
 

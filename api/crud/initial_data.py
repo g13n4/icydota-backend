@@ -51,8 +51,7 @@ async def _build_computations() -> list[dict]:
 
 
 async def get_initial_data(db: AsyncSession) -> dict:
-    # key = datetime.datetime.now().hour
-    key = datetime.datetime.now().second
+    key = datetime.datetime.now().hour
     if key not in CACHE:
         patch_objs = await db.exec(select(Patch).where(Patch.aggregation_allowed == True).order_by(Patch.id.desc()))
         league_data = await db.execute(

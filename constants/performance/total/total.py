@@ -96,13 +96,26 @@ class GameTotalsIterator:
 class GameTotals:
     gold: GameTotal = GameTotal(value_type=condecimal(max_digits=10, decimal_places=2), index=1)
     xp: GameTotal = GameTotal(value_type=condecimal(max_digits=8, decimal_places=2), index=2)
-    kills_per_min: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=3)
-    kda: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=4)
+    kills_per_min: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=5, decimal_places=2),
+        index=3,
+        category=GameTotalsCategory.KDA,
+    )
+    kda: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=5, decimal_places=2),
+        index=4,
+        category=GameTotalsCategory.KDA,
+    )
     neutral_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=5)
     tower_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=5, decimal_places=2), index=6)
     courier_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=7)
     lane_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=8)
-    hero_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=9)
+    hero_kills: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=6, decimal_places=2),
+        index=9,
+        category=GameTotalsCategory.KDA,
+
+    )
     observer_kills: GameTotal = GameTotal(value_type=condecimal(max_digits=4, decimal_places=2), index=10)
     sentry_kills: GameTotal = GameTotal(
         value_type=condecimal(max_digits=4, decimal_places=2),
@@ -130,7 +143,7 @@ class GameTotals:
         index=20,
         description="First Blood",
         pseudo_bool=True,
-        category=GameTotalsCategory.FIRST_KILL_DEATH,
+        category=GameTotalsCategory.KDA,
         team_processing_option=TotalTeamProcessingOption.CEIL,
         field_options=FieldOption(
             is_comparable=False,
@@ -142,7 +155,6 @@ class GameTotals:
                 TotalFieldRepresentation(
                     field_repr="boolean",
                     data_type="match",
-                    pot="player",
                     comparison="none"
                 ),
             ],
@@ -151,7 +163,7 @@ class GameTotals:
     first_kill_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=24,
-        category=GameTotalsCategory.FIRST_KILL_DEATH,
+        category=GameTotalsCategory.KDA,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
         field_options=FieldOption(
             is_comparable=False,
@@ -166,7 +178,7 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=21,
         pseudo_bool=True,
-        category=GameTotalsCategory.FIRST_KILL_DEATH,
+        category=GameTotalsCategory.KDA,
         team_processing_option=TotalTeamProcessingOption.CEIL,
         field_options=FieldOption(
             is_comparable=False,
@@ -186,7 +198,7 @@ class GameTotals:
     died_first_time: GameTotal = GameTotal(
         value_type=Optional[int],
         index=25,
-        category=GameTotalsCategory.FIRST_KILL_DEATH,
+        category=GameTotalsCategory.KDA,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
         field_options=FieldOption(
             is_comparable=False,
@@ -229,8 +241,6 @@ class GameTotals:
             is_comparable=False,
             representation=TotalFieldRepresentation(
                 field_repr="time",
-                data_type=None,
-                pot=None,
             )
         ),
     )
@@ -247,7 +257,6 @@ class GameTotals:
             representation=TotalFieldRepresentation(
                 field_repr="lane",
                 data_type="match",
-                pot=None,
             )
         ),
         category=GameTotalsCategory.T1_TOWERS,
@@ -334,29 +343,41 @@ class GameTotals:
     no_death: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2), index=32,
         field_options=FieldOption(
+            is_comparable=False,
             representation=TotalFieldRepresentation(
                 field_repr="boolean",
                 data_type="match",
                 pot=None,
             ),
         ),
+        category=GameTotalsCategory.KDA,
         pseudo_bool=True
     )
     no_kills: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=33,
         field_options=FieldOption(
+            is_comparable=False,
             representation=TotalFieldRepresentation(
                 field_repr="boolean",
                 data_type="match",
                 pot=None,
             ),
         ),
-        pseudo_bool=True
+        category=GameTotalsCategory.KDA,
+        pseudo_bool=True,
     )
 
-    deaths: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=34)
-    assists: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=35)
+    deaths: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=6, decimal_places=2),
+        category=GameTotalsCategory.KDA,
+        index=34,
+    )
+    assists: GameTotal = GameTotal(
+        value_type=condecimal(max_digits=6, decimal_places=2),
+        category=GameTotalsCategory.KDA,
+        index=35,
+    )
 
     last_hits: GameTotal = GameTotal(value_type=condecimal(max_digits=7, decimal_places=2), index=36)
     denies: GameTotal = GameTotal(value_type=condecimal(max_digits=6, decimal_places=2), index=37)
@@ -386,11 +407,17 @@ class GameTotals:
         index=42,
         pseudo_bool=True,
         field_options=FieldOption(
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="player",
-            ),
+            is_comparable=False,
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="player",
+                )],
         ),
     )
     aghanims_shard: GameTotal = GameTotal(
@@ -398,22 +425,34 @@ class GameTotals:
         index=43,
         pseudo_bool=True,
         field_options=FieldOption(
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="player",
-            ),
+            is_comparable=False,
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="player",
+                )],
         ),
     )
     moonshard: GameTotal = GameTotal(
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=44,
         field_options=FieldOption(
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="player",
-            ),
+            is_comparable=False,
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="player",
+                )],
         ),
         pseudo_bool=True,
     )
@@ -426,12 +465,14 @@ class GameTotals:
         value_type=condecimal(max_digits=3, decimal_places=2),
         index=48,
         field_options=FieldOption(
+            is_comparable=False,
             representation=TotalFieldRepresentation(
                 field_repr="boolean",
                 data_type="match",
                 pot="player",
             )
         ),
+        category=GameTotalsCategory.KDA,
         pseudo_bool=True,
 
     )
@@ -612,7 +653,7 @@ class GameTotals:
             representation=TotalFieldRepresentation(
                 field_repr="boolean",
                 data_type="match",
-                pot="team",
+                pot="player",
             ),
         ),
         pseudo_bool=True,
@@ -628,7 +669,7 @@ class GameTotals:
             representation=TotalFieldRepresentation(
                 field_repr="boolean",
                 data_type="match",
-                pot="team",
+                pot="player",
             ),
         ),
         pseudo_bool=True,

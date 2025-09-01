@@ -28,7 +28,7 @@ def _remove_ndarray(value: int | np.ndarray) -> float:
 
 
 @shared_task(name='approximate_positions_for_league', ignore_result=True)
-def approximate_positions(league_id: int) -> None:
+def approximate_positions(league_id: int, **kwargs) -> None:
     logger.info(f"Approximating positions for league {league_id}")
     db_session: Session = get_sync_db_session()
     game_start_time = 0

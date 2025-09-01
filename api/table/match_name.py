@@ -5,7 +5,7 @@ from models import Game
 
 async def get_match_name_data(adb_session: AsyncSession, match_id: str | int) -> dict[str, str | bool]:
     game_obj = await adb_session.get(Game, match_id)
-    sent_name, dire_win = game_obj.name.split(" vs ")
+    sent_name, dire_win = game_obj.name.split(" vs ") if game_obj and game_obj.name else ("", "")
 
     return {
         "direName": dire_win,

@@ -44,7 +44,7 @@ celery_app = Celery(
 
 logger = logging.getLogger(__name__)
 
-base_message_format = "%(levelname)s|%(asctime)s|%(processName)s|%(args)s|%(reason)s"
+base_message_format = "%(levelname)s|%(asctime)s|%(processName)s|%(args)s"
 
 
 @after_setup_logger.connect

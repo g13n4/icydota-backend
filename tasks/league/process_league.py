@@ -7,6 +7,7 @@ from celery import chain, group
 from dotenv import load_dotenv
 from sqlmodel import Session
 
+from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import Game, League
 from tasks import set_comparison_names
@@ -93,7 +94,7 @@ def process_league_task_group(
         league_id: int | None = None,
         overwrite: bool = False,
         execute: bool = True,
-        reason: int | None = None,
+        reason: int | None = TaskReason.PROCESS_LEAGUE,
 ) -> tuple[int, None | celery.group]:
     tasks = get_league_games_tasks(league_obj=league_obj, league_id=league_id, overwrite=overwrite, reason=reason)
 

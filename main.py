@@ -261,7 +261,8 @@ if not LIGHT_MODE:
     from tasks.aggregation_tasks_helper import aggregate_task_helper, cross_compare_task_helper, \
         approximate_positions_helper, set_comparison_names_helper, delete_league_task_helper, \
         delete_cross_comparison_task_helper, parallel_cross_comparison_task_helper, parallel_aggregate_task_helper
-    from tasks.league.process_league import process_league_task_group, process_game_helper
+    from tasks.league.process_league import process_league_task_group, check_leagues_for_correctness
+    from tasks.league.process_match import process_game_helper
 
 
     @backend_api.post(API_PREFIX + '/process/league/{league_id}', status_code=202)
@@ -337,4 +338,9 @@ if not LIGHT_MODE:
     @backend_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
     async def set_comparison_names_api(league_id: int | None = None):
         set_comparison_names_helper(league_id=league_id)
+
+
+    @backend_api.post(API_PREFIX + '/check_leagues', status_code=202)
+    async def check_leagues():
+        check_leagues_for_correctness()
 

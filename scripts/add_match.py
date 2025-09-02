@@ -3,7 +3,7 @@ from collections.abc import Iterable
 import click
 
 from constants.task_reason import TaskReason
-from tasks.league.process_league import process_game_helper
+from tasks.league.process_match import process_game_helper
 
 
 @click.command()

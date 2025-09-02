@@ -1,57 +1,25 @@
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 import celery
 import requests
-from celery import chain, group
+from celery import group
 from dotenv import load_dotenv
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import Game, League
 from tasks import set_comparison_names
 from tasks.approximate_positions import approximate_positions
-from tasks.game.create_bad_game import create_bad_game_on_error
-from tasks.game.delete_replay import delete_replay_folder
-from tasks.game.download_replay import get_match_replay
-from tasks.game.process_game import process_game_data
-from tasks.game.single_task_match_processing import single_task_process_game
+from tasks.cron.process_mispositioned_games import reprocess_mispositioned_league_games_cron
 from tasks.league.create_league import get_or_create_league
-from utils.game_parsers_list import AVAILABLE_PARSERS_PORT
+from tasks.league.process_match import process_game_helper
 
 
 load_dotenv()
 
 MATCH_ONE_TASK = os.getenv('MATCH_ONE_TASK', default='true')
-
-
-def process_game_helper(
-        match_id: int,
-        league_id: int | None = None,
-        execute: bool = False,
-        reason: int | None = None,
-) -> Optional[chain]:
-    port = next(AVAILABLE_PARSERS_PORT)
-    if MATCH_ONE_TASK == "true":
-        task = single_task_process_game.si(match_id=match_id, league_id=league_id, port=port, reason=reason)
-    else:
-        task = (
-                get_match_replay.si(match_id=match_id, parser_port=port, reason=reason) |
-                process_game_data.si(match_id=match_id, league_id=league_id, reason=reason) |
-                delete_replay_folder.si(match_id=match_id, reason=reason)
-        )
-
-    task = task.on_error(
-        create_bad_game_on_error.si(match_id=match_id, league_id=league_id) |
-        delete_replay_folder.si(match_id=match_id)
-    )
-
-    if execute:
-        task.apply_async()
-        return None
-    else:
-        return task
 
 
 def get_league_games_tasks(
@@ -67,7 +35,7 @@ def get_league_games_tasks(
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/matches')
     league_match_data = r.json()
 
-    db_league_games: Dict[int, Game] = {}
+    db_league_games: Dict[int, Game] = { }
     if league_obj:
         db_league_games = { x.id: x for x in league_obj.games }
     new_games_found_list = []
@@ -114,3 +82,28 @@ def process_league_task_group(
 
     else:
         return 0, None
+
+
+def check_leagues_for_correctness():
+    db_session: Session = get_sync_db_session(expire=False)
+    sel_result = db_session.exec(select(League))
+
+    for league_obj in sel_result.all():
+        tasks = get_league_games_tasks(
+            league_obj=league_obj,
+            league_id=league_obj.id,
+            overwrite=False,
+            reason=TaskReason.PROCESS_LEAGUE,
+        )
+
+        print(f"{len(tasks)} new games found for {league_obj.name}")
+
+        task = (
+                reprocess_mispositioned_league_games_cron.si(league_id=league_obj.id) |
+                group(*tasks) |
+                approximate_positions.si(league_id=league_obj.id) |
+                set_comparison_names.si(league_id=league_obj.id)
+        ).on_error(
+            approximate_positions.si(league_id=league_obj.id) | set_comparison_names.si(league_id=league_obj.id)
+        )
+        task.apply_async()

@@ -8,7 +8,7 @@ from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import League, Game
 from tasks.cron.set_flags_for_league_and_patch import set_leagues_and_patch_flags_cron
-from tasks.league.process_league import process_game_helper
+from tasks.league.process_match import process_game_helper
 
 
 logger = get_task_logger(__name__)

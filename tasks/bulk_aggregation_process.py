@@ -18,7 +18,7 @@ from tasks.cross_comparison.delete import delete_cross_comparison_match, delete_
 from tasks.cross_comparison.match import cross_compare_player_task
 from tasks.cross_comparison.team import cross_compare_team_task
 from tasks.league.create_league import get_or_create_league
-from tasks.league.process_league import process_game_helper
+from tasks.league.process_match import process_game_helper
 
 
 logger = get_task_logger(__name__)

@@ -7,15 +7,23 @@ from sqlmodel import Session, select
 from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import Game, PositionApproximation, PlayerGameData, Player, League
-from tasks.league.process_league import process_game_helper
+from tasks.league.process_match import process_game_helper
 
 
 logger = get_task_logger(__name__)
 
 
 @shared_task(name='reprocess_mispositioned_league_games_(cron)', ignore_result=True)
-def reprocess_mispositioned_league_games_cron() -> None:
+def reprocess_mispositioned_league_games_cron(league_id: int | None) -> None:
     db_session: Session = get_sync_db_session(expire=True)
+
+    where = [
+        PlayerGameData.player_id == PositionApproximation.player_id,
+        PlayerGameData.team_id == PositionApproximation.team_id,
+        PlayerGameData.position_id != PositionApproximation.position_id,
+    ]
+    if league_id:
+        where.append(Game.league_id == league_id)
 
     player_information_select_query = (
         select(
@@ -31,11 +39,7 @@ def reprocess_mispositioned_league_games_cron() -> None:
         .join(PositionApproximation, onclause=Game.league_id == PositionApproximation.league_id)
         .join(Player, onclause=Player.account_id == PlayerGameData.player_id)
         .join(League, onclause=League.id == Game.league_id)
-        .where(
-            PlayerGameData.player_id == PositionApproximation.player_id,
-            PlayerGameData.team_id == PositionApproximation.team_id,
-            PlayerGameData.position_id != PositionApproximation.position_id,
-        )
+        .where(*where)
     )
 
     player_information_data = db_session.exec(player_information_select_query).all()
@@ -57,7 +61,7 @@ def reprocess_mispositioned_league_games_cron() -> None:
 
         for league_id, league_name in league_name_dict.items():
             league_games_found = len(league_info[league_id])
-            logger.info(f"Found {league_games_found} for league {league_name}:")
+            logger.info(f"Found {league_games_found} wrong positions for league {league_name}:")
 
             for message in league_info[league_id]:
                 logger.info(message)

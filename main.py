@@ -335,5 +335,6 @@ if not LIGHT_MODE:
 
 
     @backend_api.post(API_PREFIX + '/set_comparison_names', status_code=202)
-    async def set_comparison_names_api():
-        set_comparison_names_helper()
+    async def set_comparison_names_api(league_id: int | None = None):
+        set_comparison_names_helper(league_id=league_id)
+

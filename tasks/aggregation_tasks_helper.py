@@ -99,5 +99,5 @@ def parallel_cross_comparison_task_helper(
     team_cross_comparison_parallel_processor_task_helper(league_id=league_id, patch_id=patch_id)
 
 
-def set_comparison_names_helper() -> None:
-    set_comparison_names.apply_async()
+def set_comparison_names_helper(league_id: int | None) -> None:
+    set_comparison_names.apply_async(league_id=league_id)

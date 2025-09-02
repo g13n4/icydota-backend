@@ -102,9 +102,9 @@ def process_league_task_group(
         task = (
                 group(*tasks) |
                 approximate_positions.si(league_id=league_id or league_obj.id) |
-                set_comparison_names.si()
+                set_comparison_names.si(league_id=league_id)
         ).on_error(
-            approximate_positions.si(league_id=league_id) | set_comparison_names.si()
+            approximate_positions.si(league_id=league_id) | set_comparison_names.si(league_id=league_id)
         )
         if execute:
             task.apply_async()

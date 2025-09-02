@@ -16,11 +16,10 @@ def set_names(pos_id: int, hero_name: str, player_name: str) -> Tuple[str, str]:
 
 
 @shared_task(name='set_comparison_names', ignore_result=True)
-def set_comparison_names() -> None:
+def set_comparison_names(league_id: None | int = None) -> None:
     logger.info('Filling names for comparison values')
 
     db_session: Session = get_sync_db_session(expire=True)
-
     db_session.execute(
         text(
             """
@@ -30,6 +29,9 @@ def set_comparison_names() -> None:
                 cpd_name=CONCAT(pos_cpd.name, '/', h_cpd.name, '/', p_cpd.nickname),
                 cps_name=CONCAT(pos_cps.name, '/', h_cps.name, '/', p_cps.nickname)
             FROM comparison_types comp_data
+            INNER JOIN performances p ON comp_data.performance_id = p.id
+            INNER JOIN players_game_data pgd ON pgd.id = p.player_game_data_id
+            INNER JOIN games g ON g.id = pgd.game_id
             INNER JOIN heroes h_cpd ON comp_data.hero_cpd_id = h_cpd.id
             INNER JOIN heroes h_cps ON comp_data.hero_cps_id = h_cps.id
             INNER JOIN players p_cpd ON comp_data.player_cpd_id = p_cpd.account_id
@@ -37,7 +39,9 @@ def set_comparison_names() -> None:
             INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = pos_cpd.id
             INNER JOIN positions pos_cps ON comp_data.pos_cps_id = pos_cpd.id
             """ +
-            f"WHERE comp_data.id in (select id from performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON})"
+            f"WHERE comp_data.id in (select id from performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON})" +
+            f"AND g.league_id = {league_id}" if league_id else ""
+
         )
     )
 

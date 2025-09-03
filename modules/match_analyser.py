@@ -418,6 +418,21 @@ class MatchAnalyser:
             if line_type == 'draft_timings':
                 draft.append(line)
 
+            # Wards can be placed before game start due to a time bug (?)
+            # example: game 8178498792
+            if line_type in ['sen_left', 'obs_left', 'obs', 'sen', ]:
+                if 'slot' not in line:
+                    line['slot'] = wards_ehandle[line['ehandle']]
+
+                if line_type.endswith('_left'):
+                    deward.append(
+                        { x: line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ] }
+                    )
+                else:
+                    wards.append({ x: line[x] for x in ['time', 'type', 'slot', ] })
+
+                wards_ehandle[line['ehandle']] = line['slot']
+
             # the game hasn't started yet
             if line_time <= -90:
                 continue
@@ -435,20 +450,6 @@ class MatchAnalyser:
 
             elif line_type == 'pings':
                 pings.append(line)
-
-            elif line_type in ['sen_left', 'obs_left', 'obs', 'sen', ]:
-                if 'slot' not in line:
-                    line['slot'] = wards_ehandle[line['ehandle']]
-
-                if line_type.endswith('_left'):
-                    deward.append(
-                        { x: line[x] for x in ['time', 'type', 'slot', 'entityleft', 'attackername', ] }
-                    )
-                else:
-                    wards.append({ x: line[x] for x in ['time', 'type', 'slot', ] })
-
-                wards_ehandle[line['ehandle']] = line['slot']
-
 
             # deprecated
             elif line_type in [

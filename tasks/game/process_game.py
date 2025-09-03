@@ -331,8 +331,10 @@ def process_game_data(match_id: int, league_id: int | None = None, outer_logger=
     for k, nicknames in position_test_dict.items():
         side, position = k
         if len(nicknames) > 1:
+            side_name = "dire" if side else "sentinel"
+            side_id = teams_dict['dire'].id if side else teams_dict['radiant'].id
             raise ValueError(
-                f"Multiple {"dire" if side else "sentinel"} players on position {position}: "
+                f"Multiple {side_name} ({side_id}) players on position {position}: "
                 f"{", ".join(nicknames)} "
             )
 

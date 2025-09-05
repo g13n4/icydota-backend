@@ -15,15 +15,19 @@ logger = get_task_logger(__name__)
 
 
 @shared_task(name='attempt_to_process_bad_games_(cron)', ignore_result=True)
-def attempt_to_process_bad_games_cron(only_active: bool = True) -> None:
+def attempt_to_process_bad_games_cron(league_id: int | None = None, only_active: bool = True) -> None:
     db_session: Session = get_sync_db_session(expire=True)
     logger.info(f'Processing leagues: start')
 
     found_in_last_8_days = datetime.datetime.now() - datetime.timedelta(days=8)
 
     where = [Game.is_broken == True]
+
     if only_active:
         where.append(League.new_game_found_at > found_in_last_8_days)
+    if league_id is not None:
+        where.append(League.id == league_id)
+
 
     league_select = db_session.exec(
         select(League.id, Game.id)

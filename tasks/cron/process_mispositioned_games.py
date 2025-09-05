@@ -14,7 +14,7 @@ logger = get_task_logger(__name__)
 
 
 @shared_task(name='reprocess_mispositioned_league_games_(cron)', ignore_result=True)
-def reprocess_mispositioned_league_games_cron(league_id: int | None) -> None:
+def reprocess_mispositioned_league_games_cron(league_id: int | None = None) -> None:
     db_session: Session = get_sync_db_session(expire=True)
 
     where = [

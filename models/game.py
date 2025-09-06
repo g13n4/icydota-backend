@@ -100,13 +100,13 @@ class PlayerGameData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     invalid: Optional[bool]
 
-    team_id: Optional[int] = Field(default=None, foreign_key="teams.id")
-    player_id: Optional[int] = Field(default=None, foreign_key="players.account_id")
+    team_id: Optional[int] = Field(default=None, foreign_key="teams.id", index=True)
+    player_id: Optional[int] = Field(default=None, foreign_key="players.account_id", index=True)
 
     original_position: Optional[int] = Field(default=None)
-    position_id: Optional[int] = Field(default=None, foreign_key="positions.id")
-    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id")
-    facet_id: Optional[int] = Field(default=None, foreign_key="facets.id")
+    position_id: Optional[int] = Field(default=None, foreign_key="positions.id", index=True)
+    hero_id: Optional[int] = Field(default=None, foreign_key="heroes.id", index=True)
+    facet_id: Optional[int] = Field(default=None, foreign_key="facets.id", index=True)
 
     slot: int
 

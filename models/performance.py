@@ -115,11 +115,16 @@ class PerformanceWindowData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     calc_type_id: Optional[int] = Field(
-        default=None, foreign_key="performance_window_calculation_types.id", index=True
+        default=None,
+        foreign_key="performance_window_calculation_types.id",
+        index=True,
     )
 
     performance_id: Optional[int] = Field(
-        default=None, foreign_key="performances.id", ondelete="CASCADE",
+        default=None,
+        foreign_key="performances.id",
+        ondelete="CASCADE",
+        index=True,
     )
     performance: Optional["Performance"] = Relationship(
         back_populates="window_data",
@@ -130,7 +135,9 @@ class PerformanceWindowData(SQLModel, table=True):
     g_empty_mask: Optional[int] = Field(sa_column=db.Column(db.SMALLINT, primary_key=False, nullable=True))
 
     performance_table_id: Optional[int] = Field(
-        default=None, foreign_key="performance_windows_table.id", ondelete="CASCADE",
+        default=None,
+        foreign_key="performance_windows_table.id",
+        ondelete="CASCADE",
     )
     performance_table: Optional["PerformanceWindowTable"] = Relationship(
         back_populates="window_data",

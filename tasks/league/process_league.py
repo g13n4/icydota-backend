@@ -12,11 +12,11 @@ from db import get_sync_db_session
 from models import Game, League
 from tasks import set_comparison_names
 from tasks.approximate_positions import approximate_positions
+from tasks.cron.create_lop_short_data import create_short_data_for_league_cron
 from tasks.cron.process_bad_games import attempt_to_process_bad_games_cron
 from tasks.cron.process_mispositioned_games import reprocess_mispositioned_league_games_cron
 from tasks.league.create_league import get_or_create_league
 from tasks.league.process_match import process_game_helper
-from tasks.cron.create_lop_short_data import create_short_data_for_league_cron, create_short_data_for_patch_cron
 
 
 load_dotenv()

@@ -32,23 +32,31 @@ def get_league_games_tasks(
 ) -> list:
     db_session: Session = get_sync_db_session(expire=False)
 
+    new_games_found_list = []
+
     league_obj = get_or_create_league(db_session=db_session, league_id=league_id, existing_obj=league_obj)
 
     r = requests.get(f'https://api.opendota.com/api/leagues/{league_id}/matches')
-    league_match_data = r.json()
+    if r.status_code != 200:
+        print(f"Games for league {league_id} are temporarily unavailable")
 
+        db_session.commit()
+        return new_games_found_list
+
+    league_match_data = r.json()
     db_league_games: Dict[int, Game] = { }
     if league_obj:
         db_league_games = { x.id: x for x in league_obj.games }
-    new_games_found_list = []
 
     for idx, game in enumerate(league_match_data):
-        if game['match_id'] in db_league_games and not overwrite:
+        match_id = game['match_id']
+
+        if match_id in db_league_games and not overwrite:
             continue
         else:
             new_games_found_list.append(
                 process_game_helper(
-                    match_id=game['match_id'],
+                    match_id=match_id,
                     league_id=league_id,
                     execute=False,
                     reason=reason,

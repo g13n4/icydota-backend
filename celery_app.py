@@ -111,9 +111,9 @@ celery_app.conf.beat_schedule = {
         'schedule': crontab(minute='0', hour='*/1'),
     },
     **strict_cron_time('reprocess_mispositioned_league_games_(cron)', time_start=0, time_step=12),
-    'aggregate_and_ccomp_league_(cron)_[at_22]': {
+    'aggregate_and_ccomp_league_(cron)_[at_3]': {
         'task': 'aggregate_and_ccomp_league_and_patch_(cron)',
-        'schedule': crontab(minute='0', hour='22'),
+        'schedule': crontab(minute='0', hour='3'),
         'kwargs': { "process_league": True },
         **parallel_options_dict
     },

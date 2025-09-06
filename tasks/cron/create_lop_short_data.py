@@ -90,7 +90,7 @@ def create_short_data_for_patch_cron(patch_id: int) -> None:
             field="patch_id",
             field_id=patch_id,
         )
-    except ValueError | ZeroDivisionError:
+    except (ValueError, ZeroDivisionError):
         logger.info(f"No appropriate data found")
         return None
 

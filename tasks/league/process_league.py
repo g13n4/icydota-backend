@@ -16,6 +16,7 @@ from tasks.cron.process_bad_games import attempt_to_process_bad_games_cron
 from tasks.cron.process_mispositioned_games import reprocess_mispositioned_league_games_cron
 from tasks.league.create_league import get_or_create_league
 from tasks.league.process_match import process_game_helper
+from tasks.cron.create_lop_short_data import create_short_data_for_league_cron, create_short_data_for_patch_cron
 
 
 load_dotenv()
@@ -104,6 +105,7 @@ def check_leagues_for_correctness():
                 | attempt_to_process_bad_games_cron.si(league_id=league_obj.id)
                 | group(*tasks)
                 | approximate_positions.si(league_id=league_obj.id)
+                | create_short_data_for_league_cron.si(league_id=league_obj.id)
                 | set_comparison_names.si(league_id=league_obj.id)
         ).on_error(
             approximate_positions.si(league_id=league_obj.id)

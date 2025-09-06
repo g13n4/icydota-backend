@@ -25,7 +25,7 @@ def get_sql_req(field_name: str, field_func: str, league_id: int | None = None) 
             INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = pos_cpd.id
             INNER JOIN positions pos_cps ON comp_data.pos_cps_id = pos_cpd.id
             """ +
-            f"WHERE performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON} " +
+            f"WHERE p.type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON} " +
             f"AND c_main.{field_name} is null "
             f"AND g.league_id = {league_id} " if league_id else ""
             )
@@ -42,9 +42,10 @@ def set_comparison_names(league_id: None | int = None) -> None:
         ("cpd_name", "cpd_name=CONCAT(pos_cpd.name, '/', h_cpd.name, '/', p_cpd.nickname)"),
         ("cps_name", "cps_name=CONCAT(pos_cps.name, '/', h_cps.name, '/', p_cps.nickname)"),
     ]:
+        logger.info(f"Setting up {field_name} field")
+
         sql_req = get_sql_req(field_name=field_name, field_func=field_func, league_id=league_id)
         db_session.execute(text(sql_req))
-        logger.info(f"Setting up {field_name} field")
 
     db_session.full_commit()
     logger.info(f"Comparison name values filled")

@@ -39,9 +39,9 @@ def set_comparison_names(league_id: None | int = None) -> None:
             INNER JOIN positions pos_cpd ON comp_data.pos_cpd_id = pos_cpd.id
             INNER JOIN positions pos_cps ON comp_data.pos_cps_id = pos_cpd.id
             """ +
-            f"WHERE comp_data.id in (select id from performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON})" +
-            f"AND g.league_id = {league_id}" if league_id else ""
-
+            f"WHERE comp_data.id in (select id from performances where type_id = {GamePerformanceTypeConstant.MATCH_DATA_COMPARISON}) " +
+            f"AND (c_main.cpd_name_short is null OR c_main.cps_name_short is null OR c_main.cpd_name is null OR c_main.cps_name is null) "
+            f"AND g.league_id = {league_id} " if league_id else ""
         )
     )
 

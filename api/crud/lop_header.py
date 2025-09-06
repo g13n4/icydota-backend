@@ -68,10 +68,14 @@ async def get_lop_header(db_session: AsyncSession, league_id: int | None = None,
 
     data_obj, momentum_obj = aquery
 
-    return {
+    output = {
         "data": {
             item.name: create_value(key=item.name, data_obj=data_obj, momentum_obj=momentum_obj) for item in
             LeaguePatchShortDataConstant.VALUES
         },
-        "patch": momentum_obj.compared_to,
     }
+
+    if momentum_obj is not None:
+        output["patch"] = momentum_obj.compared_to
+
+    return output

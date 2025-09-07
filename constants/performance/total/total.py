@@ -272,11 +272,17 @@ class GameTotals:
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
         field_options=FieldOption(
             is_comparable=False,
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot=None,
-            )
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    comparison="none"
+                ),
+            ],
         ),
     )
     destroyed_tower_lane: GameTotal = GameTotal(
@@ -330,11 +336,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(is_hidden=True),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot=None,
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    comparison="none"
+                ),
+            ],
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
@@ -683,11 +695,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First T3 tower destroyed - mid",
@@ -700,11 +718,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First T3 tower destroyed - top",
@@ -716,11 +740,17 @@ class GameTotals:
         index=63,
         field_options=FieldOption(
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First T3 tower destroyed - bot",
@@ -733,11 +763,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First lost T3 tower - mid",
@@ -750,11 +786,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First lost T3 tower - top",
@@ -767,11 +809,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         description="First lost T3 tower - bot",
         pseudo_bool=True,
@@ -785,11 +833,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set destroyed - mid",
@@ -802,11 +856,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set destroyed - top",
@@ -819,11 +879,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set destroyed - bot",
@@ -836,11 +902,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set lost - mid",
@@ -853,11 +925,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set lost - top",
@@ -870,11 +948,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First rax set lost - bot",
@@ -887,11 +971,17 @@ class GameTotals:
         index=73,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First pick - pos 1",
@@ -903,11 +993,17 @@ class GameTotals:
         index=74,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First pick - pos 2",
@@ -919,11 +1015,17 @@ class GameTotals:
         index=75,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First pick - pos 3",
@@ -935,11 +1037,17 @@ class GameTotals:
         index=76,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First pick - pos 4",
@@ -951,11 +1059,17 @@ class GameTotals:
         index=77,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         description="First pick - pos 5",
@@ -968,11 +1082,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,
@@ -984,11 +1104,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -1010,11 +1136,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -1026,11 +1158,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -1042,11 +1180,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,
@@ -1057,11 +1201,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ]
         ), pseudo_bool=True,
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.CEIL,

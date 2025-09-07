@@ -78,11 +78,12 @@ def process_league_task_group(
 
     if tasks:
         task = (
-                group(*tasks) |
-                approximate_positions.si(league_id=league_id or league_obj.id) |
-                set_comparison_names.si(league_id=league_id)
+                group(*tasks)
+                | approximate_positions.si(league_id=league_id or league_obj.id)
+                # | set_comparison_names.si(league_id=league_id)
         ).on_error(
-            approximate_positions.si(league_id=league_id) | set_comparison_names.si(league_id=league_id)
+            approximate_positions.si(league_id=league_id)
+            # | set_comparison_names.si(league_id=league_id)
         )
         if execute:
             task.apply_async()
@@ -114,7 +115,7 @@ def check_leagues_for_correctness():
                 | group(*tasks)
                 | approximate_positions.si(league_id=league_obj.id)
                 | create_short_data_for_league_cron.si(league_id=league_obj.id)
-                | set_comparison_names.si(league_id=league_obj.id)
+                # | set_comparison_names.si(league_id=league_obj.id)
         ).on_error(
             approximate_positions.si(league_id=league_obj.id)
             | set_comparison_names.si(league_id=league_obj.id)

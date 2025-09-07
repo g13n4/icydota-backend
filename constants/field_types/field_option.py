@@ -55,7 +55,7 @@ class FieldOption(BaseModel):
                 field_code = value_tuple[FIELD_REPRESENTATION_INDEX]
 
                 if code in output:
-                    print(f"Representation for {name_tuple} is changed from {output[code]} to {field_code}")
+                    pass
                 output[code] = field_code
 
         return output if output else None

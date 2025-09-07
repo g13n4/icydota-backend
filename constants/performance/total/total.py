@@ -321,18 +321,16 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(match=False),
-            representation=TotalFieldRepresentation(
-                representation=[
-                    TotalFieldRepresentation(
-                        field_repr="percent",
-                        comparison="none"
-                    ),
-                    TotalFieldRepresentation(
-                        field_repr="boolean",
-                        pot="team",
-                    ),
-                ]
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    pot="team",
+                ),
+            ]
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.STATS,

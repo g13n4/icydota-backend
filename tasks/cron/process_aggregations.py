@@ -24,7 +24,7 @@ LoPItem = namedtuple(
 )
 
 PATCH_TUPLE = LoPItem(
-    "select distinct p.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id" +
+    "select distinct p.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id " +
     "JOIN patches p ON g.patch_id = p.id WHERE pgd.created_at > p.processed_at GROUP BY p.id",
     "patch_id",
     "patch",
@@ -33,7 +33,7 @@ PATCH_TUPLE = LoPItem(
 )
 
 LEAGUE_TUPLE = LoPItem(
-    "select distinct l.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id" +
+    "select distinct l.id from players_game_data pgd JOIN games g ON pgd.game_id = g.id " +
     "JOIN leagues l ON g.league_id = l.id WHERE pgd.created_at > l.processed_at GROUP BY l.id",
     "league_id",
     "league",

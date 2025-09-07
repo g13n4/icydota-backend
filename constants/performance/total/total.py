@@ -1141,7 +1141,12 @@ class GameTotals:
         index=80,
         field_options=FieldOption(
             is_comparable=False,
-            availability=FieldAvailability(match=False, player=False, for_any_option=True)
+            availability=FieldAvailability(match=False, player=False, for_any_option=True),
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
         ),
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
@@ -1273,7 +1278,12 @@ class GameTotals:
         index=88,
         field_options=FieldOption(
             is_comparable=False,
-            availability=FieldAvailability(match=False, player=False, for_any_option=True)
+            availability=FieldAvailability(match=False, player=False, for_any_option=True),
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
         ),
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,
@@ -1283,7 +1293,12 @@ class GameTotals:
         index=89,
         field_options=FieldOption(
             is_comparable=False,
-            availability=FieldAvailability(match=False, player=False, for_any_option=True)
+            availability=FieldAvailability(match=False, player=False, for_any_option=True),
+            representation=TotalFieldRepresentation(
+                field_repr="time",
+                data_type=None,
+                pot=None,
+            )
         ),
         category=GameTotalsCategory.STATS,
         team_processing_option=TotalTeamProcessingOption.BIGGEST,

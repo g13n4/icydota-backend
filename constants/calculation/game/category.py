@@ -5,7 +5,7 @@ from constants.helpers import Item, update_description, get_only_names, GetItemH
 class WindowCategories(GetItemHelper):
     INTERVAL: Item = Item(
         value=1,
-        name="In-game windows_data",
+        name="In-game windows data",
         description="Data that is collected by Dota 2 client and is shown to spectators or after the game."
         )
     PINGS: Item = Item(value=2, name="Pings", description="Data regarding players pings")

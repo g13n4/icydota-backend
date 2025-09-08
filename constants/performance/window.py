@@ -111,7 +111,7 @@ class LaneStageWindows:
     # total calc
     ltotal_max: GameWindow = GameWindow(start_time=None, end_time=None, description='<20 m. (max)', agg_func=np.nanmax)
     ltotal_min: GameWindow = GameWindow(start_time=None, end_time=None, description='<20 m. (min)', agg_func=np.nanmin)
-    ltotal_sum: GameWindow = GameWindow(start_time=None, end_time=None, description='<20 m. (sum)', agg_func=np.nanmax)
+    ltotal_sum: GameWindow = GameWindow(start_time=None, end_time=None, description='<20 m. (sum)', agg_func=np.nansum)
 
     l_empty_mask: str = 'l_empty_mask'
     empty_mask: str = 'l_empty_mask'
@@ -159,7 +159,7 @@ class GameStageWindows:
         start_time=None,
         end_time=None,
         description='By the game\'s end (sum)',
-        agg_func=np.nanmax,
+        agg_func=np.nansum,
     )
 
     g_empty_mask: str = 'g_empty_mask'

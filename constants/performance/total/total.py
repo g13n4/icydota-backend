@@ -1269,11 +1269,6 @@ class GameTotals:
         category=GameTotalsCategory.STATS,
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
         ),
         description="Maximal gold advantage (win)",
     )
@@ -1284,11 +1279,6 @@ class GameTotals:
         description="Maximal gold advantage (lose)",
         field_options=FieldOption(
             availability=FieldAvailability(match=False, player=False, for_any_option=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
         ),
     )
     duration_win: GameTotal = GameTotal(

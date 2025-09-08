@@ -663,11 +663,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(player=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="team",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="team",
+                ),
+            ],
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
@@ -679,11 +685,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(team=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="player",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="player",
+                ),
+            ],
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,
@@ -695,11 +707,17 @@ class GameTotals:
         field_options=FieldOption(
             is_comparable=False,
             availability=FieldAvailability(team=False),
-            representation=TotalFieldRepresentation(
-                field_repr="boolean",
-                data_type="match",
-                pot="player",
-            ),
+            representation=[
+                TotalFieldRepresentation(
+                    field_repr="percent",
+                    comparison="none"
+                ),
+                TotalFieldRepresentation(
+                    field_repr="boolean",
+                    data_type="match",
+                    pot="player",
+                ),
+            ],
         ),
         pseudo_bool=True,
         category=GameTotalsCategory.PICKS,

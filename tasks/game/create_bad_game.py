@@ -30,8 +30,7 @@ def create_bad_game_on_error(match_id: int, league_id: None | int = None):
 
     if league_id is None:
         league_id = game_data['league']['leagueid']
-        league_obj = get_or_create_league(db_session=db_session, league_id=league_id)
-        league_id = league_obj.id
+        get_or_create_league(db_session=db_session, league_id=league_id)
 
     game_obj = db_session.get(Game, match_id)
     if game_obj is None:

@@ -16,6 +16,8 @@ REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', default="127.0.0.1")
 AGGREGATION_SEPARATE_TASK = os.getenv('AGGREGATION_SEPARATE_TASK', default="false")
 
+REDIS_URI = f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0'
+
 tasks = [
     'tasks.aggregation',
     'tasks.cron',
@@ -28,11 +30,11 @@ celery_app = Celery(
     main='celery',
     enable_utc=True,
     timezone='Europe/Moscow',
-    broker=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
-    broker_url=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
-    result_backend=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
-    celery_broker_url=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
-    celery_result_backend=f'redis://default:{REDIS_PASSWORD}@{REDIS_ADDRESS}:6379/0',
+    broker=REDIS_URI,
+    broker_url=REDIS_URI,
+    result_backend=REDIS_URI,
+    celery_broker_url=REDIS_URI,
+    celery_result_backend=REDIS_URI,
     result_expires=60 * 60 * 24,
     celery_result_expires=60 * 60 * 24,
     celery_cache_backend='redis',

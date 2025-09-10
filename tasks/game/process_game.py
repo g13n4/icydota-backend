@@ -11,14 +11,13 @@ from sqlmodel import Session
 
 from constants.performance.game_side import SidePerformance
 from db import get_sync_db_session
-from file_path import BASE_REPLAY_PATH
+from dev_constants import BASE_REPLAY_PATH
 from models import Player, Team, SidePerformanceData, PlayerGameData, Game
 from models.game import Patch, GamePerformanceGraph
 from models.performance import PerformanceTotalData
 from tasks.game.helpers import fix_odota_data
 from tasks.game.manual_processing import check_for_manual_fix_inplace
 from tasks.game.proces_game_replay import process_game_replay
-from tasks.league.create_league import get_or_create_league
 from utils import none_to_zero, get_or_create, get_positions_approximations
 from utils.helpers import is_equals_to_zero
 

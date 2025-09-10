@@ -6,7 +6,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from dotenv import load_dotenv
 
-from file_path import BASE_REPLAY_PATH
+from dev_constants import BASE_REPLAY_PATH
 
 
 load_dotenv()

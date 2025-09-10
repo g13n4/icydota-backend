@@ -3,7 +3,7 @@ from pathlib import Path
 
 import click
 
-from file_path import BASE_REPLAY_PATH
+from dev_constants import BASE_REPLAY_PATH
 from scripts.name_map.facets import FACETS_NAME, check_initial_facets_map
 from scripts.name_map.heroes import HEROES_NAME, check_initial_heroes_map
 from scripts.name_map.heroes_icons import HEROES_ICONS, check_initial_heroes_icons

@@ -5,7 +5,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from db import get_sync_db_session
-from file_path import BASE_REPLAY_PATH
+from dev_constants import BASE_REPLAY_PATH
 from models import Game
 from tasks.league.create_league import get_or_create_league
 

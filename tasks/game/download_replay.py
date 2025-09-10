@@ -8,10 +8,10 @@ from typing import Callable
 
 import requests
 from celery import shared_task
-from celery.utils.log import get_task_logger, logger as celery_logger
+from celery.utils.log import get_task_logger
 from dotenv import load_dotenv
 
-from file_path import BASE_REPLAY_PATH
+from dev_constants import BASE_REPLAY_PATH
 from tasks.game.helpers import error_exception_wrapper
 
 

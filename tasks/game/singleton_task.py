@@ -1,7 +1,11 @@
 from celery import shared_task
 
+from dev_constants import LATEST_COMMIT
 from redis_app import get_redis_single
+from dotenv import load_dotenv
 
+
+load_dotenv()
 
 MATCH_LOCK_DURATION = 60 * 60 * 2
 
@@ -9,7 +13,7 @@ MATCH_LOCK_DURATION = 60 * 60 * 2
 def is_match_locked(match_id: int) -> bool:
     r = get_redis_single()
 
-    match_key = f"match-{match_id}"
+    match_key = f"match-{match_id}-{LATEST_COMMIT}"
     output = r.get(match_key)
 
     # No lock exists so we create one

@@ -1,19 +1,22 @@
-from celery import shared_task
+import os
 
-from dev_constants import LATEST_COMMIT
-from redis_app import get_redis_single
+from celery import shared_task
 from dotenv import load_dotenv
+
+from redis_app import get_redis_single
 
 
 load_dotenv()
 
 MATCH_LOCK_DURATION = 60 * 60 * 2
 
+APP_VERSION = os.getenv('APP_VERSION')
+
 
 def is_match_locked(match_id: int) -> bool:
     r = get_redis_single()
 
-    match_key = f"match-{match_id}-{LATEST_COMMIT}"
+    match_key = f"match-{match_id}-{APP_VERSION}"
     output = r.get(match_key)
 
     # No lock exists so we create one

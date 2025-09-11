@@ -108,7 +108,7 @@ if AGGREGATION_SEPARATE_TASK == "true":
     }
 
 celery_app.conf.beat_schedule = {
-    'find_leagues_to_process_(cron)_[hourly]': {
+    'find_leagues_to_process_(cron)_[every_ten_minute]': {
         'task': 'find_leagues_to_process_(cron)',
         'schedule': crontab(minute='*/10'),
     },

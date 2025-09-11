@@ -10,6 +10,7 @@ from fuzzywuzzy import fuzz
 from constants.position import PositionConstant, POSITION_OPPONENTS
 from models import PlayerGameData
 from models.performance import PerformanceTotalData
+from modules.interval.ineterval_buyback_data import IntervalBuybackStatus
 from modules.interval.interval_biggest_advantage import IntervalBiggestAdvantage
 from modules.interval.interval_chart_data_collector import IntervalChartDataCollector
 from modules.match_windows_handler import MatchWindowsHandler
@@ -391,6 +392,7 @@ class MatchAnalyser:
 
         ICDC = IntervalChartDataCollector()
         IBA = IntervalBiggestAdvantage()
+        IBS = IntervalBuybackStatus()
 
         for line in orjsonl.stream(self.path):
             if line['type'] in [
@@ -442,11 +444,15 @@ class MatchAnalyser:
 
                 ICDC.add_line(line)
                 IBA.add_line(line)
+                IBS.add_interval_line(line)
 
                 self.windows_handler.update_time(line_time)
 
             if line_type == 'DOTA_COMBATLOG_GOLD' and line['gold_reason'] == 5:
                 break
+
+            elif line_type == 'CHAT_MESSAGE_BUYBACK':
+                IBS.add_buyback_line(line)
 
             elif line_type == 'pings':
                 pings.append(line)
@@ -506,5 +512,6 @@ class MatchAnalyser:
             'damage': pd.DataFrame(damage),
             'roshan_deaths': pd.DataFrame(roshan_deaths),
             'hero_deaths': pd.DataFrame(hero_deaths),
-            'draft': pd.DataFrame(draft)
+            'draft': pd.DataFrame(draft),
+            'buyback': pd.DataFrame(IBS.get_data()),
         }, additional_options, ICDC, IBA

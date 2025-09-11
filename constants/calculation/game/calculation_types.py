@@ -1,5 +1,6 @@
 from typing import Literal
 
+from constants.calculation.game.calculation_type.buyback import BuybackCalculations
 from constants.calculation.game.calculation_type.damage import DamageCalculations
 from constants.calculation.game.calculation_type.deward import DewardCalculations
 from constants.calculation.game.calculation_type.gold import GoldCalculations
@@ -67,7 +68,8 @@ class WindowCalculations(
     WardsCalculations,
     DewardCalculations,
     XPCalculations,
-    GoldCalculations
+    GoldCalculations,
+    BuybackCalculations
 ):
     _VALUES: list[CalculationItem] = (
             IntervalCalculations.VALUES +
@@ -76,7 +78,8 @@ class WindowCalculations(
             WardsCalculations.VALUES +
             DewardCalculations.VALUES +
             XPCalculations.VALUES +
-            GoldCalculations.VALUES
+            GoldCalculations.VALUES +
+            BuybackCalculations.VALUES
     )
 
     DB_INDEX_MAP: dict[int, int]

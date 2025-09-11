@@ -314,7 +314,6 @@ class IntervalCalculations:
             )
         ),
         processing=(IntervalCalculationColumn.MOVEMENT_UNIQUE, IntervalCalculationAggregationMethod.COEFF),
-
     )
     xp__lvl: CalculationItem = CalculationItem(
         name="xp__lvl",

@@ -3,6 +3,7 @@ import pandas as pd
 from modules.match_analyser import MatchAnalyser
 from modules.match_splitter import MatchSplitter
 from modules.performance_data_processor import PerformanceDataProcessor
+from replay_parsing.processors.buyback.process_buyback_windows import process_buyback_windows
 from replay_parsing.processors.damage import process_damage_windows
 from replay_parsing.processors.deward import process_deward_windows
 from replay_parsing.processors.gold import process_gold_windows
@@ -33,6 +34,8 @@ def set_processor_data(match: MatchAnalyser,
     process_damage_windows(match_data['damage'], MS, PDP=PDP, players=match.get_players(), )
     process_xp_windows(match_data['xp'], MS, PDP, players_to_slot=match.players.get_name_slot_dict(), )
     process_gold_windows(match_data['gold'], MS, PDP, players_to_slot=match.players.get_name_slot_dict(), )
+
+    process_buyback_windows(match_data['buyback'], MS, PDP)
 
     postprocess_windows(PDP=PDP)
 

@@ -14,6 +14,7 @@ class WindowCategories(GetItemHelper):
     DEWARD: Item = Item(value=5, name="Deward", description="Data regarding dewarding")
     XP: Item = Item(value=6, name="XP", description="Data regarding experience acquisition")
     GOLD: Item = Item(value=7, name="Gold", description="Data regarding gold acquisition")
+    BUYBACK: Item = Item(value=8, name="Buyback", description="Data regarding buyback status")
 
-    VALUES: list = [INTERVAL, PINGS, DAMAGE, WARDS, DEWARD, XP, GOLD]
+    VALUES: list = [INTERVAL, PINGS, DAMAGE, WARDS, DEWARD, XP, GOLD, BUYBACK]
     VALUES_NAMES: list = get_only_names(VALUES)

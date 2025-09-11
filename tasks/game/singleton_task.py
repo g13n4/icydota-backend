@@ -8,23 +8,27 @@ from redis_app import get_redis_single
 
 load_dotenv()
 
-MATCH_LOCK_DURATION = 60 * 60 * 2
-
-APP_VERSION = os.getenv('APP_VERSION')
+try:
+    MATCH_LOCK_DURATION = int(os.getenv('MATCH_LOCK_DURATION', default=60 * 60 * 2))
+except ValueError:
+    MATCH_LOCK_DURATION = 60 * 60 * 2
 
 
 def is_match_locked(match_id: int) -> bool:
-    r = get_redis_single()
+    if MATCH_LOCK_DURATION:
+        r = get_redis_single()
 
-    match_key = f"match-{match_id}-{APP_VERSION}"
-    output = r.get(match_key)
+        match_key = f"match-{match_id}"
+        output = r.get(match_key)
 
-    # No lock exists so we create one
-    if output is None:
-        r.set(match_key, "", MATCH_LOCK_DURATION)
+        # No lock exists so we create one
+        if output is None:
+            r.set(match_key, "", MATCH_LOCK_DURATION)
+            return False
+
+        return True
+    else:
         return False
-
-    return True
 
 
 @shared_task(name='fake_match_task', ignore_result=True)

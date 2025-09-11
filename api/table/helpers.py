@@ -161,7 +161,7 @@ def extract_formatted_columns(
 
         if this_item is not None:
             this_dict["colId"] = f"{this_item.index}-{salt}"
-            this_dict["orderId"] = f"{this_item.index}"
+            this_dict["context"] = this_item.index
             if is_total:
                 category_index = this_item.category.value
                 total_category_list[category_index]["children"].append(this_dict)
@@ -169,18 +169,18 @@ def extract_formatted_columns(
                 data_columns.append(this_dict)
         else:
             this_dict["colId"] = f"{name}-{salt}"
-            this_dict["orderId"] = f"{name}"
+            this_dict["context"] = name
             if is_total:
                 total_category_list[0]["children"].append(this_dict)
             else:
                 header_columns.append(this_dict)
 
     if is_total:
-        [children["children"].sort(key=lambda x: x["orderId"]) for children in total_category_list]
+        [children["children"].sort(key=lambda x: x["context"]) for children in total_category_list]
         return total_category_list
 
     else:
-        data_columns.sort(key=lambda x: x["orderId"])
+        data_columns.sort(key=lambda x: x["context"])
         return header_columns + [item for item in data_columns]
 
 

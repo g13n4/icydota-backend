@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from constants.task_reason import TaskReason
 from db import get_sync_db_session
 from models import League
+from tasks.cron.process_bad_games import attempt_to_process_bad_games_cron
 from tasks.cron.set_flags_for_league_and_patch import set_leagues_and_patch_flags_cron
 from tasks.league.process_league import process_league_task_group
 
@@ -24,6 +25,9 @@ def find_leagues_to_process_cron() -> None:
     sel_res = db_session.exec(select(League).where(League.new_game_found_at > found_in_last_8_days))
 
     for league_obj in sel_res.all():
+
+        attempt_to_process_bad_games_cron.si(league_id=league_obj.id)
+
         found_games, processing_group = process_league_task_group(
             league_obj=league_obj,
             league_id=league_obj.id,

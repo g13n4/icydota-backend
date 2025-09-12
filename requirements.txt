@@ -5,7 +5,6 @@ anyio==4.8.0
 asyncpg==0.30.0
 billiard==4.2.1
 celery==5.4.0
-celery==5.5.3
 certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
@@ -23,7 +22,7 @@ h11==0.14.0
 httptools==0.6.4
 humanize==4.12.3
 idna==3.10
-kombu==5.5.0
+kombu==5.5.4
 isal==1.7.2
 kombu==5.5.4
 Levenshtein==0.27.1

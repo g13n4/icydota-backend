@@ -10,3 +10,4 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY . /app/
 
 RUN mkdir -p /app/logs /app/.venv /app/logs/workers /app/logs/tasks
+RUN apt update && apt install -y curl

@@ -60,7 +60,8 @@ def aggregate_and_ccomp_league_and_patch_cron(
     else:
         raise TypeError("No argument provided")
 
-    for obj_id in db_session.execute(text(data_tuple.query)).all():
+    for obj_row in db_session.execute(text(data_tuple.query)).all():
+        obj_id = obj_row[0]
         kwarg = { data_tuple.field: obj_id }
 
         parallel_aggregate_task_helper(**kwarg)
